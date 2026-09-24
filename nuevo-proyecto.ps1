@@ -95,6 +95,12 @@ try {
     Write-Host "  + .gitignore: .pr-shots"
   }
 
+  # bash falla con un .sh en CRLF: git lo convertiría al clonar en Windows.
+  if (-not (Test-Path .gitattributes) -or (Get-Content .gitattributes -Raw) -notmatch '\*\.sh') {
+    Add-Content .gitattributes "* text=auto`n*.sh text eol=lf"
+    Write-Host "  + .gitattributes: *.sh con LF"
+  }
+
   # Los scripts importan 'bun' y '@playwright/test': sin sus tipos, `tsc` y `next build`
   # fallan (tsconfig incluye **/*.ts). Los navegadores de Playwright no se bajan aquí:
   # `bunx playwright install chromium` cuando haga falta capturar o auditar.
