@@ -84,8 +84,24 @@ git add -A; git commit -m "chore: inicializa proyecto con web-agent-kit"
 gh repo create <usuario>/clinica-dental --private --source . --push   # modo pr
 ```
 
-En GitHub: *Settings → Branches* → protege `main` (exigir PR). Ya puedes abrir Claude Code
-en la carpeta.
+En GitHub, protege `main`: exigir PR (0 aprobaciones, porque trabajas solo), exigir el check
+`ci`, sin force-push ni borrado. Es la configuración de World Flags:
+
+```bash
+gh api -X PUT repos/<usuario>/<repo>/branches/main/protection --input - <<'EOF'
+{"required_status_checks":{"strict":false,"contexts":["ci"]},"enforce_admins":false,
+ "required_pull_request_reviews":{"required_approving_review_count":0},
+ "restrictions":null,"allow_force_pushes":false,"allow_deletions":false}
+EOF
+```
+
+> **Repos privados en el plan gratuito de GitHub no admiten protección de ramas** (ni
+> rulesets): la API responde 403 "Upgrade to GitHub Pro". Opciones: repo público, GitHub
+> Pro, o seguir sin protección técnica (las reglas de `CLAUDE.md` siguen prohibiendo a los
+> agentes empujar a `main` o mergear; lo que se pierde es el bloqueo si alguien se salta
+> eso, y que el CI sea obligatorio antes de mergear).
+
+Ya puedes abrir Claude Code en la carpeta.
 
 ### Proyecto que ya creaste (o creaste con otras opciones)
 
@@ -276,4 +292,5 @@ Normalmente no los corres tú: los corren las skills. Están para cuando quieras
 | `tsc`/`next build` falla en `scripts/*.ts` | Faltan `@types/bun` o `@playwright/test` | `bun add -d @types/bun @playwright/test` (el script de arranque ya lo hace) |
 | El `.ps1` no corre | Política de ejecución de PowerShell 5.1 | `pwsh`, o `-ExecutionPolicy Bypass -File` solo para esa ejecución |
 | `next dev` vuelve a escribir `AGENTS.md` | Next.js 16 lo regenera | Normal: se commitea con el resto; `CLAUDE.md` lo importa con `@AGENTS.md` |
+| `tsc` en CI: "Cannot find name LayoutProps" | Next 16 genera esos tipos en `.next/` al hacer dev/build | `bun run typecheck` = `next typegen && tsc --noEmit` (ya en el script de arranque y el CI) |
 | Un worker no pudo escribir en `context/` local | Los worktrees en sandbox no escriben en la carpeta principal | Lo entrega en su informe y el orquestador lo copia |

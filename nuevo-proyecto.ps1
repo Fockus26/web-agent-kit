@@ -76,6 +76,7 @@ try {
   $pkg = Get-Content package.json -Raw | ConvertFrom-Json
   $scripts = @{
     'test'          = 'bun test ./tests/unit --dots --pass-with-no-tests'
+    'typecheck'     = 'next typegen && tsc --noEmit'
     'test:related'  = 'bun scripts/test-related.ts'
     'shots'         = 'node scripts/pr-screenshots.ts .pr-shots.json'
     'shots:publish' = 'bash scripts/publish-pr-shots.sh .pr-shots'
