@@ -67,12 +67,13 @@ Hace, en este orden:
 
 1. `bunx create-next-app@latest clinica-dental --ts --tailwind --app --biome --react-compiler --import-alias "@/*" --use-bun`
    — **Biome** (no ESLint), **React Compiler** activo, bun. Next ya inicializa git.
-2. Copia `context/`, `phases/`, `scripts/`, `.github/` (plantilla de PR + CI), crea
-   `design/` y `tests/unit/`.
+2. Copia `context/`, `phases/`, `scripts/`, `.github/` (plantilla de PR, CI y `release.yml`)
+   y `.changeset/`, crea `design/` y `tests/unit/`. Si el proyecto no lleva versión ni
+   CHANGELOG, `-SinVersion` omite lo de Changesets.
 3. Escribe `CLAUDE.md` con la plantilla del kit, **conservando la línea `@AGENTS.md`** que
    pone Next.js 16 (así Claude lee las reglas de esa versión de Next).
 4. Añade a `package.json`: `test`, `test:related`, `shots`, `shots:publish`, y las
-   devDependencies `@types/bun` y `@playwright/test`.
+   devDependencies `@types/bun`, `@playwright/test` y `@changesets/cli`.
 5. Formatea lo copiado con el Biome del proyecto.
 
 No pisa nada que ya exista y **no commitea**. Después:
@@ -101,7 +102,26 @@ EOF
 > agentes empujar a `main` o mergear; lo que se pierde es el bloqueo si alguien se salta
 > eso, y que el CI sea obligatorio antes de mergear).
 
+Dos ajustes más en el repo de GitHub, una vez:
+
+- *Settings › Actions › General › Allow GitHub Actions to create and approve pull
+  requests*: sin eso, la Action de Changesets no puede abrir el PR de versión. Ese PR lo abre
+  `GITHUB_TOKEN` y no dispara el CI: si `main` exige el check `ci`, lo mergeas saltándote la
+  protección (solo cambia `version` y `CHANGELOG.md`).
+- *Settings › General › Automatically delete head branches*: la rama remota se borra al
+  mergear el PR.
+
+Y en Windows, si vas a usar `orchestrate`: excluye de Windows Defender la carpeta de trabajo,
+la del pool de worktrees (`..\<repo>-wt`) y `%USERPROFILE%\.bun\install\cache`. Con el
+antivirus escaneando cada archivo de `node_modules`, instalar y borrar tarda el triple.
+
 Ya puedes abrir Claude Code en la carpeta.
+
+### Proyecto que seguía la versión anterior del kit
+
+Abre Claude Code en el proyecto (sesión nueva) y pega el bloque de
+`prompts/ACTUALIZAR-PROYECTO.md`: diagnostica, migra a Changesets, alinea `CLAUDE.md`, la
+plantilla de PR, las decisiones y las memorias, y lo deja en un PR `chore/changesets`.
 
 ### Proyecto que ya creaste (o creaste con otras opciones)
 
@@ -243,10 +263,16 @@ Qué pasa:
 1. Mapea cada punto al código y te hace **de una vez** las preguntas que bloquean (p. ej.
    "¿los precios son reales o placeholder?", "¿pueden los workers levantar el servidor?").
 2. Agrupa (lo que toca los mismos archivos va junto), ordena en **olas** y reserva números
-   (decisiones, puertos) para que no choquen.
+   (decisiones, filas del checklist) para que no choquen.
 3. Deja el plan y los prompts en `context/plans/` y lanza un **`feature-worker`** por unidad,
-   cada uno en su worktree, en paralelo.
-4. Te llega **un PR por unidad** y un resumen con el **orden de merge recomendado**.
+   en paralelo, cada uno en un slot del **pool de worktrees** (`..\<repo>-wt\wt1..wtN`, con su
+   puerto 4301, 4302…). Los slots no se borran: `node_modules` ya está y cada unidad solo
+   instala si cambió `bun.lock`. La primera vez en un proyecto, el orquestador corre `wt init`.
+4. Te llega **un PR por unidad**, cada uno con su changeset (sin tocar `version` ni
+   `CHANGELOG.md`: no chocan entre sí). Mergéalos en el orden que quieras; tras cada merge
+   el orquestador libera el slot (`wt free`).
+5. Cuando quieras publicar, mergeas el PR **`chore(release): versión`** que mantiene la
+   Action: junta los changesets, sube la versión y escribe el CHANGELOG.
 
 Mientras tanto puedes seguir con otra cosa. Lo que se te ocurra después va a
 `context/plans/pendientes.md`, no a la tanda en curso.
@@ -294,3 +320,9 @@ Normalmente no los corres tú: los corren las skills. Están para cuando quieras
 | `next dev` vuelve a escribir `AGENTS.md` | Next.js 16 lo regenera | Normal: se commitea con el resto; `CLAUDE.md` lo importa con `@AGENTS.md` |
 | `tsc` en CI: "Cannot find name LayoutProps" | Next 16 genera esos tipos en `.next/` al hacer dev/build | `bun run typecheck` = `next typegen && tsc --noEmit` (ya en el script de arranque y el CI) |
 | Un worker no pudo escribir en `context/` local | Los worktrees en sandbox no escriben en la carpeta principal | Lo entrega en su informe y el orquestador lo copia |
+| `wt take`: "No hay slots libres" | Todas las carpetas del pool tienen una unidad abierta | Esperar a que se mergee una (`wt free`) o ampliar: `wt init -Count 6` |
+| `wt free` aborta | El slot tiene cambios sin commitear | Ver qué son (`wt status`); nunca se descartan solos |
+| El pool va lento (install, borrados) | Windows Defender escanea cada archivo de `node_modules` | Excluir la carpeta de trabajo, `..\<repo>-wt` y `%USERPROFILE%\.bun\install\cache` |
+| No aparece el PR de versión | La Action no tiene permiso para abrir PRs | Settings › Actions › General › "Allow GitHub Actions to create and approve pull requests" |
+| El PR de versión no tiene checks del CI | Los PRs abiertos con `GITHUB_TOKEN` no disparan workflows | Mergearlo saltándose la protección (solo cambia `version` y `CHANGELOG.md`) o usar el token de una GitHub App |
+| `changeset version` no sube la versión | App `private: true` sin `privatePackages.version: true` | Usar el `config.json` del kit (`changeset-templates/`) |

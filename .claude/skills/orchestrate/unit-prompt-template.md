@@ -1,6 +1,7 @@
 ## {{W#}} — `{{rama}}`
 
-Eres el worker **{{W#}}**. Rama: `{{rama}}`. Puerto: **{{43NN}}**. Decisiones:
+Eres el worker **{{W#}}**. Rama: `{{rama}}`. Slot y puerto: los del mensaje con el que te
+lanzan (`wt take`). Decisiones:
 `context/decisions/{{NN}}-{{tema}}.md`, rango **{{D0NN–D0NN}}**. Filas de CONTENT_CHECKLIST:
 **{{NN}}**.
 
@@ -31,7 +32,7 @@ opciones que quedan a su criterio, dilo explícitamente.}}
 - {{tests nuevos que se esperan}}
 
 ### Cierre
-Versión {{PATCH | MINOR | MAJOR (por qué)}}. Entrada del CHANGELOG en lenguaje de usuario.
+Changeset: {{patch | minor | major | ninguno}} — {{texto en lenguaje de usuario}}.
 En el PR, "Decisión tomada / alternativa" para: {{…}}. Acciones manuales: {{…}}.
 Informe final según el brief.
 

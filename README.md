@@ -46,7 +46,8 @@ lo demás se apoya en puertas de calidad que no dependen de tener buen ojo.
   En cada cierre de unidad, siempre:   [a11y] → [seo si aplica] → [git-flow]
 
   ¿Llega una lista de varias cosas a la vez?  → [orchestrate] reparte en unidades,
-  las ordena en olas y lanza un feature-worker por unidad, cada uno en su worktree y su PR.
+  las ordena en olas y lanza un feature-worker por unidad, cada uno en un slot del pool de
+  worktrees (reciclable: no reinstala node_modules) y con su PR.
 ```
 
 ---
@@ -71,7 +72,7 @@ contigo**: hacer preguntas, presentar 3 opciones, esperar tu aprobación.
 ### Agentes — corren aislados y devuelven un reporte
 
 Los de QA auditan sin interrumpir y no modifican código. `feature-worker` sí implementa: una
-unidad completa, en su worktree, hasta el PR.
+unidad completa, en su slot del pool de worktrees, hasta el PR.
 
 | Agente | Qué hace | Cuándo lo lanzas |
 |---|---|---|
@@ -145,9 +146,11 @@ Un solo comando (PowerShell 7, `pwsh`) crea la app y deja todo el kit copiado:
 - Crea la app con `bunx create-next-app@latest <nombre> --ts --tailwind --app --biome
   --react-compiler --import-alias "@/*" --use-bun` (Biome, no ESLint; React Compiler activo).
 - Copia `context/`, `phases/`, `CLAUDE.md` (conservando el `@AGENTS.md` de Next.js 16),
-  `scripts/`, `.github/` y crea `tests/unit/` y `design/`.
+  `scripts/`, `.github/`, `.changeset/` y crea `tests/unit/` y `design/`.
 - Añade los scripts de `package.json` (`test`, `test:related`, `shots`, `shots:publish`),
-  `@types/bun` y `@playwright/test`, y `.pr-shots` al `.gitignore`.
+  `@types/bun`, `@playwright/test` y `@changesets/cli`, y `.pr-shots` al `.gitignore`.
+- Versión y CHANGELOG con Changesets: cada PR trae su `.changeset/*.md` y una Action mantiene
+  el PR de versión, así los PRs en paralelo no chocan. `-SinVersion` lo omite.
 - No pisa nada que ya exista y **no commitea**.
 
 ¿Proyecto ya creado con otras opciones? `-Existente` añade solo lo del kit (ver GUIA.md).
@@ -244,15 +247,18 @@ web-agent-kit/
 ├── CLAUDE.md.template             va a la raíz de cada proyecto (≤ 8 KB: mapa, no manual)
 ├── .claude/
 │   ├── skills/                    las 7 skills → ~/.claude/skills/
-│   │   └── orchestrate/           + brief-template.md y unit-prompt-template.md
+│   │   └── orchestrate/           + brief-template.md, unit-prompt-template.md y
+│   │                                scripts/wt.ps1 (pool de worktrees reciclables)
 │   └── agents/                    design-qa, functional-qa, feature-worker → ~/.claude/agents/
 ├── prompts/
 │   ├── CLAUDE-DESIGN-BRIEF.template.md   lo que se le pega a Claude Design
-│   └── DESIGN-HANDOFF.template.md        lo que debe volver, y su verificación
+│   ├── DESIGN-HANDOFF.template.md        lo que debe volver, y su verificación
+│   └── ACTUALIZAR-PROYECTO.md            se pega en un proyecto con la versión anterior del kit
 ├── context-templates/             → se copia como context/ en cada proyecto
 ├── phases-templates/              → se copia como phases/
 ├── sections-template/             brief de contenido, uno por sección
-├── github-templates/              → se copia como .github/ (plantilla de PR + CI)
+├── github-templates/              → se copia como .github/ (plantilla de PR, CI y release.yml)
+├── changeset-templates/           → se copia como .changeset/ (versión y CHANGELOG sin conflictos)
 └── reference/
     ├── STACK-NEXTJS.md            Next.js + bun + Context7 + convenciones
     ├── UI-LIBRARIES.md            shadcn/ui · Hero UI · MUI — criterio y qué cambia
@@ -316,7 +322,7 @@ Detalle en `reference/TOKEN-ECONOMY.md`. Lo que más pesa:
 | "Lee estos 5 archivos antes de empezar" | Lectura por niveles: siempre `CLAUDE.md` + `CURRENT_PHASE`; lo demás según la tarea o con `grep` |
 | `CURRENT_PHASE.md` "liviano" sin tope (llegó a 38 KB) | Tope de 60 líneas; la narrativa va a `PHASE_LOG/<rama>.md`; se poda al cerrar cada unidad |
 | Solo merge local con pausa de aprobación | Modo `pr` (PR que César revisa y mergea) además del `local` |
-| Una sesión hace todo, unidad a unidad | `orchestrate` + `feature-worker`: tandas en paralelo en worktrees, en olas, con números reservados |
+| Una sesión hace todo, unidad a unidad | `orchestrate` + `feature-worker`: tandas en paralelo en un pool de worktrees reciclables, en olas, con números reservados |
 | Toda la suite de tests en cada iteración | `test:related` (grafo de imports) en el bucle; suite completa antes del PR y en CI |
 | PR sin capturas | `shots` + `shots:publish`: capturas a la rama `pr-shots`, enlazadas en el PR, sin que el agente las abra |
 | Scripts de Playwright con `bun` (se colgaban en Windows) | Con `node` |

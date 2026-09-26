@@ -186,7 +186,8 @@ context/
   plans/                  · planes y pendientes (plans/pendientes.md)
 phases/                   · las fases del track elegido
 scripts/                  · test-related.ts, pr-screenshots.ts, publish-pr-shots.sh (del kit)
-.github/                  · pull_request_template.md y workflows/ci.yml (modo pr)
+.github/                  · pull_request_template.md, workflows/ci.yml y workflows/release.yml (modo pr)
+.changeset/               · config.json y README.md (si el proyecto lleva versión)
 ```
 
 Copia también `CLAUDE.md.template` a la raíz del proyecto como `CLAUDE.md`, con los valores
@@ -213,6 +214,23 @@ Deja listos los scripts y su configuración:
 `shots` necesita `@playwright/test` (`bun add -d @playwright/test && bunx playwright
 install chromium`) y Node ≥ 23.6; va con `node` a propósito (Playwright bajo Bun se cuelga
 en Windows).
+
+**Versión y CHANGELOG** (todo proyecto que se publica, salvo que César diga que no):
+Changesets. `nuevo-proyecto.ps1` ya lo deja puesto (`-SinVersion` lo omite); si no se usó,
+`bun add -d @changesets/cli` y copia del kit `changeset-templates/` como `.changeset/` y
+`github-templates/workflows/release.yml`. El `config.json` lleva `"privatePackages":
+{ "version": true, "tag": false }`: la app es `private: true` y sin eso Changesets no le
+sube la versión (y aun así consume los changesets). Cómo se escriben: `git-flow` §2.1.3.
+
+**Acciones manuales de César** (dilas al cerrar el arranque; no las hace el agente):
+
+- GitHub › *Settings › Actions › General › Allow GitHub Actions to create and approve pull
+  requests* — sin eso la Action no puede abrir el PR de versión.
+- GitHub › *Settings › General › Automatically delete head branches*.
+- Si `main` exige checks: el PR de versión lo abre `GITHUB_TOKEN` y no dispara el CI; se
+  mergea saltándose la protección o se usa el token de una GitHub App.
+- Si va a usar `orchestrate`: excluir de Windows Defender la carpeta de trabajo, la del
+  pool (`..\<repo>-wt`) y `%USERPROFILE%\.bun\install\cache`.
 
 **Ningún placeholder `{{...}}` puede quedar sin llenar.** Si un dato no existe todavía,
 escribe `PENDIENTE` explícito y agrega la fila a `CONTENT_CHECKLIST.md`. Un `{{TONO}}` que
