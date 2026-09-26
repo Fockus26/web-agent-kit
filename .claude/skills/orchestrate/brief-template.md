@@ -7,9 +7,11 @@
 
 ## Unidades y orden
 
-| # | Rama | Qué | Ola | Puerto |
+| # | Rama | Qué | Ola | Slot / puerto |
 |---|---|---|---|---|
-| W1 | `{{feat/...}}` | {{...}} | 1 | {{4331}} |
+| W1 | `{{feat/...}}` | {{...}} | 1 | {{wt1 / 4301}} |
+
+Slot y puerto los da `wt take` al lanzar; el mensaje con el que se lanza cada worker los repite.
 
 La ola 2 sale de `main` **después** de que se mergeen {{W…}} (tocan {{qué archivos}}).
 
@@ -30,17 +32,20 @@ No uses números fuera de tu rango.
 
 1. **Lee solo** `CLAUDE.md` y lo que tu prompt cite (rutas, líneas, decisiones). No leas
    `context/` entero; lo demás, con `grep`.
-2. **Rama:** `git fetch origin && git switch -c <tu-rama> origin/main`.
+2. **Slot y rama:** trabajas SOLO en la ruta de tu slot del pool (`..\<repo>-wt\wtN`), que
+   ya viene con tu rama creada, `node_modules` instalado y los `.env*` copiados. No crees
+   ni borres worktrees, no corras `wt` y no cambies de rama.
 3. **Archivos locales compartidos:** no edites `CURRENT_PHASE.md` ni `CONTENT_CHECKLIST.md`.
    Escribe `context/PHASE_LOG/<tu-rama-con-guiones>.md` en la carpeta principal; si no
    tienes permiso de escritura ahí, entrégalo completo en tu informe final.
 4. **Decisiones:** tu archivo de decisiones va en git, con su fila de una línea al final de
    `DECISIONS_INDEX.md`. En conflicto al sincronizar, conserva las filas de los dos lados.
-5. **Versión y changelog:** parte de la versión de `main`; si al sincronizar otra unidad ya
-   tomó tu número, sube la tuya por encima y deja tu entrada arriba.
-6. **Servidor:** {{autorizado: `bun run dev -- --port <tu puerto>` en segundo plano, en tu
-   worktree, tras `bun install` y copiar el `.env` de la carpeta principal (nunca se
-   commitea). Apágalo al terminar. | no autorizado: verificación por código, márcalo.}}
+5. **Changeset:** el salto que dice tu prompt (patch/minor/major, o ninguno). Si lleva, un
+   `.changeset/<desc-kebab>.md` escrito a mano (formato en `git-flow` §2.1) con el texto en
+   lenguaje de usuario. No toques `version` ni `CHANGELOG.md`: los escribe el PR de versión.
+6. **Servidor:** {{autorizado: `bun run dev -- --port <el puerto de tu slot>` en segundo
+   plano, en tu slot (ya está instalado y con `.env*`). Apágalo al terminar. | no
+   autorizado: verificación por código, márcalo.}}
 7. **Navegador:** crea tu propia pestaña y pasa su `tabId` en cada llamada. Verifica
    midiendo el DOM (no con capturas vistas). Scripts con Playwright: con `node`.
 8. **Datos reales:** el `.env` apunta a {{producción}}. No crees cuentas ni escribas datos;
@@ -54,8 +59,9 @@ No uses números fuera de tu rango.
     alternativa" en el PR. No te bloquees.
 13. **Copy nuevo = provisional:** marcado en el código + tu fila reservada del checklist.
 14. **Cierre:** commits Conventional (solo tus archivos), push de tu rama, `gh pr create`
-    con la plantilla. **Nunca** `gh pr merge`, push a `main`, force-push ni amend de lo
-    empujado. Base de datos: solo lo aditivo autorizado; nada destructivo.
-15. **Informe final** (lo lee el orquestador, sé breve): URL del PR, versión, verificado /
+    con la plantilla. Deja el slot limpio: todo commiteado y empujado (`git status` vacío),
+    o el orquestador no podrá liberarlo. **Nunca** `gh pr merge`, push a `main`, force-push
+    ni amend de lo empujado. Base de datos: solo lo aditivo autorizado; nada destructivo.
+15. **Informe final** (lo lee el orquestador, sé breve): URL del PR, slot, changeset, verificado /
     no verificado, decisiones abiertas, acciones manuales, bugs vistos de paso, y tu
     PHASE_LOG si no pudiste escribirlo.

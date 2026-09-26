@@ -64,8 +64,8 @@ una unidad ves que el archivo creció, podarlo es parte del cierre, no una tarea
 espera; si dice que no, se sigue sin esa verificación y se marca como no verificado.
 
 **Excepción autorizada por tanda** (la usa `orchestrate` con workers en paralelo): si César
-lo autoriza, cada agente levanta el suyo **en segundo plano**, en su worktree y **en su
-propio puerto**, no lee sus logs salvo que algo falle, y lo apaga al terminar. La
+lo autoriza, cada agente levanta el suyo **en segundo plano**, en su slot del pool y **en
+el puerto del slot**, no lee sus logs salvo que algo falle, y lo apaga al terminar. La
 autorización vale para esa tanda, no para siempre.
 
 Por qué la regla existe: un servidor en primer plano escupe logs de compilación a cada

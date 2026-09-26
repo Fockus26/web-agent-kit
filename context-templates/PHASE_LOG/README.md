@@ -19,7 +19,7 @@ paga salvo quien lo busca.
 ## Formato (unidad)
 
 ```markdown
-# <rama> — <qué> (PR #N · versión X.Y.Z)
+# <rama> — <qué> (PR #N · changeset patch/minor/major o ninguno)
 
 ## Estado
 <abierta / en revisión / mergeada el AAAA-MM-DD>

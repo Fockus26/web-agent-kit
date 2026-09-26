@@ -11,6 +11,10 @@
   # Proyecto que ya existe (solo añade lo del kit; no toca la app)
   & "...\web-agent-kit\nuevo-proyecto.ps1" -Ruta C:\Users\Admin\Documents\Work\melao -Existente
 
+.PARAMETER SinVersion
+  El proyecto no lleva versión ni CHANGELOG: no instala Changesets (.changeset/,
+  release.yml, @changesets/cli).
+
 .NOTES
   - No sobrescribe nada que ya exista (context/, scripts/, .github/…): lo avisa y lo salta.
   - Next.js 16 genera AGENTS.md + CLAUDE.md con "@AGENTS.md". Se conserva: el CLAUDE.md del
@@ -19,7 +23,8 @@
 #>
 param(
   [Parameter(Mandatory)] [string] $Ruta,
-  [switch] $Existente
+  [switch] $Existente,
+  [switch] $SinVersion
 )
 
 $ErrorActionPreference = 'Stop'
@@ -60,6 +65,12 @@ try {
   }
   Copiar "$kit\github-templates\pull_request_template.md" '.github\pull_request_template.md'
   Copiar "$kit\github-templates\workflows\ci.yml" '.github\workflows\ci.yml'
+  # Versión y CHANGELOG con Changesets: cada PR trae su .changeset/*.md y la Action mantiene
+  # el PR de versión. Así dos PRs en paralelo no chocan en `version` ni en CHANGELOG.md.
+  if (-not $SinVersion) {
+    Copiar "$kit\changeset-templates" '.changeset'
+    Copiar "$kit\github-templates\workflows\release.yml" '.github\workflows\release.yml'
+  }
 
   # CLAUDE.md: el del kit, conservando el "@AGENTS.md" que pone Next.js 16.
   $claude = Get-Content "$kit\CLAUDE.md.template" -Raw
@@ -105,8 +116,10 @@ try {
   # Los scripts importan 'bun' y '@playwright/test': sin sus tipos, `tsc` y `next build`
   # fallan (tsconfig incluye **/*.ts). Los navegadores de Playwright no se bajan aquí:
   # `bunx playwright install chromium` cuando haga falta capturar o auditar.
-  $faltan = @('@types/bun', '@playwright/test') | Where-Object {
-    -not $pkg.devDependencies.PSObject.Properties[$_]
+  $deps = @('@types/bun', '@playwright/test')
+  if (-not $SinVersion) { $deps += '@changesets/cli' }
+  $faltan = $deps | Where-Object {
+    -not ($pkg.devDependencies -and $pkg.devDependencies.PSObject.Properties[$_])
   }
   if ($faltan) {
     bun add -d @faltan | Out-Null
@@ -115,13 +128,19 @@ try {
   }
 
   # Lo copiado adopta el formato del proyecto (comillas, punto y coma, sangría).
-  if ($pkg.devDependencies.PSObject.Properties['@biomejs/biome']) {
-    bunx biome check --write package.json scripts | Out-Null
-    Write-Host "  ~ formateado con el Biome del proyecto: package.json, scripts/"
+  if ($pkg.devDependencies -and $pkg.devDependencies.PSObject.Properties['@biomejs/biome']) {
+    $rutas = @('package.json', 'scripts')
+    if (Test-Path .changeset) { $rutas += '.changeset' }
+    bunx biome check --write @rutas | Out-Null
+    Write-Host "  ~ formateado con el Biome del proyecto: $($rutas -join ', ')"
   }
 
   Write-Host "`nListo. Siguiente:" -ForegroundColor Green
   Write-Host "  1. git status  → revisa y haz el primer commit"
-  Write-Host "  2. (modo pr) crea el repo en GitHub y protege main"
+  Write-Host "  2. (modo pr) crea el repo en GitHub, protege main y en Settings activa:"
+  Write-Host "     General › `"Automatically delete head branches`""
+  if (-not $SinVersion) {
+    Write-Host "     Actions › General › `"Allow GitHub Actions to create and approve pull requests`" (PR de versión)"
+  }
   Write-Host "  3. abre Claude Code en $Ruta y escribe /project-kickoff"
 } finally { Pop-Location }

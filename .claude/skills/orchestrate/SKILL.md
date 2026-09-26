@@ -1,6 +1,6 @@
 ---
 name: orchestrate
-description: Orquestador de tandas. Úsala cuando César llega con una lista de varias cosas a la vez (features, fixes, pedidos de diseño) y quiere que se resuelvan en paralelo en worktrees. Mapea cada pedido al código, agrupa por archivos que se tocan, ordena en olas, reserva números (decisiones, puertos, filas), hace de una vez las preguntas que bloquean, escribe un brief común y un prompt por unidad, lanza workers feature-worker en segundo plano y consolida sus informes y PRs.
+description: Orquestador de tandas. Úsala cuando César llega con una lista de varias cosas a la vez (features, fixes, pedidos de diseño) y quiere que se resuelvan en paralelo en el pool de worktrees del proyecto. Mapea cada pedido al código, agrupa por archivos que se tocan, ordena en olas, reserva números (decisiones, filas), toma un slot del pool por unidad, hace de una vez las preguntas que bloquean, escribe un brief común y un prompt por unidad, lanza workers feature-worker en segundo plano y consolida sus informes y PRs.
 ---
 
 # Orquestar una tanda
@@ -13,6 +13,15 @@ que su prompt le señala. Por eso tú vas con esfuerzo alto y ellos con medio (v
 Requisito: el agente `feature-worker` instalado (`~/.claude/agents/` o `.claude/agents/`)
 **antes de abrir la sesión**. Los agentes se cargan al arrancar: uno creado a mitad de
 sesión da "Agent type not found" hasta que se abre una sesión nueva.
+
+Los workers trabajan en el **pool de worktrees** que gestiona `scripts/wt.ps1` (en esta
+carpeta; PowerShell 7). En esta skill, `wt` es:
+
+```bash
+pwsh -NoProfile -File "$USERPROFILE/.claude/skills/orchestrate/scripts/wt.ps1" <comando>
+```
+
+(Con el kit instalado en el proyecto, la ruta es `.claude/skills/orchestrate/scripts/wt.ps1`.)
 
 ---
 
@@ -52,7 +61,7 @@ explicado en el PR con su alternativa.
 - **Olas:** unidades que se pisan (mismos archivos) van en olas distintas; lo transversal
   (estilos globales, cabeceras compartidas de modales) va en la última, sobre `main` ya
   actualizado.
-- Una unidad sin código de repo (plantilla externa) corre sin worktree ni PR.
+- Una unidad sin código de repo (plantilla externa) corre sin slot del pool ni PR.
 
 ## 4. Reservar números
 
@@ -63,12 +72,15 @@ Para que las unidades en paralelo no choquen, asigna a cada una:
 | Rama | `feat/ranking-top20` |
 | Archivo de decisiones y rango de IDs | `decisions/18-ranking.md`, D075–D079 |
 | Filas de `CONTENT_CHECKLIST` | 26–27 |
-| Puerto del servidor | 4331 |
+| Salto del changeset | `minor` (o `ninguno`) |
 
-Versiones: cada PR con cambio visible sube versión; varias en paralelo **van a chocar** en
-`package.json`/`CHANGELOG.md`. Regla para el worker: parte de la versión de `main`; al
-sincronizar, si otra ya tomó su número, sube la suya por encima y deja su entrada arriba.
-Tú recomiendas a César un **orden de merge por versión ascendente**.
+El slot y su puerto no se reservan aquí: los da `wt take` al lanzar (wt2 → 4302, §6).
+
+Versiones: ya no hay números que reservar ni orden de merge por versión. Ningún PR toca
+`version` ni `CHANGELOG.md`: cada unidad con cambio visible agrega su `.changeset/<desc>.md`
+con su salto, y la Action del proyecto los junta en el PR de versión (ver `git-flow` §2.1).
+Dos changesets en paralelo no chocan: son archivos distintos. Tú decides el salto de cada
+unidad y va en su prompt.
 
 ## 5. Escribir el brief y los prompts — en disco
 
@@ -89,19 +101,32 @@ va la tanda.
 
 ## 6. Lanzar
 
+Sin `isolation: "worktree"`: crearía y borraría un worktree (y su `node_modules`) por
+unidad. Cada unidad con código toma un slot del pool, desde la carpeta principal y **una
+tras otra** (en paralelo elegirían el mismo slot):
+
+```bash
+wt take feat/ranking-top20
+# slot=wt2 · rama=feat/ranking-top20 · ruta=C:\…\<repo>-wt\wt2 · puerto=4302
+```
+
+`wt take` crea la rama desde `origin/main` (o la retoma si ya existe), instala solo si
+cambió `bun.lock` y refresca los `.env*`. Si no quedan slots libres, las unidades que
+sobran esperan a la ola siguiente, o se amplía el pool con `wt init -Count <N>`.
+
 ```
 Agent(
   subagent_type: "feature-worker",
-  isolation: "worktree",          # salvo unidades sin código de repo
   run_in_background: true,
   description: "W3 modales",
-  prompt: "Tu prompt completo es la sección '## W3 — …' de <ruta>/orquestacion-<fecha>-prompts.md.
+  prompt: "Trabaja SOLO en `C:\…\<repo>-wt\wt2` (rama feat/…, ya creada); tu puerto es 4302.
+           Tu prompt completo es la sección '## W3 — …' de <ruta>/orquestacion-<fecha>-prompts.md.
            Léela entera y síguela. Resumen para orientarte: …(3-4 líneas)"
 )
 ```
 
-Todas las unidades de una ola en el **mismo mensaje** (corren en paralelo). No sondees:
-te avisan al terminar.
+Una unidad sin código de repo no toma slot. Todas las unidades de una ola en el **mismo
+mensaje** (corren en paralelo). No sondees: te avisan al terminar.
 
 ## 7. Consolidar
 
@@ -110,12 +135,20 @@ Cuando llega cada informe:
 - Copia su `PHASE_LOG` y los archivos locales que dejó (SQL, plantillas) a la carpeta
   principal si el worker no pudo escribir ahí (un worktree en sandbox no suele poder).
 - Actualiza `CURRENT_PHASE.md` (una fila por PR, tablero corto) y `CONTENT_CHECKLIST.md`.
-- A César: tabla de PRs (número, versión, qué cambia), **orden de merge recomendado**,
-  decisiones abiertas y acciones manuales. Nada más.
+- A César: tabla de PRs (número, salto patch/minor/major o ninguno, qué cambia, slot),
+  orden de merge solo si una unidad depende de otra, decisiones abiertas y acciones
+  manuales. Nada más.
 - Pedidos que surgen después → `context/plans/pendientes.md`, no la tanda en curso.
 
 Cuando César pide cambios en un PR o `main` avanzó: continúa al worker con `SendMessage`
-(conserva su contexto) en vez de lanzar uno nuevo.
+(conserva su contexto) en vez de lanzar uno nuevo. El slot sigue siendo suyo hasta el merge.
+
+Tras el merge de cada PR: `wt free <slot>`. Vuelve a `origin/main` detached y borra la rama
+local si ya está mergeada; `node_modules` se queda. Si `free` aborta por cambios sin
+commitear, pregúntale al worker qué son antes de tocar nada.
+
+El PR `chore(release): versión` lo abre la Action y lo mergea César cuando quiere publicar:
+no es de la tanda, ni tú ni los workers lo editan o mergean.
 
 Ola siguiente: cuando las unidades de las que depende estén mergeadas.
 
@@ -124,8 +157,15 @@ Ola siguiente: cuando las unidades de las que depende estén mergeadas.
 - **Archivos locales compartidos:** los workers no editan `CURRENT_PHASE` ni
   `CONTENT_CHECKLIST` (se pisarían); escriben su propio `PHASE_LOG/<rama>.md` o lo
   entregan en el informe.
-- **Un worktree nuevo no tiene lo gitignored** (`.env`, `context/` local): el prompt dice
-  dónde está la carpeta principal y que el `.env` se copia, nunca se commitea.
+- **Primer uso en un proyecto:** `wt init` (4 slots; `-Count` para más). Cuesta un
+  `bun install` por slot, una sola vez. `wt status` dice qué slot tiene qué rama.
+- **Lo gitignored en el pool:** `wt` ya copió los `.env*` de la carpeta principal a cada
+  slot (y los refresca en cada `take`); nunca se commitean. `context/` local no se copia: el
+  prompt dice dónde está la carpeta principal.
+- **Para que el pool vaya rápido** (acción manual de César, no del agente; recomiéndasela la
+  primera vez): excluir de Windows Defender la carpeta de trabajo, la del pool
+  (`..\<repo>-wt`) y `%USERPROFILE%\.bun\install\cache`; y activar en GitHub *Settings ›
+  General › Automatically delete head branches*.
 - **`.env` de producción:** los workers verifican como invitados; no crean cuentas ni
   escriben datos reales. Para estados que dependen de datos (rankings, listas largas),
   interceptan la respuesta en el navegador solo para depurar.

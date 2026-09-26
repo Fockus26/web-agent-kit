@@ -1,6 +1,6 @@
 ---
 name: git-flow
-description: Flujo de ramas y commits del kit. Úsala siempre que se vaya a empezar una unidad de trabajo (fase, sección, componente, feature) y siempre que una unidad de trabajo termine y esté lista para revisión. Tiene dos modos según context/GIT_STATE.md - "pr" (rama → push → Pull Request que César revisa y mergea; lo normal con repo en GitHub) y "local" (pausa de aprobación → commit → merge a la base). Cubre ramas, Conventional Commits, verificación, capturas, poda de context/, versión/changelog y la regla de push.
+description: Flujo de ramas y commits del kit. Úsala siempre que se vaya a empezar una unidad de trabajo (fase, sección, componente, feature) y siempre que una unidad de trabajo termine y esté lista para revisión. Tiene dos modos según context/GIT_STATE.md - "pr" (rama → push → Pull Request que César revisa y mergea; lo normal con repo en GitHub) y "local" (pausa de aprobación → commit → merge a la base). Cubre ramas, Conventional Commits, verificación, capturas, poda de context/, changesets (versión/changelog) y la regla de push.
 ---
 
 # Git Flow
@@ -83,8 +83,8 @@ git pull --ff-only origin <rama-base>   # solo si la base ya existe en remoto
 git checkout -b <tipo>/<descripcion-kebab-case>
 ```
 
-En un **worktree** (unidad delegada por `orchestrate`), el worktree ya nace con una rama de
-nombre automático: `git fetch origin && git switch -c <tipo>/<desc> origin/main`.
+En un **slot del pool de worktrees** (unidad delegada por `orchestrate`), la rama ya viene
+creada: la hizo `wt take` desde `origin/main`. No crees otra ni cambies de rama.
 
 **Tipos válidos:** `feat`, `fix`, `refactor`, `style`, `docs`, `chore`, `perf`, `test`,
 `design`, `a11y`, `seo`.
@@ -121,10 +121,9 @@ Antes de siquiera mencionar un commit:
 4. `bunx tsc --noEmit` y el linter pasan, si el proyecto los tiene configurados.
 5. **Tests:** durante el trabajo bastó `bun run test:related`; aquí va la suite completa
    (`bun run test`, con `--dots`). CI la vuelve a correr en el PR.
-6. **Versión y changelog**, si el proyecto los lleva: si quien usa el sitio nota el cambio,
-   se sube `version` (MAJOR rompe datos guardados o quita algo · MINOR función nueva · PATCH
-   arreglo) y se añade la entrada arriba de `CHANGELOG.md`, en lenguaje de usuario. Docs,
-   tests, CI y refactors no suben versión.
+6. **Changeset**, si el proyecto lleva versión (tiene `.changeset/`): si quien usa el sitio
+   nota el cambio, agrega `.changeset/<desc>.md` (ver 2.1.3). No toques `version` ni
+   `CHANGELOG.md`: los genera el PR de versión. Docs, tests, CI y refactors: sin changeset.
 7. **Capturas**, si cambió algo visible (ver 2.1.1).
 8. **Podar `context/`** (ver 2.1.2).
 
@@ -157,6 +156,45 @@ awk 'length > 200' context/DECISIONS_INDEX.md | head   # filas que son párrafos
   de unidades anteriores que siga ahí, se mueve.
 - Decisiones: detalle en `decisions/NN-<tema>.md`, una línea en `DECISIONS_INDEX.md`.
 
+#### 2.1.3 Changesets: versión y CHANGELOG sin conflictos
+
+`bunx changeset` hace preguntas y no sirve para un agente: el archivo se escribe a mano.
+Nombre en kebab-case, descriptivo y único (`.changeset/repetir-combinacion.md`):
+
+```md
+---
+"<name de package.json>": minor
+---
+
+Ahora puedes repetir una combinación desde el historial.
+```
+
+Salto: **major** rompe datos guardados o quita algo · **minor** función nueva · **patch**
+arreglo. El texto, en lenguaje de usuario. Dos PRs en paralelo no chocan: cada uno trae su
+archivo.
+
+Al llegar a `main`, la Action `release.yml` abre (o actualiza) el PR
+`chore(release): versión`, que junta los changesets, sube `version` y escribe el
+`CHANGELOG.md`. **Lo abre la Action y lo mergea César** cuando quiere publicar; ningún agente
+lo edita ni lo mergea. En modo `local` no hay Action: cuando César pide publicar,
+`bunx --bun changeset version` en la base y el commit `chore(release): versión` pasa por la
+pausa de aprobación como cualquier otro.
+
+#### Migrar un proyecto existente a Changesets
+
+En un PR propio, `chore/changesets`, sin mezclar con otra cosa:
+
+1. `bun add -d @changesets/cli`.
+2. Copia del kit `changeset-templates/` como `.changeset/` y
+   `github-templates/workflows/release.yml` a `.github/workflows/`.
+3. `CHANGELOG.md` y `version` se quedan como están: la Action continúa desde ahí (la
+   versión nueva va encima de la última entrada).
+4. Acción manual de César en GitHub: *Settings › Actions › General › Allow GitHub Actions
+   to create and approve pull requests*.
+
+Los PRs que ya estaban abiertos con su subida de versión se ajustan al sincronizar con
+`main`: quitan su cambio de `version`/`CHANGELOG.md` y agregan su changeset.
+
 ---
 
 ## 2A. Cierre en modo `pr`
@@ -181,9 +219,10 @@ Después:
 - ¿Cambios pedidos en el PR? Nuevos commits en la misma rama + push. Sin amend ni
   force-push sobre lo empujado.
 - ¿`main` avanzó y hay conflicto? `git fetch origin && git merge origin/main` (merge, no
-  rebase), resuelve y vuelve a pasar la verificación. Conflictos típicos cuando hay PRs en
-  paralelo: `CHANGELOG.md` + `version` (tu entrada va arriba y tu versión por encima de la
-  de `main`) y los índices de `context/` (se conservan las filas de los dos lados).
+  rebase), resuelve y vuelve a pasar la verificación. Conflicto típico cuando hay PRs en
+  paralelo: los índices de `context/` (se conservan las filas de los dos lados).
+- El PR `chore(release): versión` lo abre la Action; lo mergea César; ningún agente lo edita
+  ni lo mergea.
 - Tras el merge: `git switch main && git pull`. Ojo: si el PR dejó de trackear archivos,
   el pull los borra del disco — cópialos fuera antes si hacen falta.
 
@@ -293,6 +332,9 @@ Nunca ejecutes, ni siquiera si parece la salida más rápida de un problema:
 - `git rebase` sobre ramas ya empujadas
 - `git commit --amend` sobre un commit ya empujado
 - `git stash drop` / `git stash clear`
+
+Única excepción: `wt free` (skill `orchestrate`) borra con `git branch -d` la rama de un slot
+ya mergeada; nunca con `-D`.
 
 Si crees que uno de estos es la solución, **descríbeselo a César con qué se perdería
 exactamente** y deja que él lo ejecute. Cuando algo se enreda, la salida segura casi siempre
