@@ -37,4 +37,4 @@
 ## Notas de contraste
 
 {{Cualquier par que requirió una excepción al token "main" (ej. usar shade 700 en vez de
-light para cumplir AA) — con referencia al ID de decisión en decisions/01-colores.md}}
+light para cumplir AA) — con referencia al ID de decisión (decisions/D0NN-<tema>.md)}}

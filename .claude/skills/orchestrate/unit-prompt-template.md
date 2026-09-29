@@ -1,13 +1,12 @@
 ## {{W#}} — `{{rama}}`
 
 Eres el worker **{{W#}}**. Rama: `{{rama}}`. Slot y puerto: los del mensaje con el que te
-lanzan (`wt take`). Decisiones:
-`context/decisions/{{NN}}-{{tema}}.md`, rango **{{D0NN–D0NN}}**. Filas de CONTENT_CHECKLIST:
-**{{NN}}**.
+lanzan (`wt take`). Decisiones: rango **{{D0NN–D0NN}}**, un archivo
+`context/decisions/D0NN-<tema>.md` por cada una. Filas de CONTENT_CHECKLIST: **{{NN}}**.
 
 Primero lee el brief común: `{{ruta}}/context/plans/orquestacion-{{fecha}}.md`.
 Decisiones previas que te condicionan: {{D0NN (qué dice en 5 palabras), D0NN (…)}} —
-búscalas con `grep` en `DECISIONS_INDEX.md`, no leas el índice entero.
+`cat context/decisions/D0NN-*.md` de cada una, no leas la carpeta entera.
 
 ### Qué pide César
 > "{{cita literal del pedido}}"

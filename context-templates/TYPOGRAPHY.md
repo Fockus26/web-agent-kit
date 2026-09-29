@@ -19,5 +19,5 @@
 ## Reglas
 
 - Todo tamaño de fuente que no esté en esta tabla es una decisión nueva — regístrala en
-  `decisions/02-tipografia.md` antes de usarla.
+  `decisions/D0NN-<tema>.md` antes de usarla.
 - {{REGLA_ADICIONAL}}

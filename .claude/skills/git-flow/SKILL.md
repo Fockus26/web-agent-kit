@@ -148,13 +148,14 @@ PR ("Capturas: no disponibles — <motivo>").
 
 ```bash
 wc -c CLAUDE.md context/CURRENT_PHASE.md              # tope ~8000 / ~4000
-awk 'length > 200' context/DECISIONS_INDEX.md | head   # filas que son párrafos
+grep -rh "^# D" context/decisions/ | awk 'length > 200'   # cabeceras que son párrafos
 ```
 
 - La narrativa de la unidad (qué, verificado, no verificado, hallazgos) → `PHASE_LOG/<rama>.md`.
 - En `CURRENT_PHASE.md` queda la fila de la unidad con su estado y el enlace; lo cerrado
   de unidades anteriores que siga ahí, se mueve.
-- Decisiones: detalle en `decisions/NN-<tema>.md`, una línea en `DECISIONS_INDEX.md`.
+- Decisiones: un archivo `decisions/D0NN-<tema>.md` por decisión, con su cabecera de una
+  línea. No hay índice compartido que editar: dos PRs que deciden cosas no chocan.
 
 #### 2.1.3 Changesets: versión y CHANGELOG sin conflictos
 
@@ -189,7 +190,10 @@ En un PR propio, `chore/changesets`, sin mezclar con otra cosa:
    `github-templates/workflows/release.yml` a `.github/workflows/`.
 3. `CHANGELOG.md` y `version` se quedan como están: la Action continúa desde ahí (la
    versión nueva va encima de la última entrada).
-4. Acción manual de César en GitHub: *Settings › Actions › General › Allow GitHub Actions
+4. Añade `workflow_dispatch:` a los `on:` de `.github/workflows/ci.yml`: `release.yml` lo
+   usa para correr el CI sobre el PR de versión (lo abre `GITHUB_TOKEN`, que no dispara
+   `pull_request`), y así ese PR tiene el check `ci` sin saltarse la protección.
+5. Acción manual de César en GitHub: *Settings › Actions › General › Allow GitHub Actions
    to create and approve pull requests*.
 
 Los PRs que ya estaban abiertos con su subida de versión se ajustan al sincronizar con

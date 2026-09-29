@@ -18,13 +18,13 @@ archivo más.**
 |---|---|---|
 | **Siempre** | `CLAUDE.md` (se carga solo) + `context/CURRENT_PHASE.md` | Toda sesión |
 | **Según la tarea** | Lo que diga la tabla "Qué leer según la tarea" de `CLAUDE.md` | Solo si la tarea es de ese tipo |
-| **Buscar, no leer** | `DECISIONS_INDEX.md`, `CONTENT_CHECKLIST.md`, inventarios, `PHASE_LOG/`, `decisions/` | `grep` por la palabra o el ID; se abre solo el archivo/rango que sale |
+| **Buscar, no leer** | `decisions/`, `CONTENT_CHECKLIST.md`, inventarios, `PHASE_LOG/` | `grep` por la palabra o el ID; se abre solo el archivo/rango que sale |
 
 Ejemplos:
 
 ```bash
-grep -n "ranking\|leaderboard" context/DECISIONS_INDEX.md     # ¿hay algo decidido sobre esto?
-grep -rn "D042" context/decisions/                              # el detalle de una decisión citada
+grep -rhi "^# D.*ranking" context/decisions/                 # ¿hay algo decidido sobre esto?
+cat context/decisions/D042-*.md                                 # el detalle de una decisión citada
 grep -n "Modal" context/COMPONENTS_INVENTORY.md                 # ¿existe ya un componente?
 ```
 
@@ -40,7 +40,7 @@ crecer, pero cada fila tiene que ser una línea.
 |---|---|---|
 | `CLAUDE.md` | ~8 KB | Lo que no es regla ni mapa se va a `context/` o a `docs/` |
 | `CURRENT_PHASE.md` | **~60 líneas / 4 KB** | Lo cerrado se mueve a `PHASE_LOG/<rama>.md`; aquí queda una línea con el enlace |
-| `DECISIONS_INDEX.md` | Sin tope, **1 fila = 1 línea ≤ 160 caracteres** | El detalle va al archivo de `decisions/`, nunca a la fila |
+| `decisions/D0NN-*.md` | Un archivo por decisión, **cabecera = 1 línea ≤ 160 caracteres** | El detalle va al cuerpo, nunca a la cabecera |
 | `CONTENT_CHECKLIST.md` | Sin tope, filas cortas | Las resueltas se marcan `Hecho`; no se reescriben párrafos |
 | Cualquier otro de lectura "siempre" | 4 KB | Partirlo |
 
@@ -48,7 +48,7 @@ Comprobación rápida (la corre `git-flow` al cerrar cada unidad):
 
 ```bash
 wc -c CLAUDE.md context/CURRENT_PHASE.md    # >8000 / >4000 → podar antes del PR
-awk 'length > 200' context/DECISIONS_INDEX.md | head   # filas que son párrafos
+grep -rh "^# D" context/decisions/ | awk 'length > 200'   # cabeceras que son párrafos
 ```
 
 ## 3. `CURRENT_PHASE.md` es un tablero, no un diario
