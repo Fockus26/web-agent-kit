@@ -3,8 +3,22 @@
 Se pega en Claude Code, **abierto en la carpeta del proyecto** (sesión nueva, para que cargue
 las skills actualizadas). Hace el cambio en una rama y abre un PR; no toca `main`.
 
-Antes de pegarlo, actualiza las skills de la máquina con las del kit (`git pull` en el kit y
-copia `.claude/skills/*` y `.claude/agents/*` a `~/.claude/`, como en la instalación).
+El kit llega como **carpeta local ya actualizada** (no hace falta acceso al repo del kit).
+Antes de pegar el prompt:
+
+1. Pon la carpeta del kit en cualquier sitio de la máquina, por ejemplo
+   `C:\kits\web-agent-kit`.
+2. Actualiza las skills y agentes de la máquina desde esa carpeta (PowerShell):
+
+   ```powershell
+   $kit = "C:\kits\web-agent-kit"   # la carpeta que te pasaron
+   New-Item -ItemType Directory -Force "$env:USERPROFILE\.claude\skills","$env:USERPROFILE\.claude\agents" | Out-Null
+   Copy-Item "$kit\.claude\skills\*" "$env:USERPROFILE\.claude\skills\" -Recurse -Force
+   Copy-Item "$kit\.claude\agents\*" "$env:USERPROFILE\.claude\agents\" -Force
+   ```
+
+3. En el bloque de abajo, cambia `{{RUTA_DEL_KIT}}` por esa ruta.
+4. Abre una sesión **nueva** de Claude Code en la carpeta del proyecto y pega el bloque.
 
 Qué cambió en el kit:
 
@@ -28,9 +42,11 @@ Este proyecto sigue una versión anterior del web-agent-kit. El kit cambió dos 
 alinear el proyecto: las decisiones pasan a un archivo por decisión (sin DECISIONS_INDEX.md) y
 el CI corre sobre el PR de versión.
 
-El kit está en C:\Users\Admin\Documents\Work\web-agent-kit (si no existe en esta máquina:
-`gh repo clone Fockus26/web-agent-kit` a una carpeta temporal y úsala como <kit>). Antes de
-nada, `git -C <kit> pull` para tener la última versión.
+El kit actualizado es la carpeta local {{RUTA_DEL_KIT}} (la llamo <kit>). Es una copia que
+me pasaron, no un repo: no hagas git pull, no la clones de ningún sitio y no la modifiques;
+solo se lee y se copia desde ella. Antes de nada, comprueba que es la versión nueva:
+debe existir <kit>\prompts\MIGRAR-DECISIONES-Y-CI.md y NO debe existir
+<kit>\context-templates\DECISIONS_INDEX.md. Si no se cumple, para y dímelo.
 
 Lee primero, del kit:
 - <kit>\context-templates\decisions\README.md (formato nuevo y sección "Migrar")

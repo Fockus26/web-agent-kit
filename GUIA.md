@@ -126,7 +126,9 @@ plantilla de PR, las decisiones y las memorias, y lo deja en un PR `chore/change
 Si el proyecto ya usa Changesets pero tiene `context/DECISIONS_INDEX.md` (o el PR de versión
 se queda sin el check `ci`), pega el de `prompts/MIGRAR-DECISIONES-Y-CI.md`: pasa las
 decisiones a un archivo cada una y hace que el CI corra sobre el PR de versión. Lo deja en un
-PR `chore/decisiones-y-ci`. Si el proyecto es más viejo todavía, primero
+PR `chore/decisiones-y-ci`. No necesita acceso al repo del kit: basta con la carpeta del kit
+actualizada en local (el prompt explica cómo copiar las skills desde ella y dónde poner su
+ruta). Si el proyecto es más viejo todavía, primero
 `ACTUALIZAR-PROYECTO.md` y después este.
 
 ### Proyecto que ya creaste (o creaste con otras opciones)
