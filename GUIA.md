@@ -106,8 +106,8 @@ Dos ajustes más en el repo de GitHub, una vez:
 
 - *Settings › Actions › General › Allow GitHub Actions to create and approve pull
   requests*: sin eso, la Action de Changesets no puede abrir el PR de versión. Ese PR lo abre
-  `GITHUB_TOKEN` y no dispara el CI: si `main` exige el check `ci`, lo mergeas saltándote la
-  protección (solo cambia `version` y `CHANGELOG.md`).
+  `GITHUB_TOKEN`, que no dispara `pull_request`; por eso `release.yml` lanza él mismo
+  `ci.yml` sobre la rama del PR y el check `ci` aparece sin saltarse la protección.
 - *Settings › General › Automatically delete head branches*: la rama remota se borra al
   mergear el PR.
 
@@ -122,6 +122,12 @@ Ya puedes abrir Claude Code en la carpeta.
 Abre Claude Code en el proyecto (sesión nueva) y pega el bloque de
 `prompts/ACTUALIZAR-PROYECTO.md`: diagnostica, migra a Changesets, alinea `CLAUDE.md`, la
 plantilla de PR, las decisiones y las memorias, y lo deja en un PR `chore/changesets`.
+
+Si el proyecto ya usa Changesets pero tiene `context/DECISIONS_INDEX.md` (o el PR de versión
+se queda sin el check `ci`), pega el de `prompts/MIGRAR-DECISIONES-Y-CI.md`: pasa las
+decisiones a un archivo cada una y hace que el CI corra sobre el PR de versión. Lo deja en un
+PR `chore/decisiones-y-ci`. Si el proyecto es más viejo todavía, primero
+`ACTUALIZAR-PROYECTO.md` y después este.
 
 ### Proyecto que ya creaste (o creaste con otras opciones)
 
@@ -299,8 +305,9 @@ Normalmente no los corres tú: los corren las skills. Están para cuando quieras
 - **`context/CURRENT_PHASE.md`** es un tablero (≤ 60 líneas): lo abierto, lo que bloquea, lo
   que sigue. Si crece, lo cerrado se mueve a `PHASE_LOG/<rama>.md`. Los agentes lo podan al
   cerrar cada unidad; si ves que no, pídeselo.
-- **`context/DECISIONS_INDEX.md`**: una línea por decisión. Lo decidido no se re-litiga; si
-  cambias de opinión, se registra una decisión nueva.
+- **`context/decisions/`**: un archivo por decisión; su primera línea es la fila del índice
+  (`grep -rh "^# D" context/decisions/`). Lo decidido no se re-litiga; si cambias de
+  opinión, se registra una decisión nueva y la vieja queda `Obsoleta → D0NN`.
 - **`context/CONTENT_CHECKLIST.md`**: todo el texto/imagen provisional. Es tu lista de lo que
   el cliente tiene que mandar antes de publicar.
 - **La rama `pr-shots`** acumula capturas. Borrarla cuando pese es decisión tuya
@@ -324,5 +331,5 @@ Normalmente no los corres tú: los corren las skills. Están para cuando quieras
 | `wt free` aborta | El slot tiene cambios sin commitear | Ver qué son (`wt status`); nunca se descartan solos |
 | El pool va lento (install, borrados) | Windows Defender escanea cada archivo de `node_modules` | Excluir la carpeta de trabajo, `..\<repo>-wt` y `%USERPROFILE%\.bun\install\cache` |
 | No aparece el PR de versión | La Action no tiene permiso para abrir PRs | Settings › Actions › General › "Allow GitHub Actions to create and approve pull requests" |
-| El PR de versión no tiene checks del CI | Los PRs abiertos con `GITHUB_TOKEN` no disparan workflows | Mergearlo saltándose la protección (solo cambia `version` y `CHANGELOG.md`) o usar el token de una GitHub App |
+| El PR de versión no tiene el check `ci` | Los PRs abiertos con `GITHUB_TOKEN` no disparan `pull_request` | `ci.yml` con `workflow_dispatch` y `release.yml` con el paso "CI del PR de versión" y `actions: write` (plantillas del kit). Mientras tanto: Actions › CI › Run workflow sobre `changeset-release/main` |
 | `changeset version` no sube la versión | App `private: true` sin `privatePackages.version: true` | Usar el `config.json` del kit (`changeset-templates/`) |

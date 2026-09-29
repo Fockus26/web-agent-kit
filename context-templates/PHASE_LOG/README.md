@@ -34,7 +34,7 @@ paga salvo quien lo busca.
 - <qué y por qué: sin cuenta de prueba, sin dispositivo real…>
 
 ## Decisiones
-- D0NN — <1 línea> (detalle en decisions/NN-<tema>.md)
+- D0NN — <1 línea> (detalle en decisions/D0NN-<tema>.md)
 
 ## Contenido provisional
 - Fila #NN de CONTENT_CHECKLIST — <qué texto>

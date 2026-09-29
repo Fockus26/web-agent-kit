@@ -28,7 +28,7 @@ pwsh -NoProfile -File "$USERPROFILE/.claude/skills/orchestrate/scripts/wt.ps1" <
 ## 1. Mapear cada pedido al código
 
 Por cada punto de la lista, localiza dónde vive (grep, rangos, no archivos enteros): qué
-archivos toca, qué decisiones previas lo condicionan (`grep` en `DECISIONS_INDEX.md`),
+archivos toca, qué decisiones previas lo condicionan (`grep -rhi "^# D.*<tema>" context/decisions/`),
 qué trampas conocidas hay. Anota ruta:línea — irá al prompt.
 
 Señales de que un pedido es más grande de lo que parece:
@@ -70,7 +70,7 @@ Para que las unidades en paralelo no choquen, asigna a cada una:
 | Qué | Ejemplo |
 |---|---|
 | Rama | `feat/ranking-top20` |
-| Archivo de decisiones y rango de IDs | `decisions/18-ranking.md`, D075–D079 |
+| Rango de IDs de decisión (un archivo por ID) | D075–D079 |
 | Filas de `CONTENT_CHECKLIST` | 26–27 |
 | Salto del changeset | `minor` (o `ninguno`) |
 

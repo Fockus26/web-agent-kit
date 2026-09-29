@@ -39,7 +39,10 @@ Y del proyecto: CLAUDE.md, context/GIT_STATE.md, package.json y `git log --oneli
 3. Changesets (si lleva versión), siguiendo la guía de migración de git-flow:
    - `bun add -d @changesets/cli`
    - copia <kit>\changeset-templates\ como .changeset\ y
-     <kit>\github-templates\workflows\release.yml a .github\workflows\
+     <kit>\github-templates\workflows\release.yml a .github\workflows\ (si ya existe,
+     reemplázalo: la versión del kit lanza el CI sobre el PR de versión)
+   - añade `workflow_dispatch:` a los `on:` de .github\workflows\ci.yml (sin eso, el PR de
+     versión se queda sin el check `ci`)
    - no toques CHANGELOG.md ni `version`: la Action sigue desde ahí
    - si el proyecto usa Biome: `bunx biome check --write .changeset`
    - comprueba con `bunx --bun changeset status` que lee la config (que avise de que faltan
@@ -55,7 +58,9 @@ Y del proyecto: CLAUDE.md, context/GIT_STATE.md, package.json y `git log --oneli
    - .github/pull_request_template.md: la casilla de versión pasa a changeset.
    - context/PHASE_LOG/README.md (local): cabecera con changeset en vez de versión.
    - Cualquier otra mención del diagnóstico que describa el flujo viejo.
-   - Registra la decisión en context/decisions/ + una línea en DECISIONS_INDEX.md:
+   - Registra la decisión en su propio archivo context/decisions/D0NN-<tema>.md (formato en
+     <kit>\context-templates\decisions\README.md; si el proyecto aún usa
+     DECISIONS_INDEX.md, añade también su fila ahí):
      "Versión con Changesets; PR de versión lo abre la Action y lo mergea César".
 
 5. Memorias del proyecto: actualiza o borra las que describan el flujo viejo (subir versión en

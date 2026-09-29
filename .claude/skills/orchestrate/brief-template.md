@@ -17,9 +17,9 @@ La ola 2 sale de `main` **después** de que se mergeen {{W…}} (tocan {{qué ar
 
 ## Números reservados
 
-| Unidad | Archivo de decisiones | IDs | Filas de `CONTENT_CHECKLIST` |
-|---|---|---|---|
-| W1 | `context/decisions/{{NN}}-{{tema}}.md` | {{D0NN–D0NN}} | {{NN–NN}} |
+| Unidad | IDs de decisión | Filas de `CONTENT_CHECKLIST` |
+|---|---|---|
+| W1 | {{D0NN–D0NN}} | {{NN–NN}} |
 
 No uses números fuera de tu rango.
 
@@ -38,8 +38,9 @@ No uses números fuera de tu rango.
 3. **Archivos locales compartidos:** no edites `CURRENT_PHASE.md` ni `CONTENT_CHECKLIST.md`.
    Escribe `context/PHASE_LOG/<tu-rama-con-guiones>.md` en la carpeta principal; si no
    tienes permiso de escritura ahí, entrégalo completo en tu informe final.
-4. **Decisiones:** tu archivo de decisiones va en git, con su fila de una línea al final de
-   `DECISIONS_INDEX.md`. En conflicto al sincronizar, conserva las filas de los dos lados.
+4. **Decisiones:** un archivo por decisión, `context/decisions/D0NN-<tema>.md`, con los IDs
+   de tu rango y la cabecera de una línea (formato en `context/decisions/README.md`). Va en
+   git. No hay índice que editar.
 5. **Changeset:** el salto que dice tu prompt (patch/minor/major, o ninguno). Si lleva, un
    `.changeset/<desc-kebab>.md` escrito a mano (formato en `git-flow` §2.1) con el texto en
    lenguaje de usuario. No toques `version` ni `CHANGELOG.md`: los escribe el PR de versión.

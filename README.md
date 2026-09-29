@@ -253,7 +253,8 @@ web-agent-kit/
 ├── prompts/
 │   ├── CLAUDE-DESIGN-BRIEF.template.md   lo que se le pega a Claude Design
 │   ├── DESIGN-HANDOFF.template.md        lo que debe volver, y su verificación
-│   └── ACTUALIZAR-PROYECTO.md            se pega en un proyecto con la versión anterior del kit
+│   ├── ACTUALIZAR-PROYECTO.md            se pega en un proyecto con la versión anterior del kit
+│   └── MIGRAR-DECISIONES-Y-CI.md         decisiones por archivo y CI en el PR de versión
 ├── context-templates/             → se copia como context/ en cada proyecto
 ├── phases-templates/              → se copia como phases/
 ├── sections-template/             brief de contenido, uno por sección

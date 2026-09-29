@@ -179,9 +179,8 @@ context/
   COMPONENTS_INVENTORY.md · vacío al inicio, lo llena el frontend
   CONTENT_CHECKLIST.md    · todo el contenido real pendiente
   CURRENT_PHASE.md        · tablero: lo abierto, lo que bloquea, lo que sigue (≤ 60 líneas)
-  DECISIONS_INDEX.md      · índice de decisiones (una línea cada una; se busca con grep)
   GIT_STATE.md            · modo (pr / local) y rama base
-  decisions/              · una por tema
+  decisions/              · un archivo por decisión (D0NN-<tema>.md); índice con grep
   PHASE_LOG/              · una por unidad cerrada (y resumen por fase)
   plans/                  · planes y pendientes (plans/pendientes.md)
 phases/                   · las fases del track elegido

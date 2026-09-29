@@ -23,7 +23,7 @@ Lee **lo que esta unidad necesita**, no todo `context/` (ver `reference/TOKEN-EC
    unidad toca color, tipo o espaciado (en la fase 01 sí, enteros).
 3. `grep` en `context/COMPONENTS_INVENTORY.md` por lo que vas a crear. **Antes de crear un
    componente, revisa si ya hay uno que resuelve lo mismo con otro nombre.**
-4. `grep` en `context/DECISIONS_INDEX.md` por el tema: lo decidido no se re-litiga.
+4. `grep -rhi "^# D.*<tema>" context/decisions/` por el tema: lo decidido no se re-litiga.
 5. El código vecino de lo que vas a tocar — para copiar sus convenciones, no las tuyas.
 
 (`CURRENT_PHASE.md` ya lo leíste al arrancar la sesión.)
@@ -145,8 +145,8 @@ un commit gigante.
 
 - `COMPONENTS_INVENTORY.md` / `SECTION_INVENTORY.md` / `PAGE_INVENTORY.md` — fila de una
   línea, nueva o actualizada, con ruta, dónde se usa y estado.
-- `decisions/NN-<tema>.md` — cualquier decisión que hayas tomado, con su razón.
-- `DECISIONS_INDEX.md` — **una línea** que apunta a esa decisión.
+- `decisions/D0NN-<tema>.md` — un archivo por decisión que hayas tomado: cabecera de una
+  línea (ID · categoría · resumen · estado) y su razón (formato en `decisions/README.md`).
 - `CONTENT_CHECKLIST.md` — todo placeholder de contenido real que dejaste.
 - `PHASE_LOG/<rama>.md` — la narrativa de la unidad (qué, verificado, no verificado).
 - `CURRENT_PHASE.md` — solo la fila de la unidad con su estado; si pasa de ~60 líneas,
@@ -199,7 +199,7 @@ copy de verdad.
 - `<ruta>` — <nuevo | modificado> — <qué hace>
 
 ### Decisiones tomadas
-- <decisión> — <razón> → registrada en decisions/0N-<cat>.md
+- <decisión> — <razón> → registrada en decisions/D0NN-<tema>.md
 
 ### Verificaciones
 - a11y: <resultado>   · seo: <resultado / N/A>
