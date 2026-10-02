@@ -27,6 +27,65 @@ agente lo dice y pregunta antes de elegir.
 
 ---
 
+## 3.4.0 — 2026-10-02 · QA de ola contra base local, fases en olas, una ola por sesión
+
+**Qué cambió**
+
+- **Agente nuevo `wave-qa`.** Cuando todos los PRs de una ola están mergeados, `orchestrate`
+  lo lanza en un slot del pool sobre `main`: levanta el servidor, recorre los flujos de la
+  ola (y las costuras entre PRs) con sesión iniciada, por rol, y devuelve hallazgos
+  reproducibles. Lo crítico y lo alto pasa a la ola siguiente. Por qué: cada worker probaba
+  su unidad como invitado y en su rama; nadie probaba las unidades juntas ni con login.
+- **QA contra base local.** `scripts/qa-local.ts` (`bun run qa:local -- --port <p>`) levanta
+  Supabase en Docker, aplica migraciones + seed, crea las cuentas de prueba y arranca el
+  servidor con las variables de Supabase apuntando a lo local (por `process.env`, sin
+  escribir archivos). Aborta si alguna variable sigue apuntando a `*.supabase.co`. Por qué:
+  probar con datos reales contra la base de producción arriesga datos de clientes; en local
+  la QA puede crear y romper lo que quiera.
+- **Cuentas de prueba** en `.env.test.local`, una pareja por rol: `EMAIL_TEST`/`PASSWORD_TEST`,
+  `ADMIN_EMAIL_TEST`/`ADMIN_PASSWORD_TEST`, `<ROL>_EMAIL_TEST`/`<ROL>_PASSWORD_TEST`. Solo
+  existen en la base local (el script las crea en cada corrida); los valores no pasan por el
+  contexto del agente (`node --env-file=.env.test.local`). Solo un servicio externo sin
+  equivalente local se prueba en remoto, con datos marcados, registrados y borrados.
+  `functional-qa` sigue las mismas reglas y ahora levanta su propio servidor.
+- **`backend-build`**: todo el esquema como migraciones en `supabase/migrations/`, un
+  `seed.sql` mínimo, y las cuentas de prueba como acción de César.
+- **Fases en olas, una ola por sesión.** `orchestrate` puede partir una fase en olas
+  (`context/plans/fase-0N-<nombre>.md`, plantilla `fase-plan-template.md`). Cada ola cierra
+  con: fase, ola cerrada, resultado de la QA, qué sigue; y con "inicia la ola en otra sesión"
+  abre una sesión nueva con el prompt de arranque (o lo da para pegar). Por qué: una sesión
+  que encadena olas arrastra el mapeo y los informes de todas en cada mensaje.
+- **`instalar-kit.ps1` / `instalar-kit.sh`**: instalan o reinstalan skills y agentes
+  (`-Pull` / `--pull` hace `git pull` antes).
+
+**Pasos para un proyecto en 3.3.0**
+
+1. Piezas globales: `powershell -ExecutionPolicy Bypass -File <kit>\instalar-kit.ps1` y
+   sesión nueva, o `wave-qa` no existe ("Agent type not found").
+2. `scripts/qa-local.ts` desde `<kit>\reference\qa-scripts\`, y en `package.json` el script
+   `"qa:local": "node scripts/qa-local.ts"`.
+3. `.gitignore`: comprueba que cubre `.env.test.local` (`git check-ignore .env.test.local`);
+   si no, añade `.env*.local`.
+4. `CLAUDE.md` del proyecto, desde `<kit>\CLAUDE.md.template`: el párrafo "Servidor de
+   desarrollo", el de "QA contra base local" debajo, y las filas de `orchestrate` y `wave-qa`
+   de "Puertas de calidad". Tope 8 KB.
+5. `context/CURRENT_PHASE.md`: la línea **Ola** bajo "Fase" (o nada si no se usan olas).
+6. **Si el proyecto usa Supabase:** que exista `supabase/config.toml` y que las migraciones
+   reproduzcan el esquema de producción. Si el esquema se hizo en el dashboard, sácalo con
+   `supabase db pull` (proyecto enlazado) a una migración, y un `supabase/seed.sql` mínimo
+   sin datos personales. Adapta en `scripts/qa-local.ts` `MAPEO` (si la app usa variables
+   con otros nombres) y `asignarRol` (si el rol no vive en `app_metadata.role`). Verifica
+   con `bun run qa:local -- --port 4399` (Docker Desktop abierto): arranca y el sitio carga.
+7. **Si el proyecto tiene login:** en `.env.example`, bajo `# QA → .env.test.local`, las
+   parejas `*_EMAIL_TEST` / `*_PASSWORD_TEST` vacías, una por rol que exista en el código
+   (búscalos: `grep -rniE "role|rol|isAdmin" --include=*.ts --include=*.tsx src app lib`).
+   **Acción de César** en el PR: rellenar `.env.test.local` (valores inventados: solo
+   existen en la base local).
+8. Si hay una tanda en curso, termina con el flujo viejo; la siguiente ya cierra con
+   `wave-qa`.
+
+---
+
 ## 3.3.0 — 2026-10-01 · Estados, assets de marca, repo y despliegue, feedback
 
 **Qué cambió**

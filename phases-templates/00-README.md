@@ -30,6 +30,14 @@ El orquestador elige uno en el arranque y lo deja escrito en `PROJECT_CONTEXT.md
 
 Elegir de más es tan malo como elegir de menos: una fase vacía es ceremonia sin trabajo real.
 
+## Fase en olas
+
+Una fase con varias unidades independientes se hace con `orchestrate` ("arranca la fase
+04"): la parte en **olas**, y cada ola corre en su propia sesión — workers en paralelo, PRs,
+merge, QA de ola (`wave-qa`, con sesión iniciada y las cuentas de prueba) y un cierre que
+dice en qué fase y ola se está y cuál sigue. Así ninguna sesión arrastra el contexto de toda
+la fase. Una fase de una o dos unidades se hace a mano, unidad a unidad.
+
 ## Regla común a todas
 
 - Cada fase se cierra actualizando `context/`: el inventario que toque, `decisions/`,

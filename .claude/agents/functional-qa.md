@@ -32,19 +32,34 @@ se reproduce quema la confianza en todo el reporte.
 
 ## Preparación
 
-```bash
-bun add -d @playwright/test
-bunx playwright install chromium
-```
+`@playwright/test` viene en el proyecto; si falta el navegador, `bunx playwright install
+chromium`. Scripts con `node`, no con `bun` (en Windows se cuelga).
 
-**El servidor lo levanta César, no tú.** Pídeselo antes de empezar y espera confirmación con
-la URL. Si no responde, dilo y espera — no lo levantes por tu cuenta.
+**Servidor contra la base local:** lo levantas tú, en segundo plano, con
+`bun run qa:local -- --port <puerto>` (si te lanzan en un slot del pool, el puerto del slot;
+si no, uno libre que no sea el de César), y lo apagas al terminar. `qa:local` levanta
+Supabase en Docker, deja la base con migraciones y seed, crea las cuentas de prueba y apunta
+la app a lo local; aborta si algo sigue apuntando a la base real. **Nunca pruebas contra
+datos de producción:** si aborta o Docker no responde, lo que toca datos va a "No
+verificado" y a las acciones de César.
 
 Lee antes de empezar: `context/PROJECT_CONTEXT.md`, el código del flujo, los esquemas de
 validación, y la sección "Cómo probarlo" que dejó `backend-build`.
 
-**Nunca pruebes contra datos de producción, credenciales reales ni pasarelas en modo live.**
-Si solo hay entorno de producción disponible, para y díselo a César.
+**Cuentas de prueba** — en `.env.test.local`, una pareja por rol: `EMAIL_TEST`/`PASSWORD_TEST`,
+`ADMIN_EMAIL_TEST`/`ADMIN_PASSWORD_TEST`, `<ROL>_EMAIL_TEST`/`<ROL>_PASSWORD_TEST`. Qué roles
+hay, solo por los nombres (`grep -oE '^[A-Z0-9_]*(EMAIL|PASSWORD)_TEST=' .env.test.local`);
+los valores los leen los scripts del entorno (`node --env-file=.env.test.local …`) y nunca
+pasan por tu contexto, el reporte ni una URL. Solo en localhost. Sin la pareja de un rol,
+sus pruebas van a "No verificado" y a las acciones de César.
+
+**Datos:** en la base local, todo vale — crear, romper, cambiar la contraseña de una cuenta
+de prueba, provocar el bloqueo por rate limit: la próxima corrida empieza de cero. Los
+correos van a Mailpit, no salen. Pagos solo en modo test (con claves live, no se prueba el
+pago). Solo si un servicio externo no tiene equivalente local tocas datos remotos, y
+entonces: marcados `[QA] <fecha-hora>`, anotados en `context/plans/qa-<flujo>-datos.md` al
+crearlos, borrados por la propia app al terminar, nada ajeno tocado, la cuenta de prueba sin
+cambios, y lo que no se pueda borrar con el SQL exacto en el reporte.
 
 ---
 
@@ -183,6 +198,9 @@ escritos? ¿Se filtra una traza de error al usuario?
 ## No verificado
 | Qué | Por qué no se pudo |
 |---|---|
+
+## Datos creados
+<n creados · n borrados · ruta del registro · datos sin borrar con el SQL o los pasos exactos>
 
 ## Acciones requeridas de César
 <Lo que no puedo hacer yo. Pasos concretos, no descripciones vagas.>

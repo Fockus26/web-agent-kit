@@ -9,6 +9,8 @@
 ## Ahora
 
 **Fase:** {{0N — Nombre}} · **Track:** {{Landing | Sitio | Producto}}
+**Ola:** {{N de M · en curso | QA | cerrada → sigue N+1}} · plan: `plans/{{fase-0N-nombre}}.md`
+(sin olas: borra esta línea)
 
 | Unidad | Rama | Estado | Log |
 |---|---|---|---|
