@@ -256,7 +256,7 @@ web-agent-kit/
 ├── prompts/
 │   ├── CLAUDE-DESIGN-BRIEF.template.md   lo que se le pega a Claude Design
 │   ├── DESIGN-HANDOFF.template.md        lo que debe volver, y su verificación
-│   ├── CLAUDE-DESIGN-ADENDA.template.md  piezas que faltan en un diseño ya hecho (estados, icono, OG…)
+│   ├── CLAUDE-DESIGN-ADENDA.template.md  piezas que faltan en un diseño ya hecho (estados, icono, OG, correos…)
 │   ├── ACTUALIZAR-KIT.md                 el que se pega para poner al día un proyecto (calcula el camino)
 │   ├── ACTUALIZAR-PROYECTO.md            paso 3.0 → 3.1 (lo cita ACTUALIZACIONES.md)
 │   └── MIGRAR-DECISIONES-Y-CI.md         paso 3.1 → 3.2 (lo cita ACTUALIZACIONES.md)
@@ -271,6 +271,7 @@ web-agent-kit/
     ├── TOKEN-ECONOMY.md           lectura por niveles, topes de context/, tests, capturas
     ├── STATUS-SCREENS.md          404 · 500 · sin conexión · mantenimiento: catálogo e implementación
     ├── BRAND-ASSETS.md            logo, icono, favicon, touch icon, OG: qué se pregunta y qué se genera
+    ├── EMAIL-TEMPLATES.md         correos de la app: catálogo, restricciones para el diseño, React Email y Supabase
     ├── DEPLOY.md                  crear el repo en GitHub y desplegar en Vercel
     └── qa-scripts/
         ├── design-qa.ts           barrido de Playwright (con node)

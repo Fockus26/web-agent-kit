@@ -141,6 +141,16 @@ sugerencia: es la estructura que el frontend va a implementar.]
       icon 180×180 con fondo opaco, maskable — solo si el cliente no lo tiene}}
 - [ ] {{Plantilla de imagen Open Graph 1200×630 — solo si el cliente no la tiene}}
 - [ ] {{Autenticado vs. anónimo — solo si hay autenticación}}
+- [ ] {{**Plantillas de correo** — solo si la app manda correos. Una familia con una
+      plantilla base (cabecera con logo, título, texto, botón + el enlace en texto debajo,
+      pie con por qué lo recibe y contacto), y estos correos: <lista cerrada, p. ej.
+      "confirmar cuenta · recuperar contraseña · pedido recibido · acuse del formulario de
+      contacto · aviso interno del formulario">. Cada uno con asunto y texto de vista previa
+      (preheader). Restricciones del medio, no negociables: ancho máximo 600 px y una
+      columna; tipografía que funcione con la pila de respaldo (`Arial, Helvetica,
+      sans-serif`), porque Gmail y Outlook no cargan fuentes web; se entiende con las
+      imágenes bloqueadas (nada de texto en imágenes); el logo se lee si el cliente invierte
+      los colores a oscuro; botón de HTML ≥ 44 px de alto; contraste AA.}}
 - [ ] Contenido extremo: título de 3 líneas, nombre de 40 caracteres, lista de 1 y de 50 ítems
 
 ## 8. Contenido
@@ -203,6 +213,12 @@ plantilla de imagen Open Graph 1200×630 (qué texto lleva y qué zona es segura
 **5b. Pantallas de estado** — por cada variante de la sección 7: layout, copy, acciones,
 qué cambia entre variantes (con/sin sesión, con/sin código, con/sin hora) y cómo se ve en
 mobile.
+
+**5c. Correos** (si la sección 7 los pide) — la plantilla base (anchos, colores con su hex y
+ratio, tamaños de texto, padding, el botón con sus medidas, la pila tipográfica de respaldo)
+y, por cada correo: asunto, preheader, copy completo, qué datos variables lleva (nombre,
+enlace, código, resumen del pedido), la acción y cómo se ve a 600 px, a 360 px, sin imágenes
+y con colores invertidos.
 
 **6. Movimiento** — qué anima, con qué duración y curva, y qué se apaga bajo
 `prefers-reduced-motion`.

@@ -78,6 +78,13 @@ Me faltan estas para armar el plan:
    CMS, blog, buscador, multi-idioma. **Si hay autenticación de usuarios**, pregunta además
    cuál es el destino principal de un usuario con sesión ("Mi curso", "Mis pedidos"): es la
    segunda acción de la 404 con sesión.
+8b. **Correos que manda la app** — dedúcelos de la funcionalidad y **propón la lista**, no
+   preguntes en abierto: auth con verificación → confirmar cuenta, recuperar contraseña (y
+   enlace mágico, cambio de correo, invitación si aplican); pagos/pedidos/reservas → sus
+   transaccionales; formulario con envío → acuse al visitante y aviso al cliente. Pregunta
+   solo lo que no se deduce: ¿bienvenida?, ¿notificaciones o recordatorios?, ¿a qué correo
+   llegan los avisos internos? Sin correos, la sección no aplica
+   (`reference/EMAIL-TEMPLATES.md`).
 9. **Cómo se entrega el trabajo** — ¿el repo va a GitHub con `main` protegida y cada unidad
    llega por Pull Request (modo `pr`, lo recomendado), o se trabaja en local con merges y
    pausa de aprobación (modo `local`)? Alimenta `GIT_STATE.md`.
@@ -162,6 +169,8 @@ El plan debe contener:
 6c. **Pantallas de estado** que aplican (`reference/STATUS-SCREENS.md`): 404 con sesión e
    invitado o una sola, 500 con y sin código, sin conexión, mantenimiento sí/no.
 6d. **Assets de marca**: qué manda el cliente y qué diseña Claude Design.
+6e. **Correos** (`reference/EMAIL-TEMPLATES.md`): la lista cerrada de los que manda la app,
+   quién manda cada uno (proveedor de auth o la app) y el proveedor de envío — o "no aplica".
 7. **Lo que queda como pendiente de contenido real.**
 8. **Riesgos** — lo que puede hacer que esto se alargue (contenido que no llega, integración
    sin documentar, decisión de marca sin cerrar).
@@ -300,7 +309,8 @@ El brief tiene que cumplir tres cosas o no sirve:
    paleta definida", ya falló.
 2. **Específico donde importa, abierto donde conviene.** Los colores exactos (incluida la
    selección de texto), las tipografías, los breakpoints, las secciones y su orden, las
-   pantallas de estado que aplican y los assets de marca que hay que crear: cerrados. El tratamiento visual
+   pantallas de estado que aplican, los correos que manda la app y los assets de marca que
+   hay que crear: cerrados. El tratamiento visual
    de cada sección: abierto, ahí es donde quieres que el diseñador aporte.
 3. **Pide explícitamente el handoff.** La última sección del brief le exige a Claude Design
    que, además del diseño, devuelva el documento de entrega para el agente de frontend

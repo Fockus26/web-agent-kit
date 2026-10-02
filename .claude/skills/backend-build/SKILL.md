@@ -100,6 +100,16 @@ Para que funcione, desde la primera unidad con base de datos:
 - El estado del pedido se confirma por webhook, no por la redirección de vuelta al sitio: el
   usuario puede cerrar el navegador antes de que esa redirección ocurra.
 
+### Correos
+- Cada correo que manda la app sale del diseño (`design/HANDOFF.md` § 5c) y de una plantilla
+  base compartida, siguiendo `reference/EMAIL-TEMPLATES.md` del kit: React Email para los de
+  la app (HTML + texto plano), `supabase/templates/` + `config.toml` para los de auth. Nunca
+  la plantilla por defecto del proveedor: llega en inglés y sin marca.
+- Si el flujo manda un correo que el handoff no diseñó, **no lo inventes**: márcalo en
+  "Pendiente de decisión visual" y usa la plantilla base con copy provisional.
+- Plantillas al dashboard del proveedor, SMTP propio y dominio verificado (SPF/DKIM/DMARC)
+  son acciones de César con pasos exactos en la entrega.
+
 ### General
 - Consultas parametrizadas siempre (el ORM ya lo hace; el SQL crudo no).
 - Sanitiza todo lo que se vaya a renderizar como HTML.

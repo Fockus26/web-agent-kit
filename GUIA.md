@@ -217,7 +217,9 @@ Qué pasa:
 5. Si autorizaste repo y despliegue, los crea y configura (`reference/DEPLOY.md`).
 6. Te entrega **el brief para Claude Design** en un bloque listo para copiar. Además de las
    páginas, pide las pantallas de estado (404, 500, sin conexión, mantenimiento), el color
-   de selección de texto y los assets de marca que haya que crear.
+   de selección de texto, los assets de marca que haya que crear y, si la app manda
+   correos, sus plantillas (confirmar cuenta, recuperar contraseña, pedido, acuse del
+   formulario…).
 
 ### Paso 2 — Diseño (tú, en Claude Design)
 

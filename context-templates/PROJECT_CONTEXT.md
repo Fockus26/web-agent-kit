@@ -83,6 +83,19 @@
 
 Detalle de tamaños y archivos: `reference/BRAND-ASSETS.md` del kit.
 
+## Correos
+
+{{No aplica: la app no manda correos. | La tabla:}}
+
+| Correo | Lo manda | Destinatario | Estado |
+|---|---|---|---|
+| {{Confirmar cuenta}} | {{Supabase Auth}} | {{usuario}} | {{pendiente de diseño · diseñado · implementado}} |
+| {{Acuse del formulario de contacto}} | {{la app (Resend)}} | {{visitante}} | |
+| {{Aviso interno del formulario}} | {{la app}} | {{correo@cliente}} | |
+
+Remitente: {{"<Marca>" <hola@dominio> | PENDIENTE}} · Dominio verificado (SPF/DKIM/DMARC):
+{{sí | pendiente — acción de César}}. Detalle: `reference/EMAIL-TEMPLATES.md` del kit.
+
 ## Alcance de páginas
 
 | Página | Ruta | Prioridad v1 |
@@ -98,6 +111,7 @@ Detalle de tamaños y archivos: `reference/BRAND-ASSETS.md` del kit.
 - [ ] Carrito / checkout
 - [ ] Dashboard
 - [ ] Formularios con envío real
+- [ ] Correos que manda la app (ver § "Correos")
 - [ ] CMS / blog
 - [ ] Buscador
 - [ ] Multi-idioma

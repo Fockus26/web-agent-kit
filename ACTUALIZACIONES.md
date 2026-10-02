@@ -27,6 +27,44 @@ agente lo dice y pregunta antes de elegir.
 
 ---
 
+## 3.5.0 — 2026-10-02 · Plantillas de correo en el diseño
+
+**Qué cambió**
+
+- **Los correos que manda la app se diseñan con el sitio.** El arranque deduce la lista
+  (confirmar cuenta, recuperar contraseña, transaccionales, acuse y aviso del formulario…) y
+  la cierra en el plan (6e) y en `PROJECT_CONTEXT.md` § "Correos"; el brief la pide en §7
+  con las restricciones del medio (600 px, tipografía de respaldo, imágenes bloqueadas, modo
+  oscuro forzado) y el handoff la devuelve en § 5c. Por qué: sin diseño, el backend mandaba
+  la plantilla por defecto del proveedor (en inglés, sin marca) o inventaba una en la fase 07.
+- **Implementación en la fase 07** (`backend-build`): una plantilla base compartida, React
+  Email para los correos de la app (HTML + texto plano), y los de auth en
+  `supabase/templates/` + `config.toml`, así la base local los manda con el diseño real a
+  Mailpit. Guía: `reference/EMAIL-TEMPLATES.md`.
+- La adenda para Claude Design tiene un bloque de correos.
+
+**Pasos para un proyecto en 3.4.0**
+
+1. Piezas globales: `powershell -ExecutionPolicy Bypass -File <kit>\instalar-kit.ps1` y
+   sesión nueva (`project-kickoff` y `backend-build` cambiaron).
+2. **Diagnóstico** (sin cambiar nada): qué correos manda ya la app
+   (`grep -rniE "resend|sendmail|nodemailer|postmark|emails\.send|resetPasswordForEmail|signUp|signInWithOtp|inviteUserByEmail" --include=*.ts --include=*.tsx app src lib`),
+   si existen `emails/` y `supabase/templates/`, y si `design/HANDOFF.md` tiene correos.
+   Si la app no manda ninguno ni lo hará, `PROJECT_CONTEXT.md` § "Correos" = "No aplica" y
+   termina aquí.
+3. `context/PROJECT_CONTEXT.md`: la sección "Correos" de
+   `<kit>\context-templates\PROJECT_CONTEXT.md`, llena con el diagnóstico (y la casilla
+   "Correos que manda la app" en "Funcionalidad").
+4. **Lo que falta de diseño no se implementa en este PR.** Se le entrega a César el bloque
+   "Plantillas de correo" de `<kit>\prompts\CLAUDE-DESIGN-ADENDA.template.md`, lleno con la
+   lista, y los correos van a `context/plans/pendientes.md` como unidades de la fase 07 (la
+   plantilla base + auth primero).
+5. Si el proyecto está en la fase 07 o ya la pasó, esas unidades siguen
+   `reference/EMAIL-TEMPLATES.md` cuando vuelva el diseño. Copy que falte: filas en
+   `CONTENT_CHECKLIST.md`.
+
+---
+
 ## 3.4.0 — 2026-10-02 · QA de ola contra base local, fases en olas, una ola por sesión
 
 **Qué cambió**
