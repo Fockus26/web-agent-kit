@@ -68,6 +68,13 @@ Por cada sección, en el orden vertical de la página:
 - [ ] Mantenimiento con hora y sin hora
 - [ ] Copy de cada una (real o marcado como propuesto) y su versión mobile
 
+### 5c. Correos (`reference/EMAIL-TEMPLATES.md`) — solo si la app manda correos
+- [ ] Plantilla base con valores concretos: ancho, colores con ratio, tipografía de respaldo,
+      botón con medidas
+- [ ] Uno por cada correo de `PROJECT_CONTEXT.md` § "Correos", con asunto, preheader y copy
+- [ ] Datos variables de cada uno identificados (enlace, código, nombre, resumen)
+- [ ] Cómo se ve sin imágenes y con colores invertidos (logo legible en ambos)
+
 ### 6. Movimiento
 - [ ] Qué anima, duración y curva
 - [ ] Qué se apaga bajo `prefers-reduced-motion`
@@ -110,6 +117,7 @@ Antes de arrancar el frontend, el orquestador sincroniza:
 - `COMPONENTS_INVENTORY.md` ← una fila por componente del handoff, estado `pendiente`
 - `SECTION_INVENTORY.md` ← una fila por sección, estado `pendiente`
 - `CONTENT_CHECKLIST.md` ← todo placeholder y asset faltante
+- `PROJECT_CONTEXT.md` § "Correos" ← estado `diseñado` en los que trae el handoff
 - `decisions/` ← una fila por decisión relevante que el handoff traiga o cambie
 
 A partir de aquí, `context/` y `HANDOFF.md` deben decir lo mismo. Si divergen, el frontend
