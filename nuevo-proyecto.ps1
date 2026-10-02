@@ -63,7 +63,7 @@ try {
   New-Item -ItemType Directory -Force design, scripts, .github\workflows, tests\unit | Out-Null
   # `bun test ./tests/unit` falla si la carpeta no existe; vacía + --pass-with-no-tests pasa.
   if (-not (Get-ChildItem tests\unit -Force)) { New-Item tests\unit\.gitkeep | Out-Null }
-  foreach ($f in 'test-related.ts', 'pr-screenshots.ts', 'publish-pr-shots.sh') {
+  foreach ($f in 'test-related.ts', 'pr-screenshots.ts', 'publish-pr-shots.sh', 'qa-local.ts') {
     Copiar "$kit\reference\qa-scripts\$f" "scripts\$f"
   }
   Copiar "$kit\github-templates\pull_request_template.md" '.github\pull_request_template.md'
@@ -106,6 +106,7 @@ try {
     'test:related'  = 'bun scripts/test-related.ts'
     'shots'         = 'node scripts/pr-screenshots.ts .pr-shots.json'
     'shots:publish' = 'bash scripts/publish-pr-shots.sh .pr-shots'
+    'qa:local'      = 'node scripts/qa-local.ts'
   }
   foreach ($k in $scripts.Keys) {
     if (-not $pkg.scripts.PSObject.Properties[$k]) {
@@ -120,6 +121,12 @@ try {
   if ($ignore -notmatch '\.pr-shots') {
     Add-Content .gitignore "`n# capturas para PR (web-agent-kit)`n.pr-shots/`n.pr-shots.json"
     Write-Host "  + .gitignore: .pr-shots"
+  }
+  # Las cuentas de prueba (.env.test.local) nunca van al repo. El .gitignore de Next trae
+  # `.env*` (versiones nuevas) o `.env*.local` (viejas); si no hay ninguno, se añade.
+  if ($ignore -notmatch '(?m)^\.env\*(\.local)?\s*$') {
+    Add-Content .gitignore "`n# cuentas de prueba de la QA (web-agent-kit)`n.env*.local"
+    Write-Host "  + .gitignore: .env*.local"
   }
 
   # bash falla con un .sh en CRLF: git lo convertiría al clonar en Windows.

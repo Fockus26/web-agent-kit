@@ -202,10 +202,11 @@ Agent(
 )
 ```
 
-No hace falta repetirle lo que el agente ya trae: levanta su servidor; inicia sesión con
+No hace falta repetirle lo que el agente ya trae: levanta su servidor con `bun run
+qa:local` contra la base local (Supabase en Docker; nunca la real); inicia sesión con
 `EMAIL_TEST`/`PASSWORD_TEST`, `ADMIN_EMAIL_TEST`/`ADMIN_PASSWORD_TEST` y
-`<ROL>_EMAIL_TEST`/`<ROL>_PASSWORD_TEST` de `.env.local` sin ver los valores; crea datos
-reales solo si los registra y los borra al terminar.
+`<ROL>_EMAIL_TEST`/`<ROL>_PASSWORD_TEST` de `.env.test.local` sin ver los valores. Si Docker
+no está abierto, lo dirá como acción de César: no lo arranques tú.
 
 Con el informe:
 - Guárdalo en `context/plans/qa-ola-0N-N.md` y `wt free` del slot de QA.
@@ -215,8 +216,9 @@ Con el informe:
 - **Datos sin borrar** y **acciones de César** → "Bloquea" de `CURRENT_PHASE.md`.
 - Su "Feedback para el kit" → `context/KIT_FEEDBACK.md`, como el de los workers.
 
-Si hay flujos con login y `.env.local` no tiene cuentas de prueba: lánzalo igual (prueba lo
-público y lo marca), y en el cierre pide a César crearlas (`backend-build` §2, Secretos).
+Si hay flujos con login y `.env.test.local` no tiene cuentas de prueba: lánzalo igual
+(prueba lo público y lo marca), y en el cierre pide a César que las ponga (`backend-build`
+§2, Secretos).
 
 ## 9. Cerrar la ola y pasar a la siguiente
 

@@ -35,28 +35,31 @@ se reproduce quema la confianza en todo el reporte.
 `@playwright/test` viene en el proyecto; si falta el navegador, `bunx playwright install
 chromium`. Scripts con `node`, no con `bun` (en Windows se cuelga).
 
-**Servidor:** lo levantas tú, `bun run dev -- --port <puerto>` en segundo plano (si te
-lanzan en un slot del pool, el puerto del slot; si no, uno libre que no sea el de César), y
-lo apagas al terminar.
+**Servidor contra la base local:** lo levantas tú, en segundo plano, con
+`bun run qa:local -- --port <puerto>` (si te lanzan en un slot del pool, el puerto del slot;
+si no, uno libre que no sea el de César), y lo apagas al terminar. `qa:local` levanta
+Supabase en Docker, deja la base con migraciones y seed, crea las cuentas de prueba y apunta
+la app a lo local; aborta si algo sigue apuntando a la base real. **Nunca pruebas contra
+datos de producción:** si aborta o Docker no responde, lo que toca datos va a "No
+verificado" y a las acciones de César.
 
 Lee antes de empezar: `context/PROJECT_CONTEXT.md`, el código del flujo, los esquemas de
 validación, y la sección "Cómo probarlo" que dejó `backend-build`.
 
-**Cuentas de prueba** — en `.env.local`, una pareja por rol: `EMAIL_TEST`/`PASSWORD_TEST`,
+**Cuentas de prueba** — en `.env.test.local`, una pareja por rol: `EMAIL_TEST`/`PASSWORD_TEST`,
 `ADMIN_EMAIL_TEST`/`ADMIN_PASSWORD_TEST`, `<ROL>_EMAIL_TEST`/`<ROL>_PASSWORD_TEST`. Qué roles
-hay, solo por los nombres (`grep -oE '^[A-Z0-9_]*(EMAIL|PASSWORD)_TEST=' .env.local`); los
-valores los leen los scripts del entorno (`node --env-file=.env.local …`) y nunca pasan por
-tu contexto, el reporte ni una URL. Solo en localhost. Sin la pareja de un rol, sus pruebas
-van a "No verificado" y a las acciones de César.
+hay, solo por los nombres (`grep -oE '^[A-Z0-9_]*(EMAIL|PASSWORD)_TEST=' .env.test.local`);
+los valores los leen los scripts del entorno (`node --env-file=.env.test.local …`) y nunca
+pasan por tu contexto, el reporte ni una URL. Solo en localhost. Sin la pareja de un rol,
+sus pruebas van a "No verificado" y a las acciones de César.
 
-**Datos reales:** con esas cuentas puedes crearlos si los borras al terminar — marcados
-`[QA] <fecha-hora>`, anotados en `context/plans/qa-<flujo>-datos.md` en cuanto los creas,
-borrados por la propia app con la misma cuenta, y lo que no se pueda borrar, con el SQL o los
-pasos exactos en el reporte. Solo tocas lo que creaste. Las pruebas que **estropean la
-cuenta** (cambio de contraseña, bloqueo por rate limit, borrar la cuenta) no se hacen con
-ella: el rate limit, con un correo inexistente; el resto, a "No verificado" salvo que César
-dé una cuenta desechable. Nada sale del sistema: ni correos a terceros ni pagos en modo
-live (solo modo test; con claves live, el flujo de pago no se prueba).
+**Datos:** en la base local, todo vale — crear, romper, cambiar la contraseña de una cuenta
+de prueba, provocar el bloqueo por rate limit: la próxima corrida empieza de cero. Los
+correos van a Mailpit, no salen. Pagos solo en modo test (con claves live, no se prueba el
+pago). Solo si un servicio externo no tiene equivalente local tocas datos remotos, y
+entonces: marcados `[QA] <fecha-hora>`, anotados en `context/plans/qa-<flujo>-datos.md` al
+crearlos, borrados por la propia app al terminar, nada ajeno tocado, la cuenta de prueba sin
+cambios, y lo que no se pueda borrar con el SQL exacto en el reporte.
 
 ---
 

@@ -42,13 +42,31 @@ Estas no se discuten ni se posponen "para después". Después no llega.
 - Si encuentras un secreto hardcodeado en código existente, es **[Crítico]**: sácalo a
   variable de entorno en esta misma entrega, sin esperar a que te lo pidan, y avisa que esa
   credencial hay que **rotarla** — sacarla del código no la desexpone si ya se empujó.
-- **Cuentas de prueba para la QA** (en cuanto hay login): una pareja por rol en
-  `.env.example`, vacías — `EMAIL_TEST`/`PASSWORD_TEST` (usuario normal),
-  `ADMIN_EMAIL_TEST`/`ADMIN_PASSWORD_TEST`, y `<ROL>_EMAIL_TEST`/`<ROL>_PASSWORD_TEST` por
-  cada rol más. Sin `NEXT_PUBLIC_` y sin que el código de la app las lea: solo las usan los
-  agentes de QA (`wave-qa`, `functional-qa`) para iniciar sesión en localhost. Crear esas
-  cuentas (dedicadas, nunca la de un cliente o la de César) y poner los valores en
-  `.env.local` es **acción de César** en tu entrega. Un rol nuevo = su pareja nueva.
+- **Cuentas de prueba para la QA** (en cuanto hay login): una pareja por rol, en
+  `.env.test.local` (gitignored: compruébalo) — `EMAIL_TEST`/`PASSWORD_TEST` (usuario
+  normal), `ADMIN_EMAIL_TEST`/`ADMIN_PASSWORD_TEST`, y `<ROL>_EMAIL_TEST`/`<ROL>_PASSWORD_TEST`
+  por cada rol más. Documentadas vacías en `.env.example`, bajo `# QA → .env.test.local`.
+  El código de la app no las lee: solo los agentes de QA (`wave-qa`, `functional-qa`), y
+  `scripts/qa-local.ts` las crea en la base local en cada corrida. Ponerles valores es
+  **acción de César** en tu entrega (inventados: no existen fuera de la base local). Un rol
+  nuevo = su pareja nueva.
+
+### Base local para la QA
+La QA nunca corre contra la base real: `bun run qa:local` (`scripts/qa-local.ts`) levanta
+Supabase en Docker, aplica migraciones + seed, crea las cuentas y apunta la app a lo local.
+Para que funcione, desde la primera unidad con base de datos:
+- `supabase init` y **todo cambio de esquema como migración** en `supabase/migrations/`
+  (`supabase migration new <nombre>`). Un cambio hecho solo en el dashboard no existe en la
+  base local: la QA probaría otro esquema.
+- `supabase/seed.sql` con lo mínimo para recorrer los flujos (catálogo, ajustes), sin datos
+  personales.
+- Si el rol no vive en `app_metadata.role` (p. ej. una tabla `profiles`), adapta
+  `asignarRol` en `scripts/qa-local.ts`. Si la app usa una variable de Supabase con otro
+  nombre, añádela a `MAPEO` ahí mismo (el script aborta si queda alguna apuntando a
+  `*.supabase.co`).
+- Otra base externa (Postgres de Neon, etc.): el equivalente local en Docker y su
+  `DATABASE_URL` en `MAPEO`. Un servicio sin equivalente local: dilo en "Cómo probarlo";
+  la QA lo prueba en remoto con limpieza de datos.
 
 ### Validación
 - **Valida en el servidor siempre**, aunque ya valides en el cliente. La validación del

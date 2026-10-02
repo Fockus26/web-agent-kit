@@ -27,12 +27,11 @@ Tu papel son cuatro momentos: **contar el proyecto**, **llevar el brief a Claude
 
 ```powershell
 git clone https://github.com/Fockus26/web-agent-kit.git "$env:USERPROFILE\Desktop\agents\web-agent-kit"
-
-$kit = "$env:USERPROFILE\Desktop\agents\web-agent-kit"
-New-Item -ItemType Directory -Force "$env:USERPROFILE\.claude\skills","$env:USERPROFILE\.claude\agents"
-Copy-Item "$kit\.claude\skills\*" "$env:USERPROFILE\.claude\skills\" -Recurse -Force
-Copy-Item "$kit\.claude\agents\*" "$env:USERPROFILE\.claude\agents\" -Force
+powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\Desktop\agents\web-agent-kit\instalar-kit.ps1"
 ```
+
+`instalar-kit.ps1` copia las skills y los agentes a `~\.claude\`, reemplazando la versión
+que hubiera (sin dejar archivos viejos) y sin tocar lo que no es del kit.
 
 Luego:
 
@@ -41,14 +40,16 @@ Luego:
 2. Comprueba con `/skills` (7) y `/agents` (4: `feature-worker`, `wave-qa`, `design-qa`, `functional-qa`).
 3. Conecta el MCP de **Context7** (documentación al día de las librerías).
 4. Requisitos: **bun**, **Node ≥ 23.6** (para los scripts de Playwright), **git**, **gh**
-   autenticado, **PowerShell 7** (`pwsh`).
+   autenticado, **PowerShell 7** (`pwsh`). Si el proyecto usa Supabase: **Docker Desktop**
+   abierto y la **CLI de Supabase** (la QA corre contra una base local).
 
 ### Actualizar el kit
 
 ```powershell
-cd "$env:USERPROFILE\Desktop\agents\web-agent-kit"; git pull
-# y vuelve a copiar .claude\skills y .claude\agents como arriba, luego sesión nueva
+powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\Desktop\agents\web-agent-kit\instalar-kit.ps1" -Pull
 ```
+
+`-Pull` hace `git pull` en el kit antes de reinstalar. Después, sesión nueva.
 
 Los proyectos ya creados no cambian solos: cada uno guarda en `.kit-version` la versión con
 la que quedó, y se pone al día con `prompts/ACTUALIZAR-KIT.md` (ver §3, "Proyecto que
@@ -320,9 +321,14 @@ parte la fase en olas (`context/plans/fase-04-secciones.md`) y lanza la primera.
 te dice "Fase 04 · ola 2 de 3 cerrada · sigue ola 3"; al cerrar la última, sigue la fase
 siguiente.
 
-**Cuentas de prueba.** En cuanto el sitio tiene login, `backend-build` te pide crear una
-cuenta de prueba por rol (dedicada, no la tuya ni la de un cliente) y ponerla en
-`.env.local`:
+**QA contra una base local.** La QA nunca toca la base real. `bun run qa:local` levanta
+Supabase en **Docker Desktop** (tenlo abierto), aplica las migraciones y el seed de `main`,
+crea las cuentas de prueba y arranca el servidor apuntando a esa base. Ahí la QA puede crear,
+romper y cambiar lo que quiera: cada corrida empieza de cero, y los correos que mande la app
+se quedan en Mailpit. Por eso la base local es **desechable**: no guardes en ella nada tuyo.
+
+**Cuentas de prueba.** En cuanto el sitio tiene login, `backend-build` te pide rellenar
+`.env.test.local` con una pareja por rol:
 
 ```
 EMAIL_TEST=…            PASSWORD_TEST=…            # usuario normal
@@ -330,10 +336,13 @@ ADMIN_EMAIL_TEST=…      ADMIN_PASSWORD_TEST=…      # administrador
 EDITOR_EMAIL_TEST=…     EDITOR_PASSWORD_TEST=…     # cualquier otro rol: <ROL>_…
 ```
 
-La QA inicia sesión con ellas solo en localhost, sin ver los valores (los scripts los leen
-del entorno). Puede crear datos reales con esas cuentas siempre que los borre: los marca
-`[QA ola N]`, los anota en `context/plans/` mientras los crea y los borra al terminar. Lo que
-la app no deje borrar te llega como "Datos sin borrar", con el SQL exacto.
+Los valores los inventas tú: esas cuentas solo existen en la base local, las crea el script
+en cada corrida. La QA inicia sesión con ellas solo en localhost y sin ver los valores (los
+scripts los leen del entorno).
+
+Lo único que tiene que cumplir el proyecto: el esquema entero como migraciones en
+`supabase/migrations/` (un cambio hecho solo en el dashboard no existe en local) y un
+`supabase/seed.sql` con lo mínimo para recorrer los flujos. `backend-build` ya lo hace así.
 
 ### Paso 7 — Devolver lo aprendido al kit
 

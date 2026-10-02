@@ -62,9 +62,9 @@ bun run shots:publish        # las sube a la rama pr-shots e imprime el markdown
 `functional-qa`) siempre, y los workers si César lo autoriza para una tanda (cada uno en su
 puerto, en segundo plano). Build, typecheck, lint y tests sí se corren sin preguntar.
 
-**Cuentas de prueba** (`.env.local`, nunca en git): `EMAIL_TEST`/`PASSWORD_TEST`,
-`ADMIN_EMAIL_TEST`/`ADMIN_PASSWORD_TEST`, `<ROL>_EMAIL_TEST`/`<ROL>_PASSWORD_TEST`. Solo la
-QA inicia sesión con ellas, en localhost; los datos que cree, los borra.
+**QA contra base local:** `bun run qa:local -- --port <p>` levanta {{Supabase}} en Docker
+(migraciones + seed), crea las cuentas de `.env.test.local` (`EMAIL_TEST`/`PASSWORD_TEST`,
+`ADMIN_…`, `<ROL>_…`) y arranca el servidor apuntando a lo local. Nunca contra la base real.
 
 **Scripts con Playwright se corren con `node`, no con `bun`:** en Windows, Playwright bajo
 Bun se cuelga al lanzar Chromium.

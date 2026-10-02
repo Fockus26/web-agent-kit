@@ -77,7 +77,7 @@ unidad completa, en su slot del pool de worktrees, hasta el PR.
 | Agente | Qué hace | Cuándo lo lanzas |
 |---|---|---|
 | **`feature-worker`** | Implementa una unidad de punta a punta (rama, código, tests, verificación, capturas, PR) con el prompt que le prepara `orchestrate`. Opus, esfuerzo medio | Lo lanza `orchestrate` |
-| **`wave-qa`** | Con la ola ya mergeada, levanta el servidor sobre `main` y recorre sus flujos como usuario real, con las cuentas de prueba de `.env.local` por rol (`EMAIL_TEST`, `ADMIN_EMAIL_TEST`, `<ROL>_EMAIL_TEST`…); los datos que crea, los borra | Lo lanza `orchestrate` al cerrar cada ola |
+| **`wave-qa`** | Con la ola ya mergeada, levanta el servidor sobre `main` y recorre sus flujos como usuario real, contra una base local (Supabase en Docker, `bun run qa:local`) y con las cuentas de prueba de `.env.test.local` por rol (`EMAIL_TEST`, `ADMIN_EMAIL_TEST`, `<ROL>_EMAIL_TEST`…) | Lo lanza `orchestrate` al cerrar cada ola |
 | **`design-qa`** | 320px a 3840px, daltonismo, zoom 400%, movimiento reducido, alto contraste, foco, coherencia de tokens. Con Playwright + axe. | Al cerrar una página o toda la integración |
 | **`functional-qa`** | Intenta romper el flujo: entradas límite, dobles clics, red caída, sesión expirada, precios manipulados, webhooks duplicados | Al cerrar un flujo completo |
 
@@ -104,20 +104,18 @@ forma conservadora y te lo deja explicado en el PR, que es donde apruebas.
 **Windows (PowerShell):**
 
 ```powershell
-$kit = "$env:USERPROFILE\Desktop\agents\web-agent-kit"   # donde clonaste el repo
-New-Item -ItemType Directory -Force "$env:USERPROFILE\.claude\skills","$env:USERPROFILE\.claude\agents"
-Copy-Item "$kit\.claude\skills\*" "$env:USERPROFILE\.claude\skills\" -Recurse -Force
-Copy-Item "$kit\.claude\agents\*" "$env:USERPROFILE\.claude\agents\" -Force
+powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\Desktop\agents\web-agent-kit\instalar-kit.ps1"
 ```
 
 **macOS / Linux:**
 
 ```bash
-kit=~/Desktop/agents/web-agent-kit   # donde clonaste el repo
-mkdir -p ~/.claude/skills ~/.claude/agents
-cp -r "$kit"/.claude/skills/* ~/.claude/skills/
-cp -r "$kit"/.claude/agents/* ~/.claude/agents/
+bash ~/Desktop/agents/web-agent-kit/instalar-kit.sh
 ```
+
+Copia cada skill y cada agente del kit a `~/.claude/`, reemplazando la versión instalada (sin
+dejar archivos viejos) y sin tocar lo que no es del kit. Para actualizar, el mismo comando
+con `-Pull` (`--pull` en bash): hace antes `git pull` en el kit.
 
 Verifica con `/skills` y `/agents`. Deberías ver las siete skills y los cuatro agentes.
 
@@ -249,6 +247,7 @@ web-agent-kit/
 ├── ACTUALIZACIONES.md             qué cambió en cada versión y los pasos para migrar un proyecto
 ├── CLAUDE.md                      cómo se mantiene el kit (procesar informes de feedback, versionar)
 ├── CLAUDE.md.template             va a la raíz de cada proyecto (≤ 8 KB: mapa, no manual)
+├── instalar-kit.ps1 / .sh         instala o reinstala skills y agentes en ~/.claude/ (-Pull: git pull antes)
 ├── .claude/
 │   ├── skills/                    las 7 skills → ~/.claude/skills/
 │   │   └── orchestrate/           + brief-, unit-prompt- y fase-plan-template.md y
@@ -277,7 +276,8 @@ web-agent-kit/
         ├── design-qa.ts           barrido de Playwright (con node)
         ├── test-related.ts        → scripts/: tests afectados por el grafo de imports
         ├── pr-screenshots.ts      → scripts/: capturas para el PR (con node)
-        └── publish-pr-shots.sh    → scripts/: las sube a la rama pr-shots
+        ├── publish-pr-shots.sh    → scripts/: las sube a la rama pr-shots
+        └── qa-local.ts            → scripts/: servidor de QA contra Supabase local (Docker) con cuentas de prueba
 ```
 
 ---
