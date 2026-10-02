@@ -24,6 +24,7 @@ devolverle a Claude Design **ahora**, no en la fase 5.
 - [ ] Sombras con valor CSS real
 - [ ] Duraciones y curvas de animación
 - [ ] Escala de z-index
+- [ ] Color de selección de texto (fondo y texto, claro y oscuro) con su ratio
 
 ### 2. Componentes
 Por cada componente:
@@ -56,6 +57,16 @@ Por cada sección, en el orden vertical de la página:
 - [ ] Lista completa con dimensiones y formato
 - [ ] Set de íconos identificado
 - [ ] Variantes del logo
+- [ ] Icono fuente (SVG) y sus derivados: favicon, apple touch icon 180×180 opaco, maskable
+      — o confirmado que los manda el cliente (ver `reference/BRAND-ASSETS.md`)
+- [ ] Plantilla de imagen Open Graph 1200×630 — o confirmado que la manda el cliente
+
+### 5b. Pantallas de estado (`reference/STATUS-SCREENS.md`)
+- [ ] 404 — con sesión e invitado si hay auth; una sola si no
+- [ ] 500 con código y sin código
+- [ ] Sin conexión
+- [ ] Mantenimiento con hora y sin hora
+- [ ] Copy de cada una (real o marcado como propuesto) y su versión mobile
 
 ### 6. Movimiento
 - [ ] Qué anima, duración y curva

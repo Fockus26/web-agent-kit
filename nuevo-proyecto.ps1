@@ -55,6 +55,9 @@ try {
   }
 
   Write-Host "Copiando el kit en $Ruta"
+  # Si ya había context/, el proyecto seguía una versión anterior del kit: no se le pone la
+  # versión actual (no está migrado); ACTUALIZAR-KIT.md la deduce y lo pone al día.
+  $kitAnterior = Test-Path context
   Copiar "$kit\context-templates" 'context'
   Copiar "$kit\phases-templates" 'phases'
   New-Item -ItemType Directory -Force design, scripts, .github\workflows, tests\unit | Out-Null
@@ -70,6 +73,18 @@ try {
   if (-not $SinVersion) {
     Copiar "$kit\changeset-templates" '.changeset'
     Copiar "$kit\github-templates\workflows\release.yml" '.github\workflows\release.yml'
+  }
+
+  # .kit-version: con qué versión del kit arranca el proyecto (prompts/ACTUALIZAR-KIT.md la lee
+  # para calcular el camino de actualización).
+  if (Test-Path .kit-version) {
+    Write-Host "  = .kit-version ya existe ($((Get-Content .kit-version -Raw).Trim())), no se toca" -ForegroundColor Yellow
+  } elseif ($kitAnterior) {
+    Write-Host "  = context/ ya existía: sin .kit-version. Pega <kit>\prompts\ACTUALIZAR-KIT.md para ponerlo al día" -ForegroundColor Yellow
+  } else {
+    $version = (Get-Content "$kit\VERSION" -Raw).Trim()
+    Set-Content .kit-version "$version`n" -NoNewline
+    Write-Host "  + .kit-version ($version)"
   }
 
   # CLAUDE.md: el del kit, conservando el "@AGENTS.md" que pone Next.js 16.
@@ -136,11 +151,8 @@ try {
   }
 
   Write-Host "`nListo. Siguiente:" -ForegroundColor Green
-  Write-Host "  1. git status  → revisa y haz el primer commit"
-  Write-Host "  2. (modo pr) crea el repo en GitHub, protege main y en Settings activa:"
-  Write-Host "     General › `"Automatically delete head branches`""
-  if (-not $SinVersion) {
-    Write-Host "     Actions › General › `"Allow GitHub Actions to create and approve pull requests`" (PR de versión)"
-  }
-  Write-Host "  3. abre Claude Code en $Ruta y escribe /project-kickoff"
+  Write-Host "  1. git status  → revisa lo copiado"
+  Write-Host "  2. abre Claude Code en $Ruta y escribe /project-kickoff"
+  Write-Host "     (pregunta si crea el repo en GitHub y el proyecto en Vercel, y con tu sí los configura;"
+  Write-Host "      ten 'gh auth login' y 'bunx vercel login' hechos si los vas a querer)"
 } finally { Pop-Location }

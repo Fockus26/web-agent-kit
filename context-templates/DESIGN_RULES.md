@@ -17,6 +17,9 @@
 - Al 400% de zoom el contenido reflota en una columna.
 - `prefers-reduced-motion` respetado.
 - Todo control tiene nombre accesible.
+- Texto seleccionado (`::selection`) con los tokens `selection`, ≥ 4.5:1, en claro y oscuro.
+- Pantallas de estado (404, 500, sin conexión, mantenimiento) con el diseño del sitio y su
+  estado HTTP real — ver `reference/STATUS-SCREENS.md` del kit.
 
 Casos que fallan una y otra vez, verifícalos explícitamente: el tono `main` o `light` de la
 marca usado como texto sobre fondo claro · chips y badges de estado · placeholders de input ·

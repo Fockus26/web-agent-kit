@@ -16,6 +16,7 @@
 | error.main | {{#______}} | | |
 | info.main | {{#______}} | | |
 | divider | {{#______}} | | |
+| selection.bg / selection.text | {{#______ / #______}} | `::selection` | {{texto sobre fondo de selección → ratio X.X:1}} |
 
 ## Dark mode
 
@@ -33,6 +34,7 @@
 | error.main | {{#______}} | | |
 | info.main | {{#______}} | | |
 | divider | {{#______}} | | |
+| selection.bg / selection.text | {{#______ / #______}} | `::selection` | |
 
 ## Notas de contraste
 

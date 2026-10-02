@@ -75,15 +75,29 @@ Me faltan estas para armar el plan:
 
 7. **Páginas** que necesita, y cuáles son de verdad prioritarias para la v1.
 8. **Funcionalidad** más allá de lo estático: auth, pagos, carrito, dashboard, formularios,
-   CMS, blog, buscador, multi-idioma.
+   CMS, blog, buscador, multi-idioma. **Si hay autenticación de usuarios**, pregunta además
+   cuál es el destino principal de un usuario con sesión ("Mi curso", "Mis pedidos"): es la
+   segunda acción de la 404 con sesión.
 9. **Cómo se entrega el trabajo** — ¿el repo va a GitHub con `main` protegida y cada unidad
    llega por Pull Request (modo `pr`, lo recomendado), o se trabaja en local con merges y
    pausa de aprobación (modo `local`)? Alimenta `GIT_STATE.md`.
+9b. **Repo y despliegue** — ¿creo el repo en GitHub (privado/público, cuenta u
+   organización)? ¿Despliego en Vercel (cuenta de César o del cliente; dominio y quién
+   gestiona el DNS)? Si ya existen, su URL. Preguntas exactas y lo que implica cada
+   respuesta: `reference/DEPLOY.md`. **Su "sí" aquí es la autorización** para crearlos en
+   el Paso 4b; sin él, no se crea nada fuera de la máquina.
+9c. **Modo mantenimiento** — ¿el sitio necesitará ponerse en mantenimiento (cambios de base
+   de datos, lanzamientos)? Si no, la pantalla de mantenimiento sale del alcance.
 
 ### Bloque C — Visual (aquí propones, no preguntas en abierto)
 
 10. **Restricciones duras**: ¿hay logo, colores o tipografía obligatorios? Si sí, pídelos
     exactos (hex, nombre de fuente, archivo del logo).
+10b. **Assets de marca — pregunta pieza por pieza, nunca asumas** (`reference/BRAND-ASSETS.md`):
+    logo, **icono/isotipo** (el que más falta: hay logo horizontal pero no icono), favicon,
+    apple touch icon e imagen Open Graph. Para cada uno: *lo tiene el cliente* (pídelo, con
+    formato) · *hay que crearlo* (va al brief para Claude Design) · *no aplica*. El logo en
+    sí no se crea dentro del kit salvo que César lo acuerde: es trabajo de marca.
 11. **Dark mode**: ¿sí, no, o "si sale barato"?
 12. **Personalidad** — aquí ofreces 3 direcciones concretas, no un "¿qué estilo te gusta?".
     Ejemplo de cómo se hace bien:
@@ -143,6 +157,11 @@ El plan debe contener:
 5. **Arquitectura técnica** — estructura de carpetas, dependencias, variables de entorno,
    modelo de datos si hay backend.
 6. **Estrategia de ramas** — modo `pr` o `local`; en `local`, si hay rama madre y cuál.
+6b. **Repo y despliegue** — qué se crea (GitHub, Vercel, dominio) y qué queda en manos de
+   César (credenciales, DNS, valores secretos).
+6c. **Pantallas de estado** que aplican (`reference/STATUS-SCREENS.md`): 404 con sesión e
+   invitado o una sola, 500 con y sin código, sin conexión, mantenimiento sí/no.
+6d. **Assets de marca**: qué manda el cliente y qué diseña Claude Design.
 7. **Lo que queda como pendiente de contenido real.**
 8. **Riesgos** — lo que puede hacer que esto se alargue (contenido que no llega, integración
    sin documentar, decisión de marca sin cerrar).
@@ -180,6 +199,7 @@ context/
   CONTENT_CHECKLIST.md    · todo el contenido real pendiente
   CURRENT_PHASE.md        · tablero: lo abierto, lo que bloquea, lo que sigue (≤ 60 líneas)
   GIT_STATE.md            · modo (pr / local) y rama base
+  KIT_FEEDBACK.md         · correcciones y fricciones con el kit (vacío al inicio)
   decisions/              · un archivo por decisión (D0NN-<tema>.md); índice con grep
   PHASE_LOG/              · una por unidad cerrada (y resumen por fase)
   plans/                  · planes y pendientes (plans/pendientes.md)
@@ -187,7 +207,12 @@ phases/                   · las fases del track elegido
 scripts/                  · test-related.ts, pr-screenshots.ts, publish-pr-shots.sh (del kit)
 .github/                  · pull_request_template.md, workflows/ci.yml y workflows/release.yml (modo pr)
 .changeset/               · config.json y README.md (si el proyecto lleva versión)
+.kit-version              · versión del kit con la que arranca (de <kit>/VERSION)
 ```
+
+`nuevo-proyecto.ps1` ya escribe `.kit-version`; si no se usó, créalo con el contenido de
+`VERSION` del kit. Es lo que permite actualizar el proyecto más adelante
+(`prompts/ACTUALIZAR-KIT.md`).
 
 Copia también `CLAUDE.md.template` a la raíz del proyecto como `CLAUDE.md`, con los valores
 del proyecto — es lo que hace que las skills y agentes se comporten igual en cada sesión
@@ -223,13 +248,29 @@ sube la versión (y aun así consume los changesets). Cómo se escriben: `git-fl
 
 **Acciones manuales de César** (dilas al cerrar el arranque; no las hace el agente):
 
-- GitHub › *Settings › Actions › General › Allow GitHub Actions to create and approve pull
-  requests* — sin eso la Action no puede abrir el PR de versión.
-- GitHub › *Settings › General › Automatically delete head branches*.
-- Si `main` exige checks: el PR de versión lo abre `GITHUB_TOKEN` y no dispara el CI; se
-  mergea saltándose la protección o se usa el token de una GitHub App.
+- Lo que el Paso 4b no pudo hacer (sin `gh`/`vercel` con sesión, sin permiso, 403).
+- DNS del dominio y valores secretos de las variables de entorno.
 - Si va a usar `orchestrate`: excluir de Windows Defender la carpeta de trabajo, la del
   pool (`..\<repo>-wt`) y `%USERPROFILE%\.bun\install\cache`.
+
+---
+
+## Paso 4b — Repo en GitHub y despliegue en Vercel
+
+Solo lo que César autorizó en la entrevista (9b). Si no se preguntó, pregunta ahora, antes de
+ejecutar: crear un repo y conectar un despliegue son acciones hacia fuera.
+
+Sigue `reference/DEPLOY.md`:
+
+1. **GitHub**: primer commit, `gh repo create`, y los ajustes que antes eran manuales
+   (borrar ramas al mergear, permiso de la Action para abrir el PR de versión, protección de
+   `main`). Cada ajuste se lee de vuelta para confirmarlo. `GIT_STATE.md` → modo `pr`.
+2. **Vercel**: `vercel link`, `vercel git connect` (preview por PR, producción al mergear a
+   `main`), variables de entorno no secretas (`NEXT_PUBLIC_SITE_URL`), dominio si lo hay.
+3. `PROJECT_CONTEXT.md` › Repo y despliegue con las URLs reales.
+
+Si falta sesión en `gh` o `vercel`, pídele a César el comando de login (él lo corre; tú nunca
+escribes credenciales) y sigue con lo demás.
 
 **Ningún placeholder `{{...}}` puede quedar sin llenar.** Si un dato no existe todavía,
 escribe `PENDIENTE` explícito y agrega la fila a `CONTENT_CHECKLIST.md`. Un `{{TONO}}` que
@@ -257,8 +298,9 @@ El brief tiene que cumplir tres cosas o no sirve:
 1. **Autocontenido.** Claude Design no ve `context/`, no ve esta conversación, no ve el
    repo. Todo lo que necesite tiene que estar dentro del brief. Si el brief dice "según la
    paleta definida", ya falló.
-2. **Específico donde importa, abierto donde conviene.** Los colores exactos, las
-   tipografías, los breakpoints, las secciones y su orden: cerrados. El tratamiento visual
+2. **Específico donde importa, abierto donde conviene.** Los colores exactos (incluida la
+   selección de texto), las tipografías, los breakpoints, las secciones y su orden, las
+   pantallas de estado que aplican y los assets de marca que hay que crear: cerrados. El tratamiento visual
    de cada sección: abierto, ahí es donde quieres que el diseñador aporte.
 3. **Pide explícitamente el handoff.** La última sección del brief le exige a Claude Design
    que, además del diseño, devuelva el documento de entrega para el agente de frontend

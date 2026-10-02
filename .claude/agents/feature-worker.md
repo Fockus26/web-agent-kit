@@ -26,3 +26,7 @@ worktrees del proyecto y la lleva hasta un Pull Request abierto (nunca mergeado)
    comentarios del código que ya hay alrededor.
 7. Tu último mensaje es el **informe para el orquestador**: breve, con URL del PR, changeset,
    verificado / no verificado, decisiones abiertas, acciones manuales y bugs vistos de paso.
+   Y, si el kit te hizo improvisar algo, una instrucción del brief o de una skill estaba mal
+   o un paso te costó más de lo que aportó, un apartado **Feedback para el kit** con una
+   línea por caso (tipo · pieza del kit · qué pasó · propuesta): el orquestador lo pasa a
+   `context/KIT_FEEDBACK.md`.

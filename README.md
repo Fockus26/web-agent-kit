@@ -244,6 +244,9 @@ El orquestador elige uno y lo justifica.
 ```
 web-agent-kit/
 ├── README.md                      este archivo
+├── VERSION                        versión actual del kit (cada proyecto guarda la suya en .kit-version)
+├── ACTUALIZACIONES.md             qué cambió en cada versión y los pasos para migrar un proyecto
+├── CLAUDE.md                      cómo se mantiene el kit (procesar informes de feedback, versionar)
 ├── CLAUDE.md.template             va a la raíz de cada proyecto (≤ 8 KB: mapa, no manual)
 ├── .claude/
 │   ├── skills/                    las 7 skills → ~/.claude/skills/
@@ -253,8 +256,10 @@ web-agent-kit/
 ├── prompts/
 │   ├── CLAUDE-DESIGN-BRIEF.template.md   lo que se le pega a Claude Design
 │   ├── DESIGN-HANDOFF.template.md        lo que debe volver, y su verificación
-│   ├── ACTUALIZAR-PROYECTO.md            se pega en un proyecto con la versión anterior del kit
-│   └── MIGRAR-DECISIONES-Y-CI.md         decisiones por archivo y CI en el PR de versión
+│   ├── CLAUDE-DESIGN-ADENDA.template.md  piezas que faltan en un diseño ya hecho (estados, icono, OG…)
+│   ├── ACTUALIZAR-KIT.md                 el que se pega para poner al día un proyecto (calcula el camino)
+│   ├── ACTUALIZAR-PROYECTO.md            paso 3.0 → 3.1 (lo cita ACTUALIZACIONES.md)
+│   └── MIGRAR-DECISIONES-Y-CI.md         paso 3.1 → 3.2 (lo cita ACTUALIZACIONES.md)
 ├── context-templates/             → se copia como context/ en cada proyecto
 ├── phases-templates/              → se copia como phases/
 ├── sections-template/             brief de contenido, uno por sección
@@ -264,6 +269,9 @@ web-agent-kit/
     ├── STACK-NEXTJS.md            Next.js + bun + Context7 + convenciones
     ├── UI-LIBRARIES.md            shadcn/ui · Hero UI · MUI — criterio y qué cambia
     ├── TOKEN-ECONOMY.md           lectura por niveles, topes de context/, tests, capturas
+    ├── STATUS-SCREENS.md          404 · 500 · sin conexión · mantenimiento: catálogo e implementación
+    ├── BRAND-ASSETS.md            logo, icono, favicon, touch icon, OG: qué se pregunta y qué se genera
+    ├── DEPLOY.md                  crear el repo en GitHub y desplegar en Vercel
     └── qa-scripts/
         ├── design-qa.ts           barrido de Playwright (con node)
         ├── test-related.ts        → scripts/: tests afectados por el grafo de imports
@@ -315,6 +323,27 @@ Detalle en `reference/TOKEN-ECONOMY.md`. Lo que más pesa:
 | El servidor lo levanta César (o cada worker el suyo, en segundo plano, si él lo autoriza) | Logs de compilación en el contexto; servidores huérfanos |
 
 ---
+
+## Versiones y actualización de proyectos
+
+El kit lleva versión (`VERSION`, ahora **3.3.0**) y cada proyecto guarda en `.kit-version`
+con cuál quedó alineado. Para ponerlo al día: `prompts/ACTUALIZAR-KIT.md` en una sesión del
+proyecto. Calcula el camino con `ACTUALIZACIONES.md` y aplica cada versión en orden, en un PR.
+
+Y el camino de vuelta: cada proyecto anota en `context/KIT_FEEDBACK.md` lo que César tuvo que
+corregir o repetir y lo que el kit no cubría. Al pedir "el informe para el kit" sale un bloque
+que se pega en una sesión abierta en este repo, donde `CLAUDE.md` dice cómo procesarlo.
+
+### 3.3.0
+
+| Antes | Ahora |
+|---|---|
+| "Estados de error (404, 500…)" como una casilla del brief | Catálogo de pantallas de estado: 404 con sesión/invitado (solo con auth), 500 con/sin código, sin conexión elegida según la red, mantenimiento con/sin hora — diseñadas, con estado HTTP real y galería `/estados` |
+| Color de selección sin definir | Token `selection` con contraste verificado, claro y oscuro |
+| Favicon y OG se generaban sin preguntar | El arranque pregunta qué assets tiene el cliente y cuáles hay que crear |
+| Crear el repo y ajustar GitHub eran acciones manuales | El arranque pregunta; con el sí, el agente crea el repo, lo configura y conecta Vercel |
+| Proyectos viejos: un prompt suelto por cambio | `.kit-version` + `ACTUALIZACIONES.md` + un solo `ACTUALIZAR-KIT.md` |
+| Las correcciones se perdían en el chat | `KIT_FEEDBACK.md` por proyecto → informe → mejora del kit |
 
 ## Qué cambió en la v3 (lo aprendido en World Flags)
 

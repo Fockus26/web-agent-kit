@@ -50,8 +50,9 @@ cd "$env:USERPROFILE\Desktop\agents\web-agent-kit"; git pull
 # y vuelve a copiar .claude\skills y .claude\agents como arriba, luego sesión nueva
 ```
 
-Los proyectos ya creados no cambian solos: si quieres una plantilla nueva en uno, cópiala a
-mano o pídeselo a Claude.
+Los proyectos ya creados no cambian solos: cada uno guarda en `.kit-version` la versión con
+la que quedó, y se pone al día con `prompts/ACTUALIZAR-KIT.md` (ver §3, "Proyecto que
+seguía una versión anterior del kit").
 
 ---
 
@@ -74,13 +75,22 @@ Hace, en este orden:
    pone Next.js 16 (así Claude lee las reglas de esa versión de Next).
 4. Añade a `package.json`: `test`, `test:related`, `shots`, `shots:publish`, y las
    devDependencies `@types/bun`, `@playwright/test` y `@changesets/cli`.
-5. Formatea lo copiado con el Biome del proyecto.
+5. Escribe `.kit-version` con la versión actual del kit.
+6. Formatea lo copiado con el Biome del proyecto.
 
-No pisa nada que ya exista y **no commitea**. Después:
+No pisa nada que ya exista y **no commitea**. El repo de GitHub y el despliegue en Vercel los
+pregunta `/project-kickoff`: si dices que sí, hace el primer commit, crea el repo, aplica los
+ajustes de abajo y conecta Vercel (`reference/DEPLOY.md`). Solo necesita que tengas sesión:
+
+```powershell
+gh auth login
+bunx vercel login
+```
+
+Si prefieres hacerlo a mano, o el agente no pudo (un 403, sin sesión), esto es lo que hace:
 
 ```powershell
 cd C:\Users\Admin\Documents\Work\clinica-dental
-git status                      # revisa
 git add -A; git commit -m "chore: inicializa proyecto con web-agent-kit"
 gh repo create <usuario>/clinica-dental --private --source . --push   # modo pr
 ```
@@ -117,19 +127,27 @@ antivirus escaneando cada archivo de `node_modules`, instalar y borrar tarda el 
 
 Ya puedes abrir Claude Code en la carpeta.
 
-### Proyecto que seguía la versión anterior del kit
+### Proyecto que seguía una versión anterior del kit
 
-Abre Claude Code en el proyecto (sesión nueva) y pega el bloque de
-`prompts/ACTUALIZAR-PROYECTO.md`: diagnostica, migra a Changesets, alinea `CLAUDE.md`, la
-plantilla de PR, las decisiones y las memorias, y lo deja en un PR `chore/changesets`.
+Un solo prompt para cualquier versión: `prompts/ACTUALIZAR-KIT.md`. Copia las skills desde la
+carpeta del kit actualizada (el prompt trae el comando), abre una sesión nueva en el proyecto
+y pega su bloque con la ruta del kit. Hace esto:
 
-Si el proyecto ya usa Changesets pero tiene `context/DECISIONS_INDEX.md` (o el PR de versión
-se queda sin el check `ci`), pega el de `prompts/MIGRAR-DECISIONES-Y-CI.md`: pasa las
-decisiones a un archivo cada una y hace que el CI corra sobre el PR de versión. Lo deja en un
-PR `chore/decisiones-y-ci`. No necesita acceso al repo del kit: basta con la carpeta del kit
-actualizada en local (el prompt explica cómo copiar las skills desde ella y dónde poner su
-ruta). Si el proyecto es más viejo todavía, primero
-`ACTUALIZAR-PROYECTO.md` y después este.
+1. Lee `.kit-version` del proyecto. Si no existe (proyectos anteriores a la 3.3.0), deduce
+   la versión por señales (`.changeset/`, `DECISIONS_INDEX.md`, `PHASE_LOG/`…) y te las
+   enseña.
+2. Calcula el camino con `ACTUALIZACIONES.md` (p. ej. 3.1.0 → 3.2.0 → 3.3.0) y te lo
+   muestra antes de tocar nada.
+3. Diagnostica todo el camino y te hace **una sola tanda** de preguntas.
+4. Aplica cada versión en orden, en una rama `chore/kit-<versión>`, un commit por versión,
+   actualizando `.kit-version` en cada paso. Un PR al final.
+5. Lo que necesite diseño (p. ej. las pantallas de estado de la 3.3.0) no lo implementa: lo
+   deja en `context/plans/pendientes.md` y te da el texto para Claude Design
+   (`prompts/CLAUDE-DESIGN-ADENDA.template.md`).
+
+`ACTUALIZAR-PROYECTO.md` y `MIGRAR-DECISIONES-Y-CI.md` siguen en `prompts/` porque
+`ACTUALIZACIONES.md` los cita como los pasos de la 3.1.0 y la 3.2.0; no hace falta pegarlos
+sueltos.
 
 ### Proyecto que ya creaste (o creaste con otras opciones)
 
@@ -186,14 +204,19 @@ Qué pasa:
 
 1. Te devuelve lo que ya entendió y **una sola tanda de preguntas**: lo que solo tú sabes
    (qué debe lograr el sitio, público, contenido real disponible, modo git `pr`/`local`,
-   librería de componentes: shadcn/ui, Hero UI o MUI).
+   librería de componentes: shadcn/ui, Hero UI o MUI). También: qué **assets de marca**
+   tiene el cliente (logo, icono, favicon, OG) y cuáles hay que crear, si hay que **crear el
+   repo en GitHub y desplegar en Vercel**, y si el sitio necesitará **modo mantenimiento**.
 2. Lo visual **te lo propone** con 3 direcciones (p. ej. "editorial sobrio / técnico /
    cálido"), con ventaja y riesgo de cada una. Eliges o le dejas elegir.
 3. Entra en **modo plan**: resumen, track de fases (aquí *Landing*), secciones, paleta con
    contrastes medidos, arquitectura, riesgos. **Tú apruebas el plan.**
 4. Rellena `context/` y `CLAUDE.md` con los datos reales (nada de `{{...}}`; lo que falte
    queda `PENDIENTE` + fila en `CONTENT_CHECKLIST.md`).
-5. Te entrega **el brief para Claude Design** en un bloque listo para copiar.
+5. Si autorizaste repo y despliegue, los crea y configura (`reference/DEPLOY.md`).
+6. Te entrega **el brief para Claude Design** en un bloque listo para copiar. Además de las
+   páginas, pide las pantallas de estado (404, 500, sin conexión, mantenimiento), el color
+   de selección de texto y los assets de marca que haya que crear.
 
 ### Paso 2 — Diseño (tú, en Claude Design)
 
@@ -284,6 +307,25 @@ Qué pasa:
 
 Mientras tanto puedes seguir con otra cosa. Lo que se te ocurra después va a
 `context/plans/pendientes.md`, no a la tanda en curso.
+
+### Paso 7 — Devolver lo aprendido al kit
+
+Durante todo el proyecto, cada vez que corriges algo que el agente hizo siguiendo el kit, le
+pides lo mismo por segunda vez, haces a mano un paso que podría hacer él, o el kit no decía
+qué hacer, el agente lo anota en `context/KIT_FEEDBACK.md` (si ya estaba, suma una "vez").
+No tienes que pedírselo.
+
+Cuando quieras (y siempre al cerrar la fase 09):
+
+```
+Dame el informe para el kit
+```
+
+Te devuelve un bloque agrupado por pieza del kit, lo más repetido primero. Lo pegas en una
+sesión de Claude Code abierta en la carpeta del kit: su `CLAUDE.md` le dice cómo triarlo
+(qué ya está resuelto, qué es propio de ese proyecto), te deja elegir qué entra, lo
+implementa, sube la versión y escribe en `ACTUALIZACIONES.md` los pasos para que los demás
+proyectos se pongan al día.
 
 ---
 
