@@ -42,6 +42,13 @@ Estas no se discuten ni se posponen "para después". Después no llega.
 - Si encuentras un secreto hardcodeado en código existente, es **[Crítico]**: sácalo a
   variable de entorno en esta misma entrega, sin esperar a que te lo pidan, y avisa que esa
   credencial hay que **rotarla** — sacarla del código no la desexpone si ya se empujó.
+- **Cuentas de prueba para la QA** (en cuanto hay login): una pareja por rol en
+  `.env.example`, vacías — `EMAIL_TEST`/`PASSWORD_TEST` (usuario normal),
+  `ADMIN_EMAIL_TEST`/`ADMIN_PASSWORD_TEST`, y `<ROL>_EMAIL_TEST`/`<ROL>_PASSWORD_TEST` por
+  cada rol más. Sin `NEXT_PUBLIC_` y sin que el código de la app las lea: solo las usan los
+  agentes de QA (`wave-qa`, `functional-qa`) para iniciar sesión en localhost. Crear esas
+  cuentas (dedicadas, nunca la de un cliente o la de César) y poner los valores en
+  `.env.local` es **acción de César** en tu entrega. Un rol nuevo = su pareja nueva.
 
 ### Validación
 - **Valida en el servidor siempre**, aunque ya valides en el cliente. La validación del

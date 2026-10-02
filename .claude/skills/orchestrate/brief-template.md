@@ -1,5 +1,7 @@
 # Orquestación del {{FECHA}} — brief común para los workers
 
+> {{Fase 0N, ola N de M — plan: `context/plans/fase-0N-<nombre>.md` | Tanda suelta}}
+
 > Lo lee **cada worker** antes de empezar. Su prompt trae solo lo específico de su unidad.
 > Carpeta principal del repo: `{{RUTA_ABSOLUTA}}` (ahí viven los archivos locales/gitignored:
 > `context/CURRENT_PHASE.md`, `context/CONTENT_CHECKLIST.md`, `context/PHASE_LOG/`,
@@ -49,8 +51,10 @@ No uses números fuera de tu rango.
    autorizado: verificación por código, márcalo.}}
 7. **Navegador:** crea tu propia pestaña y pasa su `tabId` en cada llamada. Verifica
    midiendo el DOM (no con capturas vistas). Scripts con Playwright: con `node`.
-8. **Datos reales:** el `.env` apunta a {{producción}}. No crees cuentas ni escribas datos;
-   verifica como invitado o interceptando respuestas en la página (solo para depurar).
+8. **Datos reales:** el `.env` apunta a {{producción}}. No inicies sesión, no crees cuentas
+   ni escribas datos; verifica como invitado o interceptando respuestas en la página (solo
+   para depurar). La prueba con sesión y datos la hace `wave-qa` cuando la ola esté
+   mergeada: en tu PR, "Cómo probarlo" dice qué flujo y con qué rol, para que la pueda hacer.
 9. **Tests:** `bun run test:related` mientras trabajas; `bun run test` completo antes del PR.
 10. **Verificación mínima antes del PR:** typecheck, lint (sin errores nuevos en lo tuyo),
     tests, build; si tocaste UI, skill `a11y` (axe claro y oscuro, 320 px, teclado).

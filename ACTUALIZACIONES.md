@@ -27,6 +27,46 @@ agente lo dice y pregunta antes de elegir.
 
 ---
 
+## 3.4.0 — 2026-10-02 · QA de ola con cuentas de prueba, fases en olas, una ola por sesión
+
+**Qué cambió**
+
+- **Agente nuevo `wave-qa`.** Cuando todos los PRs de una ola están mergeados, `orchestrate`
+  lo lanza en un slot del pool sobre `main`: levanta el servidor, recorre los flujos de la
+  ola (y las costuras entre PRs) con sesión iniciada, por rol, y devuelve hallazgos
+  reproducibles. Lo crítico y lo alto pasa a la ola siguiente. Por qué: cada worker probaba
+  su unidad como invitado y en su rama; nadie probaba las unidades juntas ni con login.
+- **Cuentas de prueba** en `.env.local`, una pareja por rol: `EMAIL_TEST`/`PASSWORD_TEST`,
+  `ADMIN_EMAIL_TEST`/`ADMIN_PASSWORD_TEST`, `<ROL>_EMAIL_TEST`/`<ROL>_PASSWORD_TEST`. Solo la
+  QA inicia sesión con ellas, en localhost, y sin que los valores pasen por su contexto
+  (`node --env-file=.env.local`). Puede crear datos reales si los marca, los anota mientras
+  los crea y los borra al terminar; lo que no se pueda borrar vuelve con el SQL para César.
+  `functional-qa` sigue las mismas reglas y ahora levanta su propio servidor.
+- **Fases en olas, una ola por sesión.** `orchestrate` puede partir una fase en olas
+  (`context/plans/fase-0N-<nombre>.md`, plantilla `fase-plan-template.md`). Cada ola cierra
+  con: fase, ola cerrada, resultado de la QA, qué sigue; y con "inicia la ola en otra sesión"
+  abre una sesión nueva con el prompt de arranque (o lo da para pegar). Por qué: una sesión
+  que encadena olas arrastra el mapeo y los informes de todas en cada mensaje.
+
+**Pasos para un proyecto en 3.3.0**
+
+1. Ninguno para las piezas globales: **reinstalar skills y agentes** (copiar `.claude\skills`
+   y `.claude\agents` del kit a `~\.claude\`) y abrir sesión nueva, o `wave-qa` no existe
+   ("Agent type not found").
+2. `CLAUDE.md` del proyecto, desde `<kit>\CLAUDE.md.template`: el párrafo "Servidor de
+   desarrollo", el de "Cuentas de prueba" debajo, y las filas de `orchestrate` y `wave-qa`
+   de "Puertas de calidad". Tope 8 KB.
+3. `context/CURRENT_PHASE.md`: la línea **Ola** bajo "Fase" (o nada si no se usan olas).
+4. **Si el proyecto tiene login:** en `.env.example`, las parejas `*_EMAIL_TEST` /
+   `*_PASSWORD_TEST` vacías, una por rol que exista en el código (búscalos:
+   `grep -rniE "role|rol|isAdmin" --include=*.ts --include=*.tsx src app lib`). Comprueba que
+   `.env.local` está en `.gitignore`. **Acción de César** en el PR: crear una cuenta de prueba
+   dedicada por rol y poner los valores en `.env.local`.
+5. Si hay una tanda en curso, termina con el flujo viejo; la siguiente ya cierra con
+   `wave-qa`.
+
+---
+
 ## 3.3.0 — 2026-10-01 · Estados, assets de marca, repo y despliegue, feedback
 
 **Qué cambió**

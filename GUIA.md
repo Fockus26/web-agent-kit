@@ -38,7 +38,7 @@ Luego:
 
 1. **Abre una sesión nueva de Claude Code.** Los agentes se cargan al arrancar; una sesión
    que ya estaba abierta no los ve.
-2. Comprueba con `/skills` (7) y `/agents` (3: `feature-worker`, `design-qa`, `functional-qa`).
+2. Comprueba con `/skills` (7) y `/agents` (4: `feature-worker`, `wave-qa`, `design-qa`, `functional-qa`).
 3. Conecta el MCP de **Context7** (documentación al día de las librerías).
 4. Requisitos: **bun**, **Node ≥ 23.6** (para los scripts de Playwright), **git**, **gh**
    autenticado, **PowerShell 7** (`pwsh`).
@@ -302,11 +302,38 @@ Qué pasa:
 4. Te llega **un PR por unidad**, cada uno con su changeset (sin tocar `version` ni
    `CHANGELOG.md`: no chocan entre sí). Mergéalos en el orden que quieras; tras cada merge
    el orquestador libera el slot (`wt free`).
-5. Cuando quieras publicar, mergeas el PR **`chore(release): versión`** que mantiene la
+5. Cuando le dices que mergeaste todos los PRs de la ola, lanza **`wave-qa`**: levanta el
+   servidor sobre `main` y recorre los flujos de la ola como usuario real, con sesión
+   iniciada (ver "Cuentas de prueba" abajo). Lo crítico y lo alto pasa a la ola siguiente.
+6. Cierra la ola con un resumen corto: **en qué fase y ola estás, qué dejó la QA y qué ola
+   sigue**. Le dices *"inicia la ola en otra sesión"* y abre una sesión nueva con el prompt
+   de arranque (o te lo da para pegarlo, si no puede abrirla). Cada ola en su sesión: ninguna
+   arrastra el contexto de las anteriores, y eso ahorra tokens en cada mensaje.
+7. Cuando quieras publicar, mergeas el PR **`chore(release): versión`** que mantiene la
    Action: junta los changesets, sube la versión y escribe el CHANGELOG.
 
 Mientras tanto puedes seguir con otra cosa. Lo que se te ocurra después va a
 `context/plans/pendientes.md`, no a la tanda en curso.
+
+**Una fase entera en olas.** Lo mismo sirve para construir: `/orchestrate arranca la fase 04`
+parte la fase en olas (`context/plans/fase-04-secciones.md`) y lanza la primera. Cada cierre
+te dice "Fase 04 · ola 2 de 3 cerrada · sigue ola 3"; al cerrar la última, sigue la fase
+siguiente.
+
+**Cuentas de prueba.** En cuanto el sitio tiene login, `backend-build` te pide crear una
+cuenta de prueba por rol (dedicada, no la tuya ni la de un cliente) y ponerla en
+`.env.local`:
+
+```
+EMAIL_TEST=…            PASSWORD_TEST=…            # usuario normal
+ADMIN_EMAIL_TEST=…      ADMIN_PASSWORD_TEST=…      # administrador
+EDITOR_EMAIL_TEST=…     EDITOR_PASSWORD_TEST=…     # cualquier otro rol: <ROL>_…
+```
+
+La QA inicia sesión con ellas solo en localhost, sin ver los valores (los scripts los leen
+del entorno). Puede crear datos reales con esas cuentas siempre que los borre: los marca
+`[QA ola N]`, los anota en `context/plans/` mientras los crea y los borra al terminar. Lo que
+la app no deje borrar te llega como "Datos sin borrar", con el SQL exacto.
 
 ### Paso 7 — Devolver lo aprendido al kit
 

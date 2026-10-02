@@ -1,6 +1,6 @@
 ---
 name: orchestrate
-description: Orquestador de tandas. Úsala cuando César llega con una lista de varias cosas a la vez (features, fixes, pedidos de diseño) y quiere que se resuelvan en paralelo en el pool de worktrees del proyecto. Mapea cada pedido al código, agrupa por archivos que se tocan, ordena en olas, reserva números (decisiones, filas), toma un slot del pool por unidad, hace de una vez las preguntas que bloquean, escribe un brief común y un prompt por unidad, lanza workers feature-worker en segundo plano y consolida sus informes y PRs.
+description: Orquestador de tandas y fases. Úsala cuando César llega con una lista de varias cosas a la vez, cuando arranca una fase para hacerla en olas, o cuando pide "la ola N" / "inicia la tanda". Mapea cada pedido al código, agrupa por archivos que se tocan, ordena en olas (una por sesión), reserva números, toma un slot del pool por unidad, hace de una vez las preguntas que bloquean, lanza workers feature-worker en segundo plano, consolida sus PRs, tras el merge lanza wave-qa con las cuentas de prueba, y cierra la ola diciendo en qué fase y ola se está y qué ola sigue.
 ---
 
 # Orquestar una tanda
@@ -10,7 +10,7 @@ escribir prompts precisos) se hace **una vez**; cada worker arranca en frío y s
 que su prompt le señala. Por eso tú vas con esfuerzo alto y ellos con medio (ver
 `reference/TOKEN-ECONOMY.md` §11-12).
 
-Requisito: el agente `feature-worker` instalado (`~/.claude/agents/` o `.claude/agents/`)
+Requisito: los agentes `feature-worker` y `wave-qa` instalados (`~/.claude/agents/` o `.claude/agents/`)
 **antes de abrir la sesión**. Los agentes se cargan al arrancar: uno creado a mitad de
 sesión da "Agent type not found" hasta que se abre una sesión nueva.
 
@@ -23,7 +23,29 @@ pwsh -NoProfile -File "$USERPROFILE/.claude/skills/orchestrate/scripts/wt.ps1" <
 
 (Con el kit instalado en el proyecto, la ruta es `.claude/skills/orchestrate/scripts/wt.ps1`.)
 
+**Una ola por sesión.** César usa "ola" y "tanda" para lo mismo: un grupo de unidades que
+corren en paralelo, se mergean y pasan QA juntas. Cada ola vive en su propia sesión: la
+que la lanza acumula mapeo, prompts e informes, y arrastrar eso a la ola siguiente cuesta
+tokens en cada mensaje sin aportar nada (`reference/TOKEN-ECONOMY.md`). Lo que la ola
+siguiente necesita va a disco (§9).
+
+| César dice | Qué haces |
+|---|---|
+| una lista de pedidos | §1-§7 sobre la lista. Si sale más de una ola, el plan en olas va a `context/plans/tanda-<fecha>.md` (misma plantilla que una fase) |
+| "fase 0N" / "arranca la fase 04" | §0 y luego la ola 1 |
+| "ola N de la fase 0N" (el prompt de arranque) | lee **solo** el plan y `CURRENT_PHASE.md`, y §1-§7 para las unidades de esa ola |
+
 ---
+
+## 0. Partir una fase en olas
+
+Con `phases/0N-*.md` del proyecto, el inventario que toque y el handoff de esa fase (por
+partes, no entero): lista las unidades, agrúpalas en olas con las reglas de §3 y escribe
+`context/plans/fase-0N-<nombre>.md` (plantilla: `fase-plan-template.md` en esta carpeta).
+Una línea por unidad: rama, qué, archivos principales. Los prompts detallados **no** van
+aquí: los escribe la sesión de cada ola, sobre el `main` que dejó la anterior.
+
+En `CURRENT_PHASE.md`, "Ahora" pasa a: fase, ola en curso de cuántas, y la ruta del plan.
 
 ## 1. Mapear cada pedido al código
 
@@ -49,6 +71,9 @@ hacen se pregunta ahora, en una sola tanda (máx. 4 preguntas, con opción recom
 - ¿Pueden aplicar cambios **aditivos** en la base (columnas nuevas) vía MCP, o los deja
   escritos para César?
 - Decisiones de producto que el pedido deja abiertas y que cambian el diseño de la unidad.
+
+No preguntes por la QA de cierre: el servidor y las cuentas de prueba de `wave-qa` ya están
+autorizados (§8).
 
 Lo demás (detalles visuales, copy) lo decide el worker de forma conservadora y lo deja
 explicado en el PR con su alternativa.
@@ -96,8 +121,8 @@ Dos archivos en `context/plans/` (local):
 En disco y no solo en el mensaje: sobreviven a un reinicio de sesión y al worker le basta
 con "tu prompt es la sección W3 de ese archivo" — lo escribes una vez, no dos.
 
-Guarda también una memoria del proyecto que apunte a esos dos archivos y diga en qué ola
-va la tanda.
+Guarda también una memoria del proyecto que apunte a esos dos archivos y al plan de la
+fase o tanda, y diga en qué ola va.
 
 ## 6. Lanzar
 
@@ -153,9 +178,75 @@ commitear, pregúntale al worker qué son antes de tocar nada.
 El PR `chore(release): versión` lo abre la Action y lo mergea César cuando quiere publicar:
 no es de la tanda, ni tú ni los workers lo editan o mergean.
 
-Ola siguiente: cuando las unidades de las que depende estén mergeadas.
+La ola no se cierra con PRs abiertos. Cuando César diga que están mergeados (compruébalo:
+`gh pr view <n> --json state`), libera sus slots y sigue con §8.
 
-## 8. Lo que ya se aprendió (no lo redescubras)
+## 8. QA de la ola
+
+Cuando **todos** los PRs de la ola están mergeados. Una QA por ola, no por PR: lo que
+nadie ha probado son las unidades juntas, en `main`, con sesión iniciada.
+
+```bash
+wt take qa/f0N-ola-N        # rama sin commits sobre origin/main: reserva el slot
+```
+
+```
+Agent(
+  subagent_type: "wave-qa",
+  run_in_background: true,
+  description: "QA ola N fase 0N",
+  prompt: "Slot `C:\…\<repo>-wt\wt1` (main @ <sha>), puerto 4301. Carpeta principal: `…`.
+           Fase 0N, ola N. PRs: #12 (W1 hero: <su 'Cómo probarlo' en 2 líneas>), #13 (…).
+           Flujos con sesión o datos: <cuáles y qué rol los usa>.
+           Costuras: <#12 y #13 tocan la misma página X>."
+)
+```
+
+No hace falta repetirle lo que el agente ya trae: levanta su servidor; inicia sesión con
+`EMAIL_TEST`/`PASSWORD_TEST`, `ADMIN_EMAIL_TEST`/`ADMIN_PASSWORD_TEST` y
+`<ROL>_EMAIL_TEST`/`<ROL>_PASSWORD_TEST` de `.env.local` sin ver los valores; crea datos
+reales solo si los registra y los borra al terminar.
+
+Con el informe:
+- Guárdalo en `context/plans/qa-ola-0N-N.md` y `wt free` del slot de QA.
+- **Crítico o Alto** → unidad de arreglo al principio de la ola siguiente. Si bloquea lo que
+  se construye encima, es una ola de arreglo propia antes de la siguiente planificada.
+- **Medio o Bajo** → `context/plans/pendientes.md`.
+- **Datos sin borrar** y **acciones de César** → "Bloquea" de `CURRENT_PHASE.md`.
+- Su "Feedback para el kit" → `context/KIT_FEEDBACK.md`, como el de los workers.
+
+Si hay flujos con login y `.env.local` no tiene cuentas de prueba: lánzalo igual (prueba lo
+público y lo marca), y en el cierre pide a César crearlas (`backend-build` §2, Secretos).
+
+## 9. Cerrar la ola y pasar a la siguiente
+
+1. Plan de la fase: estado de la ola, fila de "Cierres", arreglos añadidos a la ola
+   siguiente, y el **prompt de arranque** de la siguiente.
+2. `CURRENT_PHASE.md`: "Ahora" con la fase y la ola siguiente; "Bloquea" con lo de la QA.
+3. A César, y nada más:
+
+```
+**Fase 04 — Secciones · ola 2 de 3 cerrada**
+PRs mergeados: #12 hero · #13 servicios
+QA: 0 críticos · 1 alto · 2 medios — el alto pasa a la ola 3 (doble envío del formulario)
+Bloquea: <datos sin borrar / cuentas que faltan / nada>
+
+**Sigue: ola 3 de 3** — fix doble envío · `feat/testimonios` · `feat/precios`
+Para lanzarla: "inicia la ola en otra sesión"
+```
+
+Si era la última ola, "Sigue" es la fase siguiente del track (su ola 1 empieza por §0).
+
+4. Cuando César diga "inicia la ola/tanda en otra sesión" (o lo equivalente):
+   - Comprueba antes que todo lo que la ola siguiente necesita está en disco (plan,
+     `CURRENT_PHASE.md`, `pendientes.md`): la sesión nueva no ve esta conversación.
+   - Si tienes la herramienta de la app para abrir otra sesión (en la app de escritorio,
+     `start_session`), ábrela en la carpeta principal con el prompt de arranque como primer
+     mensaje y dile a César cuál es. Esta sesión no lanza nada más.
+   - Si no la tienes: el prompt de arranque en un bloque, para pegarlo en una sesión nueva
+     abierta en el proyecto.
+
+## 10. Lo que ya se aprendió (no lo redescubras)
 
 - **Archivos locales compartidos:** los workers no editan `CURRENT_PHASE` ni
   `CONTENT_CHECKLIST` (se pisarían); escriben su propio `PHASE_LOG/<rama>.md` o lo
@@ -169,9 +260,10 @@ Ola siguiente: cuando las unidades de las que depende estén mergeadas.
   primera vez): excluir de Windows Defender la carpeta de trabajo, la del pool
   (`..\<repo>-wt`) y `%USERPROFILE%\.bun\install\cache`; y activar en GitHub *Settings ›
   General › Automatically delete head branches*.
-- **`.env` de producción:** los workers verifican como invitados; no crean cuentas ni
-  escriben datos reales. Para estados que dependen de datos (rankings, listas largas),
-  interceptan la respuesta en el navegador solo para depurar.
+- **`.env` de producción:** los `feature-worker` verifican como invitados; no inician
+  sesión, no crean cuentas ni escriben datos reales. Para estados que dependen de datos
+  (rankings, listas largas), interceptan la respuesta en el navegador solo para depurar. La
+  prueba con sesión y datos es de `wave-qa`, tras el merge (§8), con las cuentas de prueba.
 - **Navegador compartido:** cada worker crea su propia pestaña y pasa su `tabId`.
 - **Operaciones destructivas en la base** (DELETE de filas viejas): las escribe el worker,
   no las ejecuta; y el clasificador de seguridad puede bloquearlas también al orquestador

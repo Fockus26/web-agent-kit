@@ -65,7 +65,7 @@ contigo**: hacer preguntas, presentar 3 opciones, esperar tu aprobación.
 | **`frontend-build`** | Handoff → código, una unidad a la vez | Cada unidad de UI |
 | **`backend-build`** | Auth, sesiones, datos, pagos, formularios | Cada unidad de funcionalidad |
 | **`git-flow`** | Ramas, commits, verificación, capturas, poda de `context/`; cierre por PR (modo `pr`) o con pausa + merge local (modo `local`) | Al abrir y cerrar cada unidad |
-| **`orchestrate`** | Mapea una lista de pedidos al código, agrupa, ordena en olas, reserva números, pregunta lo que bloquea y lanza un `feature-worker` por unidad | Cuando llegan varias cosas a la vez |
+| **`orchestrate`** | Mapea una lista de pedidos (o una fase) al código, agrupa, ordena en olas, reserva números, pregunta lo que bloquea y lanza un `feature-worker` por unidad; con la ola mergeada lanza `wave-qa`, la cierra diciendo fase, ola y lo que sigue, y abre la siguiente en otra sesión | Cuando llegan varias cosas a la vez · al hacer una fase en olas |
 | **`a11y`** | Puerta WCAG 2.1 AA | Siempre que se toque UI, antes de la revisión |
 | **`seo`** | Metadata, JSON-LD, sitemap, Core Web Vitals | Init del repo · sección con contenido · página |
 
@@ -77,6 +77,7 @@ unidad completa, en su slot del pool de worktrees, hasta el PR.
 | Agente | Qué hace | Cuándo lo lanzas |
 |---|---|---|
 | **`feature-worker`** | Implementa una unidad de punta a punta (rama, código, tests, verificación, capturas, PR) con el prompt que le prepara `orchestrate`. Opus, esfuerzo medio | Lo lanza `orchestrate` |
+| **`wave-qa`** | Con la ola ya mergeada, levanta el servidor sobre `main` y recorre sus flujos como usuario real, con las cuentas de prueba de `.env.local` por rol (`EMAIL_TEST`, `ADMIN_EMAIL_TEST`, `<ROL>_EMAIL_TEST`…); los datos que crea, los borra | Lo lanza `orchestrate` al cerrar cada ola |
 | **`design-qa`** | 320px a 3840px, daltonismo, zoom 400%, movimiento reducido, alto contraste, foco, coherencia de tokens. Con Playwright + axe. | Al cerrar una página o toda la integración |
 | **`functional-qa`** | Intenta romper el flujo: entradas límite, dobles clics, red caída, sesión expirada, precios manipulados, webhooks duplicados | Al cerrar un flujo completo |
 
@@ -118,7 +119,7 @@ cp -r "$kit"/.claude/skills/* ~/.claude/skills/
 cp -r "$kit"/.claude/agents/* ~/.claude/agents/
 ```
 
-Verifica con `/skills` y `/agents`. Deberías ver las siete skills y los tres agentes.
+Verifica con `/skills` y `/agents`. Deberías ver las siete skills y los cuatro agentes.
 
 > **Los agentes se cargan al abrir la sesión.** Si instalas o editas uno con una sesión
 > abierta, esa sesión no lo ve ("Agent type not found"): abre una sesión nueva.
@@ -250,9 +251,9 @@ web-agent-kit/
 ├── CLAUDE.md.template             va a la raíz de cada proyecto (≤ 8 KB: mapa, no manual)
 ├── .claude/
 │   ├── skills/                    las 7 skills → ~/.claude/skills/
-│   │   └── orchestrate/           + brief-template.md, unit-prompt-template.md y
+│   │   └── orchestrate/           + brief-, unit-prompt- y fase-plan-template.md y
 │   │                                scripts/wt.ps1 (pool de worktrees reciclables)
-│   └── agents/                    design-qa, functional-qa, feature-worker → ~/.claude/agents/
+│   └── agents/                    design-qa, functional-qa, feature-worker, wave-qa → ~/.claude/agents/
 ├── prompts/
 │   ├── CLAUDE-DESIGN-BRIEF.template.md   lo que se le pega a Claude Design
 │   ├── DESIGN-HANDOFF.template.md        lo que debe volver, y su verificación
