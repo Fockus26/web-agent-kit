@@ -126,6 +126,10 @@ Antes de siquiera mencionar un commit:
    `CHANGELOG.md`: los genera el PR de versión. Docs, tests, CI y refactors: sin changeset.
 7. **Capturas**, si cambió algo visible (ver 2.1.1).
 8. **Podar `context/`** (ver 2.1.2).
+9. **Feedback para el kit**: repasa la unidad. ¿César corrigió algo que hiciste siguiendo el
+   kit, te pidió lo mismo por segunda vez, hizo a mano un paso que el kit podría hacer, o el
+   kit no decía qué hacer? Fila en `context/KIT_FEEDBACK.md` (o suma 1 a "Veces" si ya
+   existe). Si no hubo nada, no se escribe nada. Un worker lo pone en su informe.
 
 Si alguna falla, no es momento de commitear: arréglalo o repórtalo.
 

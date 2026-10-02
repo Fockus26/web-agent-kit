@@ -24,6 +24,7 @@ al cerrar cada unidad de trabajo.
 | `decisions/` | Un archivo por decisión; su primera línea es la fila del índice | quien decide |
 | `PHASE_LOG/` | La narrativa de cada unidad (por rama) y de cada fase cerrada | quien cierra la unidad |
 | `GIT_STATE.md` | Modo (`pr` / `local`) y rama base | `git-flow` |
+| `KIT_FEEDBACK.md` | Correcciones, repeticiones, huecos y fricciones con el kit; de ahí sale el informe para mejorarlo | quien cierra la unidad |
 
 ## Cómo se lee (y cuánto cuesta)
 
@@ -31,7 +32,7 @@ al cerrar cada unidad de trabajo.
 |---|---|---|
 | Siempre | `CURRENT_PHASE.md` (≤ 60 líneas) | Se lee entero, en cada sesión |
 | Según la tarea | `DESIGN_RULES`, `COLORS`, `TYPOGRAPHY`, `DESIGN_TOKENS`, `PROJECT_CONTEXT` | Solo si la tarea toca eso (tabla de `CLAUDE.md`) |
-| Buscar | `decisions/`, `CONTENT_CHECKLIST`, inventarios, `PHASE_LOG/` | `grep` por palabra o ID; se abre solo lo que sale |
+| Buscar | `decisions/`, `CONTENT_CHECKLIST`, inventarios, `PHASE_LOG/`, `KIT_FEEDBACK` | `grep` por palabra o ID; se abre solo lo que sale |
 
 Por eso los archivos de "siempre" tienen tope y los de "buscar" tienen filas de una línea.
 Detalle en `reference/TOKEN-ECONOMY.md` del kit.

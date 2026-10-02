@@ -49,6 +49,8 @@ de Stripe la densidad de información sin sensación de saturación" sí.]
 **Logo:** {{disponible / en desarrollo / no hay}} — {{descripción o nota de uso}}
 **Colores obligatorios:** {{hex exactos, o "ninguno — propón la paleta"}}
 **Tipografía obligatoria:** {{nombre exacto, o "ninguna — propón"}}
+**Icono / isotipo:** {{lo tiene el cliente (adjunto) | diséñalo derivado del logo (sección 7) | no aplica}}
+**Favicon, apple touch icon e imagen Open Graph:** {{los tiene el cliente | diséñalos (sección 7)}}
 **Otras:** {{ej. "el cliente odia el morado", "debe convivir con una app existente que usa X"}}
 
 ## 4. Sistema visual de partida
@@ -67,6 +69,7 @@ Claude Design proponga, escribe "PROPÓN" y da la dirección.]
 | text secondary | {{#______}} | {{#______}} | |
 | success / warning / error | {{...}} | {{...}} | |
 | border / divider | {{#______}} | {{#______}} | |
+| selection (fondo / texto) | {{#______ / #______}} | {{#______ / #______}} | {{texto seleccionado; ratio anotado; distinto del foco y de los enlaces}} |
 
 **Dark mode:** {{sí — obligatorio / no / opcional}}
 
@@ -118,11 +121,26 @@ sugerencia: es la estructura que el frontend va a implementar.]
 
 - [ ] Estados vacíos (lista sin resultados, carrito vacío, sin pedidos aún)
 - [ ] Estados de carga (skeletons por sección, no un spinner global)
-- [ ] Estados de error (404, 500, fallo de red, formulario rechazado)
+- [ ] **Pantallas de estado**, como una familia visual (cabecera mínima con el logo,
+      etiqueta, título con la voz de la marca, una línea de qué pasó, acciones):
+  - [ ] **404** — {{con sesión: "Ir al inicio" + "<destino principal del usuario>" ·
+        invitado: "Ir al inicio" + "Entrar"}} {{— o, sin autenticación, una sola 404 con
+        "Ir al inicio" + "<acción principal>"}}
+  - [ ] **500 con código** (el código visible y copiable para escribir a soporte;
+        "Reintentar" + "Ir al inicio") y **500 sin código**
+  - [ ] **Sin conexión** (qué revisar, qué se conserva, "Reintentar")
+  - [ ] **Mantenimiento con hora** ("Volvemos aproximadamente: <fecha y hora local>") y
+        **sin hora**
+- [ ] Error dentro de una pantalla (formulario rechazado, fallo de red al guardar): no a
+      pantalla completa
 - [ ] Formularios: reposo, foco, relleno, error con mensaje, éxito, deshabilitado, enviando
 - [ ] Botones: reposo, hover, foco, activo, cargando, deshabilitado
 - [ ] Navegación abierta en mobile
-- [ ] {{Autenticado vs. anónimo}}
+- [ ] Color de selección de texto, en claro {{y oscuro}}
+- [ ] {{Icono derivado del logo: legible a 16 px, SVG para fondo claro y oscuro, apple touch
+      icon 180×180 con fondo opaco, maskable — solo si el cliente no lo tiene}}
+- [ ] {{Plantilla de imagen Open Graph 1200×630 — solo si el cliente no la tiene}}
+- [ ] {{Autenticado vs. anónimo — solo si hay autenticación}}
 - [ ] Contenido extremo: título de 3 líneas, nombre de 40 caracteres, lista de 1 y de 50 ítems
 
 ## 8. Contenido
@@ -178,7 +196,13 @@ caption), espaciado, radios, sombras, duraciones y curvas de animación, z-index
 breakpoint, padding lateral por breakpoint, ritmo vertical entre secciones.
 
 **5. Assets** — lista de todo lo que hay que exportar o conseguir: imágenes (con dimensiones
-y formato), íconos (con el set del que salen), ilustraciones, logo en sus variantes.
+y formato), íconos (con el set del que salen), ilustraciones, logo en sus variantes, y los
+assets de marca: icono fuente (SVG), favicon, apple touch icon 180×180, icono maskable y la
+plantilla de imagen Open Graph 1200×630 (qué texto lleva y qué zona es segura al recortar).
+
+**5b. Pantallas de estado** — por cada variante de la sección 7: layout, copy, acciones,
+qué cambia entre variantes (con/sin sesión, con/sin código, con/sin hora) y cómo se ve en
+mobile.
 
 **6. Movimiento** — qué anima, con qué duración y curva, y qué se apaga bajo
 `prefers-reduced-motion`.

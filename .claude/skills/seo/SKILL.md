@@ -84,16 +84,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 Si hay rutas dinámicas (productos, artículos), el sitemap **se genera desde los datos**. Un
 sitemap escrito a mano queda desactualizado la primera semana.
 
-### Imagen OG por defecto
+### Assets de marca: favicon, touch icon, manifest y OG
 
-`app/opengraph-image.tsx` (1200×630). Si no hay diseño de OG todavía, deja un placeholder
-generado con `ImageResponse` y registra la fila en `CONTENT_CHECKLIST.md`. Una página sin OG
-image compartida en WhatsApp o LinkedIn se ve rota, y eso pesa más que casi cualquier otro
-detalle de esta lista.
+Antes de crear nada, mira `PROJECT_CONTEXT.md` › Assets de marca: el arranque dejó escrito,
+pieza por pieza, si **lo tiene el cliente**, si **hay que crearlo** (y si Claude Design ya lo
+entregó) o si **no aplica**. Si esa sección no existe, pregúntaselo a César — no asumas que
+hay que generarlo ni que el cliente lo tiene. Tamaños, archivos y reglas:
+`reference/BRAND-ASSETS.md` del kit.
 
-### Favicons y manifest
+- `app/favicon.ico`, `app/icon.svg` (+ `icon.png` 512), `app/apple-icon.png` (180×180,
+  fondo opaco), `app/manifest.ts` (192, 512 y maskable). Todo derivado de **un** icono fuente.
+- `app/opengraph-image.tsx` (1200×630) con la plantilla de Claude Design, o la del cliente.
+  Una página sin OG compartida en WhatsApp o LinkedIn se ve rota, y eso pesa más que casi
+  cualquier otro detalle de esta lista.
+- Lo que aún no llegó (icono del cliente, OG sin aprobar): placeholder generado con
+  `ImageResponse` desde los tokens y el nombre del sitio — **marcado como provisional** — y
+  su fila en `CONTENT_CHECKLIST.md`.
 
-`app/icon.png` (512×512), `app/apple-icon.png` (180×180), `app/manifest.ts`.
+### Páginas de estado
+
+404, 500 y mantenimiento no se indexan ni van al sitemap: la 404 ya sale con `noindex` y
+estado 404; mantenimiento responde 503 con `Retry-After` (ver
+`reference/STATUS-SCREENS.md`). La galería `/estados` de desarrollo, fuera del sitemap y
+bloqueada en producción.
 
 ### Fuentes
 

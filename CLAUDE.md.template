@@ -9,6 +9,8 @@
 
 **Tipo:** {{landing | e-commerce | corporativo | dashboard | blog | app}} · **Cliente:** {{...}}
 **Track de fases:** {{Landing | Sitio | Producto}} · **Modo git:** {{pr | local}} (ver `context/GIT_STATE.md`)
+**Kit:** web-agent-kit, versión en `.kit-version` (se actualiza con `prompts/ACTUALIZAR-KIT.md` del kit) ·
+**Despliegue:** {{Vercel <proyecto> · preview por PR | otro | ninguno}}
 
 ---
 
@@ -87,9 +89,9 @@ algo que se revisa en dos minutos. Una unidad = una rama = {{un PR | un merge lo
 
 ### Qué va al repo y qué es local
 
-En git: {{los documentos fijos de context/: PROJECT_CONTEXT, DESIGN_RULES, COLORS, DESIGN_TOKENS,
-TYPOGRAPHY, decisions/}}.
-Local (gitignored): {{CURRENT_PHASE, CONTENT_CHECKLIST, inventarios, PHASE_LOG/, plans/, .env}}.
+En git: `.kit-version` y {{los documentos fijos de context/: PROJECT_CONTEXT, DESIGN_RULES, COLORS,
+DESIGN_TOKENS, TYPOGRAPHY, decisions/}}.
+Local (gitignored): {{CURRENT_PHASE, CONTENT_CHECKLIST, KIT_FEEDBACK, inventarios, PHASE_LOG/, plans/, .env}}.
 Los slots del pool de worktrees (`orchestrate`, `..\<repo>-wt\wtN`) traen los `.env*`
 copiados, pero **no** `context/` local: se lee en la carpeta principal
 (`{{RUTA_ABSOLUTA_DEL_REPO}}`). Un subagente en un slot puede no tener permiso de escritura
@@ -126,6 +128,13 @@ ahí: entonces los devuelve en su informe y el orquestador los copia.
 - Algo rompe una regla de accesibilidad → gana la regla, se escala.
 - Problema en código ya cerrado → se reporta, no se arregla dentro de la unidad actual.
 - Archivo sin uso → se señala, **no se borra**.
+
+## Feedback para el kit
+
+Cuando César corrija algo que hiciste siguiendo el kit, te pida lo mismo por segunda vez,
+haga a mano un paso que el kit podría hacer, o el kit no diga qué hacer: fila en
+`context/KIT_FEEDBACK.md` (o +1 en "Veces" si ya está). Sin preguntar y sin anunciarlo
+más que en una línea. Cuando pida "el informe para el kit", sigue el formato de ese archivo.
 
 ---
 

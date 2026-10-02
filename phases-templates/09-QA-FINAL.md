@@ -25,7 +25,10 @@ Los dos agentes de QA pueden correr en paralelo: auditan cosas distintas y no se
 - [ ] La sección "Acciones requeridas de César" de `functional-qa` está resuelta o
       explícitamente pospuesta.
 - [ ] `CONTENT_CHECKLIST.md` revisado: qué contenido real sigue pendiente para el lanzamiento.
+- [ ] Pantallas de estado y assets de marca revisados (`design-qa` §8b; tarjeta OG sobre la
+      URL desplegada).
 - [ ] `CURRENT_PHASE.md` y `PHASE_LOG/09-qa.md` cerrados.
+- [ ] **Informe para el kit** generado desde `context/KIT_FEEDBACK.md` y entregado a César.
 
 ## Entrega
 

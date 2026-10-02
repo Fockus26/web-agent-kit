@@ -108,12 +108,13 @@ Sigue el orden que trae el handoff. Si no lo trae, este:
 
 ```
 1. Tokens          → el sistema de tema de la librería elegida, light/dark
-2. Layout base     → tipografía, contenedor, grid, reset
+2. Layout base     → tipografía, contenedor, grid, reset, ::selection, favicon
 3. Primitivos      → los componentes de ui/ que todo lo demás usa
 4. Componentes     → los compuestos del handoff
 5. Secciones       → en el orden vertical de cada página
 6. Páginas         → ensamblar y conectar rutas
-7. Estados         → vacío, carga, error, 404
+7. Estados         → vacío, carga, error; pantallas 404 / 500 / sin conexión /
+                     mantenimiento (reference/STATUS-SCREENS.md del kit)
 8. Responsive      → pulido en todos los breakpoints
 ```
 
@@ -151,6 +152,8 @@ un commit gigante.
 - `PHASE_LOG/<rama>.md` — la narrativa de la unidad (qué, verificado, no verificado).
 - `CURRENT_PHASE.md` — solo la fila de la unidad con su estado; si pasa de ~60 líneas,
   mueve lo cerrado a `PHASE_LOG/` (ver `git-flow` §2.1.2).
+- `KIT_FEEDBACK.md` — si en la unidad César corrigió algo que hiciste siguiendo el kit, te
+  pidió algo por segunda vez o el kit no cubría el caso (ver `git-flow` §2.1, paso 9).
 
 Este es el paso que hace que la sesión siguiente arranque sabiendo dónde quedó todo. Saltarlo
 se siente eficiente y cuesta media hora de reconstrucción después.

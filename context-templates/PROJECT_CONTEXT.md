@@ -63,6 +63,26 @@
 - Despliegue: {{Vercel | VPS | hosting del cliente}}
 - Dominio: {{... | pendiente}}
 
+## Repo y despliegue
+
+- Repo: {{https://github.com/<dueño>/<repo> | sin remoto (modo local) | no autorizado aún}}
+- Vercel: {{proyecto <equipo>/<proyecto> en la cuenta de César | del cliente | no aplica}}
+- Producción: {{URL}} · Previews: {{uno por PR | no}}
+- DNS gestionado por: {{César | el cliente | proveedor}}
+- Mantenimiento: {{sí, por MAINTENANCE_MODE / MAINTENANCE_UNTIL | no aplica}}
+
+## Assets de marca
+
+| Pieza | Estado | Dónde / nota |
+|---|---|---|
+| Logo | {{lo tiene el cliente · hay que crearlo · no aplica}} | {{ruta del SVG / fila #N del checklist}} |
+| Icono / isotipo | {{...}} | |
+| Favicon | {{...}} | |
+| Apple touch icon | {{...}} | |
+| Imagen Open Graph | {{...}} | |
+
+Detalle de tamaños y archivos: `reference/BRAND-ASSETS.md` del kit.
+
 ## Alcance de páginas
 
 | Página | Ruta | Prioridad v1 |
@@ -71,7 +91,8 @@
 
 ## Funcionalidad más allá de lo estático
 
-- [ ] Autenticación de usuarios
+- [ ] Autenticación de usuarios — destino principal con sesión: {{ej. "Mi curso" | N/A}}
+      (segunda acción de la 404 con sesión)
 - [ ] Persistencia de datos de usuario
 - [ ] Pagos
 - [ ] Carrito / checkout

@@ -135,6 +135,9 @@ Cuando llega cada informe:
 - Copia su `PHASE_LOG` y los archivos locales que dejó (SQL, plantillas) a la carpeta
   principal si el worker no pudo escribir ahí (un worktree en sandbox no suele poder).
 - Actualiza `CURRENT_PHASE.md` (una fila por PR, tablero corto) y `CONTENT_CHECKLIST.md`.
+- Pasa su "Feedback para el kit" a `context/KIT_FEEDBACK.md` (si ya hay una fila del mismo
+  problema, suma a "Veces"). Si varios workers tropezaron con lo mismo, es una señal fuerte:
+  dilo en el resumen a César.
 - A César: tabla de PRs (número, salto patch/minor/major o ninguno, qué cambia, slot),
   orden de merge solo si una unidad depende de otra, decisiones abiertas y acciones
   manuales. Nada más.

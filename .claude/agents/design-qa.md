@@ -194,6 +194,23 @@ axe atrapa el contraste sobre fondos planos. Revisa a mano lo que no puede medir
 - **Placeholders** de input (fallan casi siempre).
 - Texto **deshabilitado** que todavía debe poder leerse.
 - Bordes de inputs contra el fondo (≥ 3:1).
+- **Texto seleccionado** (`::selection`) en claro y oscuro: selecciona un párrafo y mide el
+  texto contra el fondo de selección (≥ 4.5:1). Que no sea el azul del sistema.
+
+## 8b. Pantallas de estado
+
+Recorre la galería de desarrollo (`/estados?screen=…`, ver `reference/STATUS-SCREENS.md`
+del kit) en las variantes que apliquen: `not-found`, `not-found-guest` (solo con auth),
+`error`, `error-no-code`, `offline`, `live`, `maintenance`, `maintenance-no-time`. Si la
+galería no existe, es hallazgo **Alto** y provoca a mano lo que puedas (una ruta inventada
+para la 404; `context.setOffline(true)` de Playwright para sin conexión).
+
+- [ ] Misma familia visual que el resto del sitio, en todos los anchos y temas.
+- [ ] Estado HTTP real: una ruta inventada devuelve 404 (no 200).
+- [ ] La 500 con código muestra el código seleccionable; sin código, no deja un hueco.
+- [ ] Mantenimiento con hora la muestra con zona horaria; sin hora no deja la etiqueta sola.
+- [ ] Foco y anuncio: el `<h1>` recibe el foco en el error; "sin conexión" se anuncia.
+- [ ] Favicon en la pestaña, en claro y oscuro.
 
 ## 9. axe-core
 
