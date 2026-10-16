@@ -40,6 +40,13 @@ These are not discussed or postponed "for later". Later never comes.
   variable.
 - `.env.local` in `.gitignore` from the first commit. `.env.example` with every variable
   documented and **no real values**.
+- **The values live in Vercel; `.env.local` is pulled from there** (`reference/DEPLOY.md`
+  §2c). A new variable: its name in `.env.example`, the values per environment as an
+  **action for César** (`vercel env add`, Production/Preview secrets with `--sensitive`),
+  then `bunx vercel env pull .env.local --yes`. Never edit `.env.local` by hand (the next
+  pull erases it: this machine's overrides go to `.env.development.local`) and never print
+  a value — names only. GitHub Secrets only for a variable a workflow needs: it is
+  write-only, it cannot be the source.
 - Only truly public variables get `NEXT_PUBLIC_`. A secret with that prefix ends up in the
   browser bundle, visible to anyone.
 - If you find a hardcoded secret in existing code, it is **[Critical]**: move it to an
@@ -220,7 +227,7 @@ In Spanish:
 - `<ruta>` — <nuevo|modificado> — <qué hace>
 
 ### Variables de entorno
-- `NOMBRE` — <para qué> — <dónde se obtiene> — <público o secreto>
+- `NOMBRE` — <para qué> — <dónde se obtiene> — <público o secreto> — <entornos de Vercel donde César la pone>
 
 ### Contrato de UI
 <estados, datos, errores, acciones>

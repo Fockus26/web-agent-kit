@@ -36,6 +36,46 @@ other, the agent shows them and asks before choosing.
 
 ---
 
+## 3.9.0 — 2026-10-16 · Environment variables: Vercel is the source
+
+**What changed**
+
+- **`reference/DEPLOY.md` §2c**: the real values live in Vercel, per environment;
+  `.env.local` is pulled from there (`bunx vercel env pull .env.local --yes`, Development)
+  and never edited by hand; this machine's overrides go to `.env.development.local` (it wins
+  over `.env.local` in `next dev`); `.env.test.local` stays local. A new variable: name in
+  `.env.example`, values in Vercel as an action for César (Production/Preview secrets with
+  `--sensitive`), pull. GitHub Secrets only for the variable a workflow needs, one by one.
+  Why: the `.env*` files were gitignored and not in any backup — losing the folder lost the
+  keys — and GitHub Secrets, the usual suggestion, is write-only: it can receive a `.env`
+  but never give it back.
+- `backend-build` (Secrets), `project-kickoff` (Step 4b: the first pull), `GUIDE.md` §5–6 and
+  the comment in `ci.yml` follow it. `CLAUDE.md.template` no longer lists `.env*` among the
+  files backed up to `context-state` (they never were).
+
+**Steps for a project on 3.8.0**
+
+1. Global pieces: `install-kit.ps1 -Pull` and a new session (already done if `kit-update`
+   runs it).
+2. `CLAUDE.md`, section on what goes in the repo ("What goes in the repo and what is local" /
+   "Qué va al repo y qué es local"): take `.env*` out of the local list backed up to
+   `context-state`, and in its place one line: "`.env.local` is pulled from Vercel, never
+   hand-edited (`vercel env pull`; kit `reference/DEPLOY.md` §2c)." (in the project's
+   language). It replaces, the size barely grows.
+3. **If the project is linked to Vercel** (`.vercel/project.json`): the "First pull" of
+   DEPLOY §2c — compare the names of `.env.local` with `bunx vercel env ls development`
+   (names only, never values) and list in the PR, as an **action for César**, the variables
+   that are only local (upload them to Development) and the ones that are this machine's
+   (move them to `.env.development.local`). The agent **does not** run the pull in the
+   migration: it would erase what is only local. César runs it once he has uploaded them.
+4. **If it is not linked to Vercel:** nothing; `.env.local` stays as it is and the first
+   pull comes with the deployment (DEPLOY §2).
+5. If a workflow in `.github/workflows/` reads `secrets.*` other than `GITHUB_TOKEN`: list
+   them in `PROJECT_CONTEXT.md` › Repo and deployment as duplicated in GitHub (they are set
+   again when they change in Vercel).
+
+---
+
 ## 3.8.0 — 2026-10-16 · The kit in English, `context/` backup, git rules for `context/` and `supabase/`
 
 **What changed**

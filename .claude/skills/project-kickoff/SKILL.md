@@ -290,7 +290,8 @@ does not bump its version (and still consumes the changesets). How they are writ
 **Manual actions for César** (state them when closing the kickoff; the agent does not do them):
 
 - What Step 4b could not do (no `gh`/`vercel` session, no permission, 403).
-- The domain's DNS and the secret values of the environment variables.
+- The domain's DNS and the secret values of the environment variables, in Vercel
+  (`reference/DEPLOY.md` §2c).
 - If he will use `orchestrate`: exclude from Windows Defender the working folder, the pool
   folder (`..\<repo>-wt`) and `%USERPROFILE%\.bun\install\cache`.
 
@@ -307,7 +308,9 @@ Follow `reference/DEPLOY.md`:
    (delete branches on merge, permission for the Action to open the version PR, protection
    of `main`). Each setting is read back to confirm it. `GIT_STATE.md` → `pr` mode.
 2. **Vercel**: `vercel link`, `vercel git connect` (preview per PR, production on merge to
-   `main`), non-secret environment variables (`NEXT_PUBLIC_SITE_URL`), domain if there is one.
+   `main`), non-secret environment variables (`NEXT_PUBLIC_SITE_URL`), domain if there is one,
+   and `.env.local` pulled from Vercel (`bunx vercel env pull .env.local --yes`; if it was
+   already written by hand, DEPLOY §2c "First pull" first: the pull overwrites it).
 3. `PROJECT_CONTEXT.md` › Repo and deployment with the real URLs.
 4. First `bun run context:backup` (private repo): from here on the local state survives
    losing the folder.
