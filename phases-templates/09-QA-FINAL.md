@@ -1,42 +1,41 @@
-# Fase 09 — QA final
+# Phase 09 — Final QA
 
-## Objetivo
+## Goal
 
-Auditoría independiente antes de entregar. Aquí **no se diseña nada nuevo**: se verifica y se
-corrige lo que ya existe.
+An independent audit before delivery. **Nothing new is designed** here: what exists gets
+verified and fixed.
 
-## Cómo se ejecuta
+## How it runs
 
-1. **Lanza `design-qa`** sobre todas las rutas. Devuelve hallazgos verificados con capturas.
-2. **Lanza `functional-qa`** sobre cada flujo funcional, si el proyecto tiene backend.
-3. `frontend-build` y `backend-build` corrigen los hallazgos por severidad, de arriba hacia
-   abajo. Cada corrección es su propia unidad de trabajo, con su rama y su commit.
-4. Se relanza el QA que corresponda para confirmar que lo corregido quedó corregido — y que
-   no se rompió otra cosa de paso.
+1. **Launch `design-qa`** over every route. It returns verified findings with screenshots.
+2. **Launch `functional-qa`** over each functional flow, if the project has a backend.
+3. `frontend-build` and `backend-build` fix the findings by severity, from the top down.
+   Each fix is its own unit of work, with its branch and its commit.
+4. The relevant QA is run again to confirm what was fixed stays fixed — and that nothing
+   else broke along the way.
 
-Los dos agentes de QA pueden correr en paralelo: auditan cosas distintas y no se pisan.
+Both QA agents can run in parallel: they audit different things and do not overlap.
 
-## Criterio de cierre
+## Closing criteria
 
-- [ ] Cero hallazgos **críticos** abiertos, en ambos QA.
-- [ ] Hallazgos **altos** corregidos, o documentados con la razón y aceptados por César.
-- [ ] Medios y bajos registrados en `decisions/` (un `D0NN-<tema>.md` por decisión, categoría QA) aunque no se corrijan — la decisión
-      de no corregir también es una decisión, y conviene que quede escrita.
-- [ ] La sección "Acciones requeridas de César" de `functional-qa` está resuelta o
-      explícitamente pospuesta.
-- [ ] `CONTENT_CHECKLIST.md` revisado: qué contenido real sigue pendiente para el lanzamiento.
-- [ ] Pantallas de estado y assets de marca revisados (`design-qa` §8b; tarjeta OG sobre la
-      URL desplegada).
-- [ ] `CURRENT_PHASE.md` y `PHASE_LOG/09-qa.md` cerrados.
-- [ ] **Feedback para el kit** enviado con `/kit-feedback` (PR en el repo del kit), si quedan
-      filas sin enviar en `context/KIT_FEEDBACK.md`.
+- [ ] Zero open **critical** findings, in both QAs.
+- [ ] **High** findings fixed, or documented with the reason and accepted by César.
+- [ ] Medium and low ones recorded in `decisions/` (one `D0NN-<topic>.md` per decision,
+      category QA) even if not fixed — deciding not to fix is also a decision, and it is
+      worth having it written.
+- [ ] `functional-qa`'s "Actions for César" section is resolved or explicitly postponed.
+- [ ] `CONTENT_CHECKLIST.md` reviewed: which real content is still pending for launch.
+- [ ] Status screens and brand assets reviewed (`design-qa` §8b; OG card on the deployed URL).
+- [ ] `CURRENT_PHASE.md` and `PHASE_LOG/09-qa.md` closed, and `bun run context:backup`.
+- [ ] **Kit feedback** sent with `/kit-feedback` (PR on the kit's repo), if there are unsent
+      rows in `context/KIT_FEEDBACK.md`.
 
-## Entrega
+## Delivery
 
-Al cerrar, produce un resumen para César con:
+When closing, produce a summary for César (in Spanish) with:
 
-- Qué se auditó y con qué cobertura (la matriz de `design-qa`).
-- Qué se corrigió.
-- Qué queda abierto y por qué.
-- Qué contenido real falta para poder lanzar.
-- Qué acciones manuales quedan de su lado.
+- What was audited and with which coverage (`design-qa`'s matrix).
+- What was fixed.
+- What remains open and why.
+- What real content is missing to be able to launch.
+- What manual actions remain on his side.

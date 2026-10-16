@@ -1,252 +1,272 @@
 ---
 name: git-flow
-description: Flujo de ramas y commits del kit. Úsala siempre que se vaya a empezar una unidad de trabajo (fase, sección, componente, feature) y siempre que una unidad de trabajo termine y esté lista para revisión. Tiene dos modos según context/GIT_STATE.md - "pr" (rama → push → Pull Request que César revisa y mergea; lo normal con repo en GitHub) y "local" (pausa de aprobación → commit → merge a la base). Cubre ramas, Conventional Commits, verificación, capturas, poda de context/, changesets (versión/changelog) y la regla de push.
+description: The kit's branch and commit flow. Use it whenever a unit of work (phase, section, component, feature) is about to start, and whenever a unit of work is finished and ready for review. It has two modes per context/GIT_STATE.md - "pr" (branch → push → Pull Request that César reviews and merges; the normal case with a GitHub repo) and "local" (approval pause → commit → merge into the base). Covers branches, Conventional Commits, verification, screenshots, pruning and backing up context/, changesets (version/changelog) and the push rule.
 ---
 
 # Git Flow
 
-Este es el flujo de git **obligatorio** de todos los proyectos del kit. Ningún agente
-commitea por su cuenta ni empieza a escribir código en la rama que esté activa por casualidad.
+This is the **mandatory** git flow of every kit project. No agent commits on its own or
+starts writing code on whatever branch happens to be checked out.
 
-Hay dos momentos en los que esta skill se activa: **al abrir** una unidad de trabajo y **al
-cerrarla**. Entre esos dos momentos no se toca git para nada.
+**Language:** commit descriptions, PR titles and bodies, and everything you tell César are
+in Spanish. Projects created before kit 3.8.0 keep their `context/` files in Spanish: use
+them as they are.
+
+The skill activates at two moments: **when opening** a unit of work and **when closing**
+it. Between those two moments git is not touched at all.
 
 ---
 
-## 0. Estado de ramas: `context/GIT_STATE.md`
+## 0. Branch state: `context/GIT_STATE.md`
 
-Antes de crear cualquier rama, lee `context/GIT_STATE.md`. Dice el **modo** (`pr` o
-`local`) y cuál es la **rama base** de la unidad que vas a abrir.
+Before creating any branch, read `context/GIT_STATE.md`. It states the **mode** (`pr` or
+`local`) and which is the **base branch** of the unit you are about to open.
 
-- **Modo `pr`** (repo con remoto y `main` protegida): la base es siempre `main`
-  actualizada; el cierre es la sección **2A**. No hay pausa antes del commit: la revisión
-  de César es el PR.
-- **Modo `local`**: rama madre opcional, pausa de aprobación, merge local; el cierre es la
-  sección **2B**.
+- **`pr` mode** (repo with a remote and protected `main`): the base is always an updated
+  `main`; closing is section **2A**. No pause before the commit: César's review is the PR.
+- **`local` mode**: optional parent branch, approval pause, local merge; closing is
+  section **2B**.
 
-Si el archivo no existe, pregúntale a César el modo una vez y créalo desde la plantilla
-del kit (`context-templates/GIT_STATE.md`). Forma mínima en modo `local`:
+If the file does not exist, ask César for the mode once and create it from the kit
+template (`context-templates/GIT_STATE.md`). Minimal form in `local` mode:
 
 ```markdown
 # Git State
 
-## Rama madre activa
-`{{rama o "ninguna — las unidades salen directo de main"}}`
+## Active parent branch
+`{{branch or "none — units branch straight off main"}}`
 
-## Rama base de la próxima unidad
-`{{main | nombre-de-la-rama-madre}}`
+## Base branch of the next unit
+`{{main | parent-branch-name}}`
 
-## Ramas de trabajo abiertas
-| Rama | Base | Unidad | Estado |
+## Open working branches
+| Branch | Base | Unit | Status |
 |---|---|---|---|
 ```
 
-Este archivo es la fuente de verdad de "¿a dónde mergeo cuando termine?". Nunca lo deduzcas
-de `git branch --show-current`: si algo salió mal antes, esa rama puede no ser la correcta.
+This file is the source of truth for "where do I merge when I'm done?". Never infer it from
+`git branch --show-current`: if something went wrong earlier, that branch may be the wrong one.
 
 ---
 
-## 1. Al ABRIR una unidad de trabajo
+## 1. When OPENING a unit of work
 
-### 1.1 Decidir si hace falta rama madre (solo modo `local`)
+### 1.1 Decide whether a parent branch is needed (`local` mode only)
 
-En modo `pr` no hay ramas madre: cada unidad sale de `main` y vuelve por su PR. Un bloque
-grande se parte en varios PR pequeños (y, si son muchos a la vez, lo reparte la skill
-`orchestrate`).
+In `pr` mode there are no parent branches: each unit leaves `main` and comes back through
+its PR. A big block is split into several small PRs (and, if many at once, the
+`orchestrate` skill distributes them).
 
-En modo `local`, pregúntale a César **una sola vez por bloque de trabajo**, no por cada componente:
+In `local` mode, ask César **once per block of work**, not per component:
 
-- **Proyecto pequeño / trabajo suelto** (una landing, un fix, dos o tres componentes):
-  las ramas de trabajo salen directo de `main`. No hay rama madre.
-- **Bloque grande** (integrar todo el diseño, el módulo de autenticación completo, un
-  checkout entero): se crea una **rama madre** desde `main`, y cada pieza sale como
-  **sub-rama** de esa madre.
+- **Small project / loose work** (a landing page, a fix, two or three components): working
+  branches leave `main` directly. No parent branch.
+- **Big block** (integrating the whole design, the full authentication module, a whole
+  checkout): a **parent branch** is created from `main`, and each piece leaves as a
+  **sub-branch** of it.
 
-Ejemplo de bloque grande:
+Big block example:
 
 ```
 main
- └── design/integration            ← rama madre (base de todas las de abajo)
-      ├── design/hero              ← sub-rama, base = design/integration
+ └── design/integration            ← parent branch (base of all the ones below)
+      ├── design/hero              ← sub-branch, base = design/integration
       ├── design/navbar
       └── design/pricing
 ```
 
-Cuando creas una rama madre, actualiza `GIT_STATE.md` para que todas las unidades
-siguientes salgan de ella sin volver a preguntar.
+When you create a parent branch, update `GIT_STATE.md` so that every following unit leaves
+from it without asking again.
 
-### 1.2 Crear la rama
+### 1.2 Create the branch
 
 ```bash
-git checkout <rama-base>
-git pull --ff-only origin <rama-base>   # solo si la base ya existe en remoto
-git checkout -b <tipo>/<descripcion-kebab-case>
+git checkout <base-branch>
+git pull --ff-only origin <base-branch>   # only if the base already exists on the remote
+git checkout -b <type>/<kebab-case-description>
 ```
 
-En un **slot del pool de worktrees** (unidad delegada por `orchestrate`), la rama ya viene
-creada: la hizo `wt take` desde `origin/main`. No crees otra ni cambies de rama.
+In a **worktree pool slot** (a unit delegated by `orchestrate`), the branch already exists:
+`wt take` created it from `origin/main`. Do not create another one or switch branches.
 
-**Tipos válidos:** `feat`, `fix`, `refactor`, `style`, `docs`, `chore`, `perf`, `test`,
+**Valid types:** `feat`, `fix`, `refactor`, `style`, `docs`, `chore`, `perf`, `test`,
 `design`, `a11y`, `seo`.
 
-Reglas del nombre: minúsculas, sin acentos, sin espacios, máximo ~5 palabras después del tipo.
+Name rules: lowercase, no accents, no spaces, at most ~5 words after the type.
 
-| Bien | Mal |
+| Good | Bad |
 |---|---|
 | `feat/auth-magic-link` | `feature/Autenticación con magic link` |
 | `design/hero` | `hero` |
-| `fix/footer-broken-links` | `fix/varias-cosas` |
+| `fix/footer-broken-links` | `fix/several-things` |
 
-En modo `local`, registra la rama nueva en la tabla de `GIT_STATE.md` con su base y su
-estado `abierta` (en modo `pr` el estado es `gh pr list`; no hay tabla que mantener).
+In `local` mode, record the new branch in the `GIT_STATE.md` table with its base and the
+status `open` (in `pr` mode the status is `gh pr list`; there is no table to keep).
 
-### 1.3 Confirmar y arrancar
+### 1.3 Confirm and start
 
-Dile a César en una línea: rama creada, cuál es su base, y qué se va a hacer en ella.
-A partir de aquí, git no se vuelve a tocar hasta que la unidad esté terminada.
+Tell César in one line: branch created, its base, and what will be done in it. From here,
+git is not touched again until the unit is finished.
 
 ---
 
-## 2. Al CERRAR una unidad de trabajo
+## 2. When CLOSING a unit of work
 
-### 2.1 Puertas previas (no negociables)
+### 2.1 Gates (non-negotiable)
 
-Antes de siquiera mencionar un commit:
+Before even mentioning a commit:
 
-1. **Si la unidad tocó UI:** la skill `a11y` ya tiene que haber corrido y estar en verde, o
-   con sus hallazgos abiertos explícitamente aceptados por César. Sin eso, no se cierra.
-2. **Si la unidad cerró una sección con contenido, una página, o inicializó el repo:** la
-   skill `seo` ya tiene que haber corrido.
-3. `bun run build` (o el comando de build del proyecto) pasa sin errores.
-4. `bunx tsc --noEmit` y el linter pasan, si el proyecto los tiene configurados.
-5. **Tests:** durante el trabajo bastó `bun run test:related`; aquí va la suite completa
-   (`bun run test`, con `--dots`). CI la vuelve a correr en el PR.
-6. **Changeset**, si el proyecto lleva versión (tiene `.changeset/`; si su `CLAUDE.md` dice
-   "sin versión", nunca: es una decisión, no algo que falte por migrar): si quien usa el sitio
-   nota el cambio, agrega `.changeset/<desc>.md` (ver 2.1.3). No toques `version` ni
-   `CHANGELOG.md`: los genera el PR de versión. Docs, tests, CI y refactors: sin changeset.
-7. **Capturas**, si cambió algo visible (ver 2.1.1).
-8. **Podar `context/`** (ver 2.1.2).
-9. **Feedback para el kit**: repasa la unidad. ¿César corrigió algo que hiciste siguiendo el
-   kit, te pidió lo mismo por segunda vez, hizo a mano un paso que el kit podría hacer, o el
-   kit no decía qué hacer? Fila en `context/KIT_FEEDBACK.md` (o suma 1 a "Veces" si ya
-   existe). Si no hubo nada, no se escribe nada. Un worker lo pone en su informe.
+1. **If the unit touched UI:** the `a11y` skill must already have run and be green, or
+   with its open findings explicitly accepted by César. Without that, it does not close.
+2. **If the unit closed a section with content, a page, or initialized the repo:** the
+   `seo` skill must already have run.
+3. `bun run build` (or the project's build command) passes with no errors.
+4. `bunx tsc --noEmit` and the linter pass, if the project has them configured.
+5. **Tests:** during the work `bun run test:related` was enough; here goes the full suite
+   (`bun run test`, with `--dots`). CI runs it again on the PR.
+6. **Changeset**, if the project is versioned (it has `.changeset/`; if its `CLAUDE.md`
+   says "no versioning", never: it is a decision, not something left to migrate): if
+   whoever uses the site notices the change, add `.changeset/<desc>.md` (see 2.1.3). Do not
+   touch `version` or `CHANGELOG.md`: the version PR generates them. Docs, tests, CI and
+   refactors: no changeset.
+7. **Screenshots**, if something visible changed (see 2.1.1).
+8. **Prune and back up `context/`** (see 2.1.2).
+9. **Kit feedback**: go over the unit. Did César correct something you did following the
+   kit, ask you for the same thing a second time, do by hand a step the kit could do, or
+   did the kit not say what to do? A row in `context/KIT_FEEDBACK.md` (or add 1 to "Times"
+   if it exists). If there was nothing, nothing is written. A worker puts it in its report.
 
-Si alguna falla, no es momento de commitear: arréglalo o repórtalo.
+If any fails, it is not time to commit: fix it or report it.
 
-#### 2.1.1 Capturas para la revisión
+#### 2.1.1 Screenshots for the review
 
-Si la unidad cambió algo visible y el sitio está corriendo:
+If the unit changed something visible and the site is running:
 
-1. **Reescribe** `.pr-shots.json` (gitignored) con los estados que cambiaron: móvil (375) y
-   escritorio (1280), claro y oscuro (`"scheme": "both"`), y "antes" solo si ayuda a ver
-   el cambio. Para llegar a un estado usa `steps` (clics, esperas) o `storage`. La URL del
-   servidor va en `base` (no `baseUrl`). Nunca reutilices el que hay: en un slot del pool es
-   el de la unidad anterior, y se publicaron capturas ajenas por eso.
-2. `bun run shots` (node + Playwright; no con bun: en Windows se cuelga).
-3. Modo `pr`: `bun run shots:publish` en segundo plano (en Windows tarda varios minutos).
-   El markdown queda en `.pr-shots/README.md`: pégalo en la sección "Capturas" del PR. Modo
-   `local`: da las rutas de los PNG en la pausa de aprobación.
+1. **Rewrite** `.pr-shots.json` (gitignored) with the states that changed: mobile (375) and
+   desktop (1280), light and dark (`"scheme": "both"`), and "before" only if it helps see
+   the change. To reach a state use `steps` (clicks, waits) or `storage`. The server URL
+   goes in `base` (not `baseUrl`). Never reuse the one that is there: in a pool slot it
+   belongs to the previous unit, and other units' screenshots got published because of it.
+2. `bun run shots` (node + Playwright; not with bun: it hangs on Windows).
+3. `pr` mode: `bun run shots:publish` in the background (on Windows it takes minutes). The
+   markdown is left in `.pr-shots/README.md`: paste it into the PR's "Screenshots" section.
+   `local` mode: give the PNG paths in the approval pause.
 
-Si el proyecto no tiene `shots` / `shots:publish` en `package.json` (creado antes de la
-3.0.0 o sin `nuevo-proyecto.ps1`), no improvises otra carpeta: dilo en el PR ("Capturas: el
-proyecto no tiene los scripts") y anótalo en `KIT_FEEDBACK.md`; `/kit-update` los instala.
+If the project has no `shots` / `shots:publish` in `package.json` (created before 3.0.0 or
+without `new-project.ps1`), do not improvise another folder: say so in the PR ("Capturas:
+el proyecto no tiene los scripts") and log it in `KIT_FEEDBACK.md`; `/kit-update` installs
+them.
 
-**No abras las imágenes** para revisarlas: tu verificación ya la hiciste midiendo el DOM,
-y cada imagen vista cuesta muchos tokens. Si una captura falla, no bloquea: se dice en el
-PR ("Capturas: no disponibles — <motivo>").
+**Do not open the images** to review them: you already verified by measuring the DOM, and
+each image you look at costs a lot of tokens. If a screenshot fails, it does not block: say
+so in the PR ("Capturas: no disponibles — <motivo>").
 
-#### 2.1.2 Podar `context/` antes de cerrar
+#### 2.1.2 Prune and back up `context/` before closing
 
 ```bash
-wc -c CLAUDE.md context/CURRENT_PHASE.md              # tope ~8000 / ~4000
-grep -rh "^# D" context/decisions/ | awk 'length > 200'   # cabeceras que son párrafos
+wc -c CLAUDE.md context/CURRENT_PHASE.md                  # cap ~8000 / ~4000
+grep -rh "^# D" context/decisions/ | awk 'length > 200'   # headers that are paragraphs
 ```
 
-- La narrativa de la unidad (qué, verificado, no verificado, hallazgos) → `PHASE_LOG/<rama>.md`.
-- En `CURRENT_PHASE.md` queda la fila de la unidad con su estado y el enlace; lo cerrado
-  de unidades anteriores que siga ahí, se mueve.
-- Decisiones: un archivo `decisions/D0NN-<tema>.md` por decisión, con su cabecera de una
-  línea. No hay índice compartido que editar: dos PRs que deciden cosas no chocan.
+- The unit's narrative (what, verified, not verified, findings) → `PHASE_LOG/<branch>.md`.
+- `CURRENT_PHASE.md` keeps the unit's row with its status and link; anything closed from
+  earlier units that is still there moves out.
+- Decisions: one file `decisions/D0NN-<topic>.md` per decision, with its one-line header.
+  There is no shared index to edit: two PRs that decide things do not collide.
 
-#### 2.1.3 Changesets: versión y CHANGELOG sin conflictos
+Then, **in the main folder** (not in a pool slot, which has no local `context/`):
 
-`bunx changeset` hace preguntas y no sirve para un agente: el archivo se escribe a mano.
-Nombre en kebab-case, descriptivo y único (`.changeset/repetir-combinacion.md`):
+```bash
+bun run context:backup     # local context/ → orphan branch context-state
+```
+
+The local files of `context/` (`CURRENT_PHASE`, `CONTENT_CHECKLIST`, `PHASE_LOG/`,
+`plans/`, `KIT_FEEDBACK`) are not in git on purpose — parallel workers would collide on
+them — but they are the only record of where the project stands. The backup goes to the
+`context-state` branch (never to `main`, never in the PR), and only commits if something
+changed. After losing the folder: clone and `bun run context:restore`. On a public repo the
+script refuses (the checklist may hold client data): say so to César. If the project does
+not have the script yet, say so; `/kit-update` adds it.
+
+#### 2.1.3 Changesets: version and CHANGELOG without conflicts
+
+`bunx changeset` asks questions and is useless for an agent: the file is written by hand.
+Kebab-case name, descriptive and unique (`.changeset/repeat-combination.md`):
 
 ```md
 ---
-"<name de package.json>": minor
+"<name from package.json>": minor
 ---
 
 Ahora puedes repetir una combinación desde el historial.
 ```
 
-Salto: **major** rompe datos guardados o quita algo · **minor** función nueva · **patch**
-arreglo. El texto, en lenguaje de usuario. Dos PRs en paralelo no chocan: cada uno trae su
-archivo.
+Bump: **major** breaks stored data or removes something · **minor** new feature ·
+**patch** fix. The text is user-facing, in the site's language. Two PRs in parallel do not
+collide: each brings its own file.
 
-Al llegar a `main`, la Action `release.yml` abre (o actualiza) el PR
-`chore(release): versión`, que junta los changesets, sube `version` y escribe el
-`CHANGELOG.md`. **Lo abre la Action y lo mergea César** cuando quiere publicar; ningún agente
-lo edita ni lo mergea. En modo `local` no hay Action: cuando César pide publicar,
-`bunx --bun changeset version` en la base y el commit `chore(release): versión` pasa por la
-pausa de aprobación como cualquier otro.
+When it reaches `main`, the `release.yml` Action opens (or updates) the
+`chore(release): version` PR, which gathers the changesets, bumps `version` and writes
+`CHANGELOG.md`. **The Action opens it and César merges it** when he wants to publish; no
+agent edits or merges it. In `local` mode there is no Action: when César asks to publish,
+`bunx --bun changeset version` on the base, and the `chore(release): version` commit goes
+through the approval pause like any other.
 
-#### Migrar un proyecto existente a Changesets
+#### Migrating an existing project to Changesets
 
-En un PR propio, `chore/changesets`, sin mezclar con otra cosa:
+In a PR of its own, `chore/changesets`, not mixed with anything else:
 
 1. `bun add -d @changesets/cli`.
-2. Copia del kit `changeset-templates/` como `.changeset/` y
-   `github-templates/workflows/release.yml` a `.github/workflows/`.
-3. `CHANGELOG.md` y `version` se quedan como están: la Action continúa desde ahí (la
-   versión nueva va encima de la última entrada).
-4. Añade `workflow_dispatch:` a los `on:` de `.github/workflows/ci.yml`: `release.yml` lo
-   usa para correr el CI sobre el PR de versión (lo abre `GITHUB_TOKEN`, que no dispara
-   `pull_request`), y así ese PR tiene el check `ci` sin saltarse la protección.
-5. Acción manual de César en GitHub: *Settings › Actions › General › Allow GitHub Actions
+2. Copy the kit's `changeset-templates/` as `.changeset/` and
+   `github-templates/workflows/release.yml` to `.github/workflows/`.
+3. `CHANGELOG.md` and `version` stay as they are: the Action continues from there (the new
+   version goes above the last entry).
+4. Add `workflow_dispatch:` to the `on:` of `.github/workflows/ci.yml`: `release.yml` uses it
+   to run CI on the version PR (opened by `GITHUB_TOKEN`, which does not trigger
+   `pull_request`), so that PR gets the `ci` check without bypassing protection.
+5. Manual action for César in GitHub: *Settings › Actions › General › Allow GitHub Actions
    to create and approve pull requests*.
 
-Los PRs que ya estaban abiertos con su subida de versión se ajustan al sincronizar con
-`main`: quitan su cambio de `version`/`CHANGELOG.md` y agregan su changeset.
+PRs that were already open with their own version bump get adjusted when they sync with
+`main`: they drop their `version`/`CHANGELOG.md` change and add their changeset.
 
 ---
 
-## 2A. Cierre en modo `pr`
+## 2A. Closing in `pr` mode
 
-En tu rama puedes commitear y empujar **sin pedir permiso**: la aprobación de César es su
-revisión del PR.
+On your branch you may commit and push **without asking**: César's approval is his review
+of the PR.
 
 ```bash
-git add <archivos concretos de la unidad>          # nunca -A a ciegas
-git commit -m "<tipo>(<alcance>): <descripción>"   # uno o varios, Conventional Commits
-git push -u origin <rama>
-gh pr create --base main --title "<tipo>(<alcance>): <descripción>" --body-file <archivo>
+git add <the unit's specific files>                  # never -A blindly
+git commit -m "<type>(<scope>): <descripción>"       # one or several, Conventional Commits
+git push -u origin <branch>
+gh pr create --base main --title "<type>(<scope>): <descripción>" --body-file <file>
 ```
 
-El cuerpo sigue `.github/pull_request_template.md`: qué cambia, por qué, cómo probarlo,
-**capturas**, cómo se verificó y qué no, decisiones tomadas con su alternativa, y
-**acciones manuales** (SQL, dashboards, orden de despliegue).
+The body follows `.github/pull_request_template.md`: what changes, why, how to test it,
+**screenshots**, how it was verified and what was not, decisions taken with their
+alternative, and **manual actions** (SQL, dashboards, deploy order).
 
-Después:
+Afterwards:
 
-- **Nunca** `gh pr merge`, nunca auto-merge, nunca push a `main`. El merge (squash) es de César.
-- ¿Cambios pedidos en el PR? Nuevos commits en la misma rama + push. Sin amend ni
-  force-push sobre lo empujado.
-- ¿`main` avanzó y hay conflicto? `git fetch origin && git merge origin/main` (merge, no
-  rebase), resuelve y vuelve a pasar la verificación. Conflicto típico cuando hay PRs en
-  paralelo: los índices de `context/` (se conservan las filas de los dos lados).
-- El PR `chore(release): versión` lo abre la Action; lo mergea César; ningún agente lo edita
-  ni lo mergea.
-- Tras el merge: `git switch main && git pull`. Ojo: si el PR dejó de trackear archivos,
-  el pull los borra del disco — cópialos fuera antes si hacen falta.
+- **Never** `gh pr merge`, never auto-merge, never push to `main`. The merge (squash) is César's.
+- Changes requested on the PR? New commits on the same branch + push. No amend or force-push
+  over what was pushed.
+- `main` moved and there is a conflict? `git fetch origin && git merge origin/main` (merge,
+  not rebase), resolve and run the verification again. Typical conflict with parallel PRs:
+  the indexes in `context/` (keep both sides' rows).
+- The `chore(release): version` PR is opened by the Action and merged by César; no agent
+  edits or merges it.
+- After the merge: `git switch main && git pull`. Careful: if the PR stopped tracking files,
+  the pull deletes them from disk — copy them out first if you need them.
 
-## 2B. Cierre en modo `local`
+## 2B. Closing in `local` mode
 
-### 2.2 Pausa de aprobación — OBLIGATORIA
+### 2.2 Approval pause — MANDATORY
 
-**Nunca commitees sin aprobación explícita de César.** Preséntale esto y **detente**:
+**Never commit without César's explicit approval.** Present this to him (in Spanish) and
+**stop**:
 
 ```
 ## Listo para revisión — <unidad>
@@ -273,117 +293,117 @@ Después:
 ¿Lo apruebo y sigo con el merge, o hay algo que ajustar?
 ```
 
-Espera respuesta. "Se ve bien", "dale", "aprobado" cuentan como aprobación. El silencio no.
-Si César pide cambios, se aplican y se vuelve a presentar este mismo bloque desde cero.
+Wait for the answer. "Se ve bien", "dale", "aprobado" count as approval. Silence does not.
+If César asks for changes, apply them and present this same block again from scratch.
 
 ### 2.3 Commit
 
-Conventional Commits: `<tipo>(<alcance>): <descripción>`
+Conventional Commits: `<type>(<scope>): <description>`
 
-- Modo imperativo en español: "agrega", no "agregado" ni "agregando".
-- Primera línea < 72 caracteres, sin punto final.
-- Cuerpo opcional tras una línea en blanco, para el "por qué" si no es obvio.
-- `git add` **solo los archivos de esta unidad**. Nunca `git add -A` a ciegas: si hay
-  archivos sueltos de otra cosa, se quedan fuera y lo mencionas.
-
-```bash
-git add <archivos concretos>
-git commit -m "<tipo>(<alcance>): <descripción>"
-```
-
-**Si el diff mezcla temas sin relación causal** (un fix de accesibilidad en un componente
-viejo + una feature nueva de pagos), divídelo en dos commits antes de mergear, y dilo. No
-fuerces todo a un commit por comodidad.
-
-### 2.4 Merge a la rama base
+- Description in Spanish, imperative mood: "agrega", not "agregado" or "agregando".
+- First line < 72 characters, no final period.
+- Optional body after a blank line, for the "why" if it is not obvious.
+- `git add` **only this unit's files**. Never `git add -A` blindly: if there are stray files
+  from something else, they stay out and you mention them.
 
 ```bash
-git checkout <rama-base>
-git merge --no-ff <rama-de-trabajo>
+git add <specific files>
+git commit -m "<type>(<scope>): <descripción>"
 ```
 
-`--no-ff` siempre: conserva visible en el historial que hubo una unidad de trabajo separada.
+**If the diff mixes unrelated topics** (an accessibility fix in an old component + a new
+payments feature), split it into two commits before merging, and say so. Do not force
+everything into one commit for convenience.
 
-Si hay conflicto: **para y avisa**. No resuelvas conflictos por tu cuenta sin mostrarle a
-César qué lado se queda con qué. Un merge mal resuelto es la forma más silenciosa de perder
-trabajo suyo.
+### 2.4 Merge into the base branch
 
-### 2.5 Push — la regla clave
-
-```
-¿La rama base es main (o master)?
-├── NO  → git push origin <rama-base>          ← push automático, ya está
-└── SÍ  → NO HAGAS PUSH. Se lo dices a César.
+```bash
+git checkout <base-branch>
+git merge --no-ff <working-branch>
 ```
 
-- **Base ≠ main** (es una rama madre como `design/integration`): commit → merge → **push**.
-  El push a una rama madre es seguro y mantiene el trabajo respaldado en remoto.
-- **Base = main**: commit → merge → **y ahí te detienes**. Reporta:
+`--no-ff` always: it keeps visible in the history that there was a separate unit of work.
+
+If there is a conflict: **stop and tell César**. Do not resolve conflicts on your own
+without showing him which side keeps what. A badly resolved merge is the quietest way to
+lose his work.
+
+### 2.5 Push — the key rule
+
+```
+Is the base branch main (or master)?
+├── NO  → git push origin <base-branch>        ← automatic push, done
+└── YES → DO NOT PUSH. Tell César.
+```
+
+- **Base ≠ main** (a parent branch such as `design/integration`): commit → merge → **push**.
+  Pushing a parent branch is safe and keeps the work backed up on the remote.
+- **Base = main**: commit → merge → **and stop there**. Report:
 
   ```
   ✅ Mergeado a main localmente. No hice push — main lo empujas tú cuando quieras.
      Cuando estés listo: git push origin main
   ```
 
-Esto aplica también cuando se cierra una **rama madre completa** contra `main`: se mergea,
-no se empuja.
+This also applies when a whole **parent branch** is closed against `main`: it is merged,
+not pushed.
 
-### 2.6 Cierre
+### 2.6 Wrap-up
 
-- Actualiza la fila de la rama en `GIT_STATE.md` a `mergeada`.
-- **No borres la rama de trabajo.** Borrar ramas es destructivo y es decisión de César.
-  Si se acumulan muchas, ofrécele la lista de las ya mergeadas para que él decida.
-- Reporta en una línea: qué se commiteó, a dónde se mergeó, y si se hizo push o no.
+- Update the branch's row in `GIT_STATE.md` to `merged`.
+- **Do not delete the working branch.** Deleting branches is destructive and César's call.
+  If many pile up, offer him the list of merged ones so he decides.
+- Report in one line: what was committed, where it was merged, and whether it was pushed.
 
 ---
 
-## 3. Prohibiciones absolutas
+## 3. Absolute prohibitions
 
-Nunca ejecutes, ni siquiera si parece la salida más rápida de un problema:
+Never run, even if it looks like the fastest way out of a problem:
 
 - `git reset --hard`
 - `git push --force` / `--force-with-lease`
 - `git checkout .` / `git restore .` / `git clean -f`
 - `git branch -D` / `git branch -d`
-- `git rebase` sobre ramas ya empujadas
-- `git commit --amend` sobre un commit ya empujado
+- `git rebase` on branches already pushed
+- `git commit --amend` on a commit already pushed
 - `git stash drop` / `git stash clear`
 
-Única excepción: `wt free` (skill `orchestrate`) borra con `git branch -d` la rama de un slot
-ya mergeada; nunca con `-D`.
+Only exception: `wt free` (`orchestrate` skill) deletes a slot's already-merged branch with
+`git branch -d`; never with `-D`.
 
-Si crees que uno de estos es la solución, **descríbeselo a César con qué se perdería
-exactamente** y deja que él lo ejecute. Cuando algo se enreda, la salida segura casi siempre
-es una rama nueva, no reescribir historia.
+If you think one of these is the solution, **describe it to César with exactly what would
+be lost** and let him run it. When something gets tangled, the safe way out is almost
+always a new branch, not rewriting history.
 
 ---
 
-## 4. Ejemplo completo
+## 4. Full example
 
-Bloque grande: integrar el diseño de una landing.
+Big block: integrating a landing page's design.
 
 ```bash
-# ── Abrir el bloque ────────────────────────────────
+# ── Open the block ─────────────────────────────────
 git checkout main
-git checkout -b design/integration          # rama madre
-# GIT_STATE.md: rama madre activa = design/integration
+git checkout -b design/integration          # parent branch
+# GIT_STATE.md: active parent branch = design/integration
 
-# ── Unidad 1: el hero ──────────────────────────────
+# ── Unit 1: the hero ───────────────────────────────
 git checkout -b design/hero                 # base = design/integration
-# ...se implementa, corre a11y, corre build...
-# → PAUSA: se le presenta a César. Él aprueba.
+# ...implement, run a11y, run build...
+# → PAUSE: present it to César. He approves.
 git add components/sections/Hero.tsx components/ui/Button.tsx
 git commit -m "feat(hero): implementa sección hero con CTA principal"
 git checkout design/integration
 git merge --no-ff design/hero
 git push origin design/integration          # base ≠ main → push ✅
 
-# ── Unidad 2: pricing ──────────────────────────────
+# ── Unit 2: pricing ────────────────────────────────
 git checkout -b design/pricing
-# ...mismo ciclo...
+# ...same cycle...
 
-# ── Cerrar el bloque contra main ───────────────────
+# ── Close the block against main ───────────────────
 git checkout main
 git merge --no-ff design/integration
-# base = main → SIN push. Se le avisa a César.
+# base = main → NO push. Tell César.
 ```

@@ -1,47 +1,48 @@
 /**
- * Capturas para el PR — genera PNG de los estados que cambió la unidad.
+ * PR screenshots — generates PNGs of the states the unit changed.
  *
- * Uso (con **node**, no con bun — ver la nota de abajo):
- *   node scripts/pr-screenshots.ts .pr-shots.json   (= bun run shots)   # Node ≥ 23.6 (o 22.x con --experimental-strip-types)
- *   → escribe .pr-shots/<nombre>[-light|-dark].png y lista las rutas.
- *   Después: bun run shots:publish   (= bash scripts/publish-pr-shots.sh .pr-shots)
+ * Usage (with **node**, not bun — see the note below):
+ *   node scripts/pr-screenshots.ts .pr-shots.json   (= bun run shots)   # Node ≥ 23.6 (or 22.x with --experimental-strip-types)
+ *   → writes .pr-shots/<name>[-light|-dark].png and lists the paths.
+ *   Then: bun run shots:publish   (= bash scripts/publish-pr-shots.sh .pr-shots)
  *
- * `.pr-shots.json` lo escribe el agente para su unidad (y va en .gitignore):
+ * `.pr-shots.json` is written by the agent for its unit — rewritten each time, never reused
+ * from the previous unit (and it is in .gitignore). The server URL goes in `base`:
  *
  *   {
  *     "base": "http://localhost:3000",
  *     "shots": [
- *       { "name": "ranking-movil", "path": "/", "width": 375, "height": 812, "scheme": "both",
+ *       { "name": "ranking-mobile", "path": "/", "width": 375, "height": 812, "scheme": "both",
  *         "storage": { "tutorial-seen": "1" },
  *         "steps": [ { "click": "role=button[name='Ver ranking']" },
  *                    { "waitFor": "role=dialog" } ],
  *         "element": "role=dialog" },
- *       { "name": "home-escritorio", "path": "/", "width": 1280, "height": 800 }
+ *       { "name": "home-desktop", "path": "/", "width": 1280, "height": 800 }
  *     ]
  *   }
  *
- * Campos de cada captura:
- *   width/height   viewport (por defecto 1280×800)
- *   scheme         "light" | "dark" | "both" (por defecto "light")
- *   storage        claves de localStorage sembradas antes de cargar (para llegar a un estado)
- *   steps          click | fill+value | press | waitFor | wait (ms) | eval (JS en la página)
- *   element        captura solo ese elemento (más nítida y más liviana que la página)
- *   fullPage       página entera en vez del viewport
+ * Fields of each shot:
+ *   width/height   viewport (default 1280×800)
+ *   scheme         "light" | "dark" | "both" (default "light")
+ *   storage        localStorage keys seeded before loading (to reach a state)
+ *   steps          click | fill+value | press | waitFor | wait (ms) | eval (JS in the page)
+ *   element        captures only that element (sharper and lighter than the page)
+ *   fullPage       whole page instead of the viewport
  *
- * Decisiones que evitan capturas malas o que se cuelgan:
- *   - Service workers bloqueados: nunca se captura un bundle viejo de caché.
- *   - `reducedMotion: 'reduce'`: sin fotos a mitad de una animación.
- *   - Timeout por paso y un reintento por captura; si aun así falla, se sigue con las
- *     demás y se informa al final (una captura que falla no bloquea el PR).
+ * Decisions that avoid bad or hanging screenshots:
+ *   - Service workers blocked: an old cached bundle is never captured.
+ *   - `reducedMotion: 'reduce'`: no photos halfway through an animation.
+ *   - Timeout per step and one retry per shot; if it still fails, it goes on with the
+ *     others and reports at the end (a failing shot does not block the PR).
  *
- * **Por qué node y no bun:** en Windows, Playwright lanzado desde un script de Bun se queda
- * colgado al arrancar Chromium (se comprobó: 170 s sin salida con bun; 3 capturas en
- * segundos con node, mismo script). Aplica a todo script que importe Playwright. Los
- * scripts de `package.json` (`bun run test:e2e` → `playwright test`) no tienen el
- * problema: el binario de Playwright se ejecuta con node por su shebang.
+ * **Why node and not bun:** on Windows, Playwright launched from a Bun script hangs starting
+ * Chromium (checked: 170 s without output with bun; 3 shots in seconds with node, same
+ * script). Applies to every script that imports Playwright. `package.json` scripts
+ * (`bun run test:e2e` → `playwright test`) do not have the problem: Playwright's binary runs
+ * with node through its shebang.
  *
- * El agente **no abre las imágenes** para revisarlas (cuestan muchos tokens): la
- * verificación ya la hizo midiendo el DOM. Las capturas son para quien revisa el PR.
+ * The agent **does not open the images** to review them (they cost many tokens): it already
+ * verified by measuring the DOM. The screenshots are for whoever reviews the PR.
  */
 
 import { chromium, type Page } from '@playwright/test'
@@ -130,6 +131,6 @@ for (const shot of config.shots) {
 
 await browser.close()
 
-console.log(`Capturas escritas (${written.length}):\n  ${written.join('\n  ') || '—'}`)
-if (failed.length) console.log(`\nNo se pudieron tomar (${failed.length}):\n  ${failed.join('\n  ')}`)
+console.log(`Screenshots written (${written.length}):\n  ${written.join('\n  ') || '—'}`)
+if (failed.length) console.log(`\nCould not be taken (${failed.length}):\n  ${failed.join('\n  ')}`)
 process.exit(written.length === 0 && failed.length > 0 ? 1 : 0)

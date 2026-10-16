@@ -1,250 +1,247 @@
-# Plantilla — Brief para Claude Design
+# Template — Brief for Claude Design
 
-> **Para el orquestador:** llena cada `{{...}}` con datos reales del proyecto y entrégale a
-> César el resultado dentro de un bloque de código, listo para copiar y pegar en Claude
-> Design. Borra este recuadro y toda instrucción entre corchetes antes de entregarlo.
+> **For the orchestrator:** fill each `{{...}}` with the project's real data and give César
+> the result inside a code block, ready to copy and paste into Claude Design. Delete this box
+> and every bracketed instruction before delivering it.
 >
-> Tres reglas al llenarlo:
-> 1. **Autocontenido.** Claude Design no ve `context/` ni el repo. Cero referencias a
->    archivos externos.
-> 2. **Cerrado donde importa, abierto donde aporta.** Paleta, tipografía, breakpoints,
->    secciones y su orden van cerrados. El tratamiento visual de cada sección va abierto.
-> 3. **La sección 9 no se toca ni se resume.** Es lo que hace que vuelva un handoff
->    utilizable en vez de solo imágenes.
+> Three rules when filling it:
+> 1. **Self-contained.** Claude Design does not see `context/` or the repo. Zero references
+>    to external files.
+> 2. **Closed where it matters, open where it helps.** Palette, typography, breakpoints,
+>    sections and their order are closed. Each section's visual treatment is open.
+> 3. **Section 9 is not touched or summarized.** It is what makes a usable handoff come back
+>    instead of just images.
 
 ---
 
 ```markdown
-# Brief de diseño — {{NOMBRE_DEL_PROYECTO}}
+# Design brief — {{PROJECT_NAME}}
 
-Eres un diseñador de producto senior. Vas a diseñar {{TIPO_DE_PROYECTO}} completo para el
-proyecto descrito abajo, y además vas a entregar un documento de traspaso a desarrollo (la
-sección 9 de este brief) que un desarrollador frontend usará para implementarlo sin volver a
-consultarte.
+You are a senior product designer. You will design a complete {{PROJECT_TYPE}} for the
+project described below, and you will also deliver a handoff document for development
+(section 9 of this brief) that a frontend developer will use to implement it without
+consulting you again. All the site's copy is in {{LANGUAGE}}.
 
-## 1. El proyecto
+## 1. The project
 
-**Qué es:** {{DESCRIPCIÓN_EN_2_LÍNEAS}}
-**Tipo:** {{landing page | e-commerce | sitio corporativo | dashboard/app | blog | portafolio}}
-**Público:** {{QUIÉN_ENTRA_Y_QUÉ_BUSCA}}
-**Acción principal:** {{LA_ÚNICA_COSA_QUE_EL_VISITANTE_DEBE_HACER}}
-**Idioma / mercado:** {{ej. español, Venezuela}}
+**What it is:** {{2_LINE_DESCRIPTION}}
+**Type:** {{landing page | e-commerce | corporate site | dashboard/app | blog | portfolio}}
+**Audience:** {{WHO_COMES_IN_AND_WHAT_THEY_LOOK_FOR}}
+**Main action:** {{THE_ONE_THING_THE_VISITOR_MUST_DO}}
+**Language / market:** {{e.g. Spanish, Venezuela}}
 
-## 2. Personalidad visual
+## 2. Visual personality
 
-**Dirección elegida:** {{ej. "Editorial sobrio"}}
-**Debe transmitir:** {{3-4 adjetivos}}
-**NO debe parecer:** {{2-3 cosas a evitar — esto guía tanto como lo anterior}}
+**Chosen direction:** {{e.g. "Sober editorial"}}
+**Must convey:** {{3-4 adjectives}}
+**Must NOT look like:** {{2-3 things to avoid — this guides as much as the above}}
 
-**Referencias:**
-- {{URL_O_MARCA}} — específicamente por {{qué exactamente: la tipografía, el ritmo vertical,
-  el tratamiento de foto, la densidad}}
-- {{REFERENCIA_2}} — por {{...}}
+**References:**
+- {{URL_OR_BRAND}} — specifically for {{what exactly: the typography, the vertical rhythm,
+  the photo treatment, the density}}
+- {{REFERENCE_2}} — for {{...}}
 
-[Sé concreto en el "por qué" de cada referencia. "Me gusta Stripe" no dice nada; "me gusta
-de Stripe la densidad de información sin sensación de saturación" sí.]
+[Be concrete about the "why" of each reference. "I like Stripe" says nothing; "I like
+Stripe's information density without a feeling of clutter" does.]
 
-## 3. Restricciones de marca
+## 3. Brand constraints
 
-**Logo:** {{disponible / en desarrollo / no hay}} — {{descripción o nota de uso}}
-**Colores obligatorios:** {{hex exactos, o "ninguno — propón la paleta"}}
-**Tipografía obligatoria:** {{nombre exacto, o "ninguna — propón"}}
-**Icono / isotipo:** {{lo tiene el cliente (adjunto) | diséñalo derivado del logo (sección 7) | no aplica}}
-**Favicon, apple touch icon e imagen Open Graph:** {{los tiene el cliente | diséñalos (sección 7)}}
-**Otras:** {{ej. "el cliente odia el morado", "debe convivir con una app existente que usa X"}}
+**Logo:** {{available / in progress / none / the client has it but has not delivered it (design a provisional one, section 7)}} — {{description or usage note}}
+**Mandatory colors:** {{exact hex, or "none — propose the palette"}}
+**Mandatory typography:** {{exact name, or "none — propose"}}
+**Icon / isotype:** {{the client has it (attached) | design it derived from the logo (section 7) | does not apply}}
+**Favicon, apple touch icon and Open Graph image:** {{the client has them | design them (section 7)}}
+**Other:** {{e.g. "the client hates purple", "must live alongside an existing app that uses X"}}
 
-## 4. Sistema visual de partida
+## 4. Starting visual system
 
-[Si el orquestador ya cerró paleta y tipografía, van aquí como cerradas. Si se decidió que
-Claude Design proponga, escribe "PROPÓN" y da la dirección.]
+[If the orchestrator already closed palette and typography, they go here as closed. If it
+was decided that Claude Design proposes them, write "PROPOSE" and give the direction.]
 
-### Paleta
-| Rol | Light | Dark | Uso |
+### Palette
+| Role | Light | Dark | Use |
 |---|---|---|---|
-| primary | {{#______}} | {{#______}} | {{CTAs, enlaces activos}} |
+| primary | {{#______}} | {{#______}} | {{CTAs, active links}} |
 | secondary | {{#______}} | {{#______}} | |
 | background | {{#______}} | {{#______}} | |
-| surface | {{#______}} | {{#______}} | {{cards, paneles}} |
+| surface | {{#______}} | {{#______}} | {{cards, panels}} |
 | text primary | {{#______}} | {{#______}} | |
 | text secondary | {{#______}} | {{#______}} | |
 | success / warning / error | {{...}} | {{...}} | |
 | border / divider | {{#______}} | {{#______}} | |
-| selection (fondo / texto) | {{#______ / #______}} | {{#______ / #______}} | {{texto seleccionado; ratio anotado; distinto del foco y de los enlaces}} |
-| scrollbar (thumb / track) | {{#______ / #______}} | {{#______ / #______}} | {{barra de scroll; thumb ≥ 3:1 contra el track; discreta, del sistema de color}} |
+| selection (background / text) | {{#______ / #______}} | {{#______ / #______}} | {{selected text; ratio noted; distinct from focus and links}} |
+| scrollbar (thumb / track) | {{#______ / #______}} | {{#______ / #______}} | {{scrollbar; thumb ≥ 3:1 against the track; discreet, from the color system}} |
 
-**Dark mode:** {{sí — obligatorio / no / opcional}}
+**Dark mode:** {{yes — mandatory / no / optional}}
 
-### Tipografía
-- **Titulares:** {{FUENTE}} — {{pesos disponibles}}
-- **Cuerpo:** {{FUENTE}} — {{pesos}}
-- **Mono (si aplica):** {{FUENTE}}
-- **Escala:** {{ej. 1.250 (major third), base 16px}}
+### Typography
+- **Headings:** {{FONT}} — {{available weights}}
+- **Body:** {{FONT}} — {{weights}}
+- **Mono (if it applies):** {{FONT}}
+- **Scale:** {{e.g. 1.250 (major third), base 16px}}
 
-### Espaciado y forma
-- Unidad base: {{8px}} — todo espaciado es múltiplo de esta unidad
-- Radios: {{ej. 6px inputs / 10px cards / 16px modales}} · {{o "sin radios, todo recto"}}
-- Sombras: {{ej. "sutiles, solo en elevación real — nada de sombras decorativas"}}
+### Spacing and shape
+- Base unit: {{8px}} — every spacing is a multiple of this unit
+- Radii: {{e.g. 6px inputs / 10px cards / 16px modals}} · {{or "no radii, all square"}}
+- Shadows: {{e.g. "subtle, only on real elevation — no decorative shadows"}}
 
-## 5. Restricciones no negociables
+## 5. Non-negotiable constraints
 
-Estas aplican a **todo** lo que diseñes. Un diseño que las incumple no se puede implementar
-y hay que rehacerlo.
+These apply to **everything** you design. A design that breaks them cannot be implemented
+and has to be redone.
 
-- **Contraste WCAG 2.1 AA.** Texto normal ≥ 4.5:1, texto grande (≥24px o ≥19px bold) ≥ 3:1,
-  bordes de inputs e íconos informativos ≥ 3:1. Verifica cada par que uses y anota el ratio.
-- **Ningún estado se comunica solo con color.** Error, éxito, seleccionado, activo: siempre
-  color + ícono, texto o forma.
-- **Sin scroll horizontal a 320px de ancho.**
-- **Estados de foco visibles y diseñados**, no el outline por defecto del navegador ni
-  ausencia de él.
-- **Se implementa con {{LIBRERÍA_DE_COMPONENTES}}**. [El orquestador pega aquí el párrafo
-  que corresponda de `reference/UI-LIBRARIES.md` § "Qué le dice el brief a la herramienta de
-  diseño" — cambia lo que es razonable diseñar, así que no lo omitas.]
-- **Breakpoints objetivo:** 360 · 768 · 1024 · 1440 · 1920 {{· 2560 si aplica}}.
+- **WCAG 2.1 AA contrast.** Normal text ≥ 4.5:1, large text (≥24px or ≥19px bold) ≥ 3:1,
+  input borders and informative icons ≥ 3:1. Check every pair you use and note the ratio.
+- **No state is conveyed only by color.** Error, success, selected, active: always color +
+  icon, text or shape.
+- **No horizontal scroll at 320px width.**
+- **Visible, designed focus states**, not the browser's default outline or its absence.
+- **Implemented with {{COMPONENT_LIBRARY}}**. [The orchestrator pastes here the matching
+  paragraph from `reference/UI-LIBRARIES.md` § "What the brief tells the design tool" — it
+  changes what is reasonable to design, so do not omit it.]
+- **Target breakpoints:** 360 · 768 · 1024 · 1440 · 1920 {{· 2560 if it applies}}.
 
-## 6. Páginas y secciones
+## 6. Pages and sections
 
-[Una entrada por página, con sus secciones en el orden vertical exacto. Este orden no es
-sugerencia: es la estructura que el frontend va a implementar.]
+[One entry per page, with its sections in exact vertical order. This order is not a
+suggestion: it is the structure the frontend will implement.]
 
-### {{PÁGINA_1 — ej. Home}}
-| # | Sección | Propósito | Contenido disponible | CTA |
+### {{PAGE_1 — e.g. Home}}
+| # | Section | Purpose | Content available | CTA |
 |---|---|---|---|---|
-| 1 | {{Hero}} | {{qué debe lograr en 3 segundos}} | {{real / placeholder}} | {{cuál}} |
+| 1 | {{Hero}} | {{what it must achieve in 3 seconds}} | {{real / placeholder}} | {{which}} |
 | 2 | {{...}} | | | |
 
-### {{PÁGINA_2}}
+### {{PAGE_2}}
 {{...}}
 
-## 7. Estados y casos que también hay que diseñar
+## 7. States and cases that also need designing
 
-[Lo que casi siempre se olvida y el frontend termina inventando. Marca lo que aplique.]
+[What is almost always forgotten and the frontend ends up inventing. Mark what applies.]
 
-- [ ] Estados vacíos (lista sin resultados, carrito vacío, sin pedidos aún)
-- [ ] Estados de carga (skeletons por sección, no un spinner global)
-- [ ] **Pantallas de estado**, como una familia visual (cabecera mínima con el logo,
-      etiqueta, título con la voz de la marca, una línea de qué pasó, acciones):
-  - [ ] **404** — {{con sesión: "Ir al inicio" + "<destino principal del usuario>" ·
-        invitado: "Ir al inicio" + "Entrar"}} {{— o, sin autenticación, una sola 404 con
-        "Ir al inicio" + "<acción principal>"}}
-  - [ ] **500 con código** (el código visible y copiable para escribir a soporte;
-        "Reintentar" + "Ir al inicio") y **500 sin código**
-  - [ ] **Sin conexión** (qué revisar, qué se conserva, "Reintentar")
-  - [ ] **Mantenimiento con hora** ("Volvemos aproximadamente: <fecha y hora local>") y
-        **sin hora**
-- [ ] Error dentro de una pantalla (formulario rechazado, fallo de red al guardar): no a
-      pantalla completa
-- [ ] Formularios: reposo, foco, relleno, error con mensaje, éxito, deshabilitado, enviando
-- [ ] Botones: reposo, hover, foco, activo, cargando, deshabilitado
-- [ ] Navegación abierta en mobile
-- [ ] Color de selección de texto, en claro {{y oscuro}}
-- [ ] {{Icono derivado del logo: legible a 16 px, SVG para fondo claro y oscuro, apple touch
-      icon 180×180 con fondo opaco, maskable — solo si el cliente no lo tiene}}
-- [ ] {{Plantilla de imagen Open Graph 1200×630 — solo si el cliente no la tiene}}
-- [ ] {{Autenticado vs. anónimo — solo si hay autenticación}}
-- [ ] {{**Plantillas de correo** — solo si la app manda correos. Una familia con una
-      plantilla base (cabecera con logo, título, texto, botón + el enlace en texto debajo,
-      pie con por qué lo recibe y contacto), y estos correos: <lista cerrada, p. ej.
-      "confirmar cuenta · recuperar contraseña · pedido recibido · acuse del formulario de
-      contacto · aviso interno del formulario">. Cada uno con asunto y texto de vista previa
-      (preheader). Restricciones del medio, no negociables: ancho máximo 600 px y una
-      columna; tipografía que funcione con la pila de respaldo (`Arial, Helvetica,
-      sans-serif`), porque Gmail y Outlook no cargan fuentes web; se entiende con las
-      imágenes bloqueadas (nada de texto en imágenes); el logo se lee si el cliente invierte
-      los colores a oscuro; botón de HTML ≥ 44 px de alto; contraste AA.}}
-- [ ] Contenido extremo: título de 3 líneas, nombre de 40 caracteres, lista de 1 y de 50 ítems
+- [ ] Empty states (list without results, empty cart, no orders yet)
+- [ ] Loading states (skeletons per section, not a global spinner)
+- [ ] **Status screens**, as one visual family (minimal header with the logo, a label, a
+      title in the brand's voice, one line about what happened, actions):
+  - [ ] **404** — {{logged in: "Go home" + "<user's main destination>" · guest: "Go home" +
+        "Log in"}} {{— or, without authentication, a single 404 with "Go home" + "<main action>"}}
+  - [ ] **500 with a code** (the code visible and copyable to write to support; "Retry" +
+        "Go home") and **500 without a code**
+  - [ ] **Offline** (what to check, what is kept, "Retry")
+  - [ ] **Maintenance with a time** ("Back around: <local date and time>") and **without a time**
+- [ ] Error inside a screen (form rejected, network failure on save): not full screen
+- [ ] Forms: rest, focus, filled, error with message, success, disabled, submitting
+- [ ] Buttons: rest, hover, focus, active, loading, disabled
+- [ ] Navigation open on mobile
+- [ ] Text selection color and scrollbar, in light {{and dark}}
+- [ ] {{Icon derived from the logo: legible at 16 px, SVG for light and dark backgrounds,
+      apple touch icon 180×180 with an opaque background, maskable — only if the client does
+      not have it. Provisional if the client has a logo but has not delivered it.}}
+- [ ] {{Open Graph image template 1200×630 — only if the client does not have it}}
+- [ ] {{Logged in vs. anonymous — only if there is authentication}}
+- [ ] {{**Email templates** — only if the app sends emails. One family with a base template
+      (header with logo, title, text, button + the link as text below it, a footer with why
+      they receive it and a contact), and these emails: <closed list, e.g. "confirm account ·
+      recover password · order received · contact form acknowledgment · contact form
+      internal notice">. Each with subject and preview text (preheader). Constraints of the
+      medium, non-negotiable: max width 600 px and one column; typography that works with
+      the fallback stack (`Arial, Helvetica, sans-serif`), because Gmail and Outlook do not
+      load web fonts; understandable with images blocked (no text in images); the logo
+      reads if the client inverts colors to dark; HTML button ≥ 44 px tall; AA contrast.}}
+- [ ] Extreme content: a 3-line title, a 40-character name, a list of 1 and of 50 items
 
-## 8. Contenido
+## 8. Content
 
-**Contenido real disponible:** {{qué textos/fotos existen ya}}
-**Pendiente:** {{qué va con placeholder}}
+**Real content available:** {{which texts/photos already exist}}
+**Pending:** {{what goes with a placeholder}}
 
-Para lo pendiente, usa texto realista en {{español}} con la longitud que tendrá el contenido
-final — **nunca lorem ipsum**. Un diseño validado con lorem se rompe al llegar el copy real,
-y esa ruptura la paga el desarrollador.
+For what is pending, use realistic text in {{LANGUAGE}} with the length the final content
+will have — **never lorem ipsum**. A design validated with lorem breaks when the real copy
+arrives, and the developer pays for that break.
 
 ---
 
-## 9. Entregable — OBLIGATORIO
+## 9. Deliverable — MANDATORY
 
-Entrega **dos cosas**. La segunda es tan importante como la primera.
+Deliver **two things**. The second is as important as the first.
 
-### 9.1 El diseño
+### 9.1 The design
 
-Todas las páginas de la sección 6 en {{desktop 1440 · mobile 390}}, con los estados de la
-sección 7.
+Every page of section 6 at {{desktop 1440 · mobile 390}}, with the states of section 7.
 
-### 9.2 `HANDOFF.md` — documento de traspaso a desarrollo
+### 9.2 `HANDOFF.md` — the handoff document for development
 
-Un documento en Markdown, autocontenido, escrito para un desarrollador frontend senior que
-**no vio el diseño contigo y no te puede preguntar nada**. Todo lo que no esté aquí, lo va a
-tener que inventar — y ahí es donde el diseño se desvía.
+A self-contained Markdown document, written for a senior frontend developer who **did not
+see the design with you and cannot ask you anything**. Whatever is not here, they will have
+to invent — and that is where the design drifts.
 
-Estructura exacta:
+Exact structure:
 
-**1. Tokens** — tabla completa de valores finales, con nombre de token, valor y uso:
-colores (light y dark, con el ratio de contraste verificado de cada par usado), escala
-tipográfica (tamaño / interlineado / peso / tracking por rol: display, h1-h6, body, small,
-caption), espaciado, radios, sombras, duraciones y curvas de animación, z-index.
+**1. Tokens** — a complete table of final values, with token name, value and use: colors
+(light and dark, with the verified contrast ratio of each pair used, including selection
+and scrollbar), type scale (size / line height / weight / tracking per role: display,
+h1-h6, body, small, caption), spacing, radii, shadows, animation durations and curves,
+z-index.
 
-**2. Componentes** — uno por uno, y para cada uno:
-   - Nombre, y si mapea a un componente de shadcn/ui, cuál
-   - Anatomía (qué partes lo componen)
-   - Variantes y tamaños
-   - **Todos** los estados: reposo, hover, foco, activo, deshabilitado, cargando, error
-   - Medidas concretas: padding, altura, gap, tamaño de ícono, grosor de borde
-   - Comportamiento responsive
-   - Notas de accesibilidad: rol, nombre accesible esperado, comportamiento de teclado
+**2. Components** — one by one, and for each:
+   - Name, and if it maps to a {{COMPONENT_LIBRARY}} component, which one
+   - Anatomy (which parts make it up)
+   - Variants and sizes
+   - **Every** state: rest, hover, focus, active, disabled, loading, error
+   - Concrete measurements: padding, height, gap, icon size, border width
+   - Responsive behavior
+   - Accessibility notes: role, expected accessible name, keyboard behavior
 
-**3. Secciones** — una por una, en el orden de la sección 6, y para cada una:
-   - Estructura del layout (grid o flex, columnas, gaps, ancho máximo)
-   - Qué componentes usa
-   - Espaciado vertical antes y después
-   - **Cómo se reordena o colapsa en cada breakpoint** (esto explícito, no "es responsive")
-   - Contenido: qué es texto real y qué es placeholder
+**3. Sections** — one by one, in section 6's order, and for each:
+   - Layout structure (grid or flex, columns, gaps, max width)
+   - Which components it uses
+   - Vertical spacing before and after
+   - **How it reorders or collapses at each breakpoint** (explicit, not "it is responsive")
+   - Content: what is real text and what is a placeholder
 
-**4. Grid y layout global** — ancho máximo del contenedor, número de columnas y gutters por
-breakpoint, padding lateral por breakpoint, ritmo vertical entre secciones.
+**4. Global grid and layout** — container max width, number of columns and gutters per
+breakpoint, side padding per breakpoint, vertical rhythm between sections.
 
-**5. Assets** — lista de todo lo que hay que exportar o conseguir: imágenes (con dimensiones
-y formato), íconos (con el set del que salen), ilustraciones, logo en sus variantes, y los
-assets de marca: icono fuente (SVG), favicon, apple touch icon 180×180, icono maskable y la
-plantilla de imagen Open Graph 1200×630 (qué texto lleva y qué zona es segura al recortar).
+**5. Assets** — a list of everything to export or obtain: images (with dimensions and
+format), icons (with the set they come from), illustrations, the logo in its variants, and
+the brand assets: source icon (SVG), favicon, apple touch icon 180×180, maskable icon and
+the Open Graph image template 1200×630 (which text it carries and which area is safe when
+cropped).
 
-**5b. Pantallas de estado** — por cada variante de la sección 7: layout, copy, acciones,
-qué cambia entre variantes (con/sin sesión, con/sin código, con/sin hora) y cómo se ve en
-mobile.
+**5b. Status screens** — for each variant in section 7: layout, copy, actions, what changes
+between variants (with/without session, with/without a code, with/without a time) and how
+it looks on mobile.
 
-**5c. Correos** (si la sección 7 los pide) — la plantilla base (anchos, colores con su hex y
-ratio, tamaños de texto, padding, el botón con sus medidas, la pila tipográfica de respaldo)
-y, por cada correo: asunto, preheader, copy completo, qué datos variables lleva (nombre,
-enlace, código, resumen del pedido), la acción y cómo se ve a 600 px, a 360 px, sin imágenes
-y con colores invertidos.
+**5c. Emails** (if section 7 asks for them) — the base template (widths, colors with hex and
+ratio, text sizes, padding, the button with its measurements, the fallback font stack) and,
+for each email: subject, preheader, full copy, which variable data it carries (name, link,
+code, order summary), the action and how it looks at 600 px, at 360 px, without images and
+with inverted colors.
 
-**6. Movimiento** — qué anima, con qué duración y curva, y qué se apaga bajo
+**6. Motion** — what animates, with which duration and curve, and what turns off under
 `prefers-reduced-motion`.
 
-**7. Orden de implementación** — la secuencia recomendada para construirlo, de tokens a
-componentes base a secciones a páginas, con las dependencias entre pasos señaladas.
+**7. Implementation order** — the recommended sequence to build it, from tokens to base
+components to sections to pages, with the dependencies between steps marked.
 
-**8. Decisiones y trampas** — las decisiones de diseño que tomaste y por qué (para que el
-desarrollador no las "corrija" sin querer), más lo que es fácil implementar mal: qué debe
-verse idéntico entre secciones, qué espaciado es intencional aunque parezca inconsistente,
-qué no debe convertirse en un componente compartido aunque se parezca a otro.
+**8. Decisions and traps** — the design decisions you took and why (so the developer does
+not "fix" them by accident), plus what is easy to implement wrong: what must look identical
+between sections, which spacing is intentional even if it looks inconsistent, what must not
+become a shared component even if it looks like another one.
 
-**9. Preguntas abiertas** — lo que no pudiste decidir por falta de información, con tu
-recomendación para cada una.
+**9. Open questions** — what you could not decide for lack of information, with your
+recommendation for each.
 
-Formato de todo el handoff: valores concretos, nunca adjetivos. "24px" y no "un espacio
-generoso". "#1E293B sobre #F8FAFC, ratio 14.8:1" y no "gris oscuro sobre gris claro".
+Format of the whole handoff: concrete values, never adjectives. "24px", not "generous
+spacing". "#1E293B on #F8FAFC, ratio 14.8:1", not "dark gray on light gray".
 ```
 
 ---
 
-## Verificación antes de entregarle el brief a César
+## Check before giving the brief to César
 
-- [ ] Cero `{{placeholders}}` sin llenar.
-- [ ] Cero referencias a archivos que Claude Design no puede ver.
-- [ ] Las secciones de cada página están en orden vertical real.
-- [ ] La sección 9 está completa y sin resumir.
-- [ ] Está dentro de un bloque de código, listo para copiar.
+- [ ] Zero unfilled `{{placeholders}}`.
+- [ ] Zero references to files Claude Design cannot see.
+- [ ] The sections of each page are in real vertical order.
+- [ ] Section 9 is complete and not summarized.
+- [ ] It is inside a code block, ready to copy.

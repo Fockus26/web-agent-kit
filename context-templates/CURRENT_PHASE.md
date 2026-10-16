@@ -1,42 +1,43 @@
-# Current Phase — {{NOMBRE_DEL_PROYECTO}}
+# Current Phase — {{PROJECT_NAME}}
 
-> **Tablero, no diario.** Se lee en *cada* sesión, así que cabe en una pantalla:
-> **≤ 60 líneas / 4 KB**. Solo lo abierto, lo que bloquea y lo que sigue.
-> Al cerrar una unidad, su narrativa (qué se hizo, qué se verificó y qué no, hallazgos)
-> va a `PHASE_LOG/<rama>.md` y aquí queda, como mucho, una línea con el enlace.
-> Comprobación al cerrar: `wc -c context/CURRENT_PHASE.md` → si pasa de 4000, podar.
+> **A board, not a diary.** It is read in *every* session, so it fits on one screen:
+> **≤ 60 lines / 4 KB**. Only what is open, what blocks and what comes next.
+> When a unit closes, its narrative (what was done, what was verified and what was not,
+> findings) goes to `PHASE_LOG/<branch>.md` and at most one line with the link stays here.
+> Check when closing: `wc -c context/CURRENT_PHASE.md` → over 4000, prune.
+> Local file: backed up with `bun run context:backup` (branch `context-state`).
 
-## Ahora
+## Now
 
-**Fase:** {{0N — Nombre}} · **Track:** {{Landing | Sitio | Producto}}
-**Ola:** {{N de M · en curso | QA | cerrada → sigue N+1}} · plan: `plans/{{fase-0N-nombre}}.md`
-(sin olas: borra esta línea)
+**Phase:** {{0N — Name}} · **Track:** {{Landing | Site | Product}}
+**Wave:** {{N of M · in progress | QA | closed → next N+1}} · plan: `plans/{{phase-0N-name}}.md`
+(no waves: delete this line)
 
-| Unidad | Rama | Estado | Log |
+| Unit | Branch | Status | Log |
 |---|---|---|---|
-| {{Hero}} | `{{design/hero}}` | {{abierta · PR #N en revisión · mergeada}} | `PHASE_LOG/{{design-hero}}.md` |
+| {{Hero}} | `{{design/hero}}` | {{open · PR #N in review · merged}} | `PHASE_LOG/{{design-hero}}.md` |
 
-## Bloquea (acciones de César o externas)
+## Blocked (actions for César or external)
 
-- {{ej. "correr supabase/x.sql antes de desplegar el PR #N"}}
+- {{e.g. "run supabase/x.sql before deploying PR #N"}}
 
-## Sigue
+## Next
 
-- {{la próxima unidad o decisión}}
+- {{the next unit or decision}}
 
-## Fases
+## Phases
 
-| # | Fase | Estado |
+| # | Phase | Status |
 |---|---|---|
-| 01 | Tokens | {{pendiente}} |
-| 02 | Layout base | {{pendiente}} |
-| 03 | Componentes | {{pendiente}} |
-| 04 | Secciones | {{pendiente}} |
-| 05 | Páginas | {{pendiente / N/A}} |
-| 06 | Estados | {{pendiente}} |
-| 07 | Backend | {{pendiente / N/A}} |
-| 08 | Responsive y pulido | {{pendiente}} |
-| 09 | QA final | {{pendiente}} |
+| 01 | Tokens | {{pending}} |
+| 02 | Base layout | {{pending}} |
+| 03 | Components | {{pending}} |
+| 04 | Sections | {{pending}} |
+| 05 | Pages | {{pending / N/A}} |
+| 06 | States | {{pending}} |
+| 07 | Backend | {{pending / N/A}} |
+| 08 | Responsive and polish | {{pending}} |
+| 09 | Final QA | {{pending}} |
 
-<!-- Pendientes sueltos que no son de la unidad en curso: context/plans/pendientes.md
-     (uno por bloque, con qué/por qué/versión), no aquí. -->
+<!-- Loose backlog items that are not the current unit's: context/plans/backlog.md (one per
+     block, with what/why/version), not here. -->

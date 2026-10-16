@@ -1,31 +1,31 @@
-# Git State — {{NOMBRE_DEL_PROYECTO}}
+# Git State — {{PROJECT_NAME}}
 
-> Fuente de verdad de "¿cómo y a dónde se entrega esta unidad?". La skill `git-flow` lo lee
-> antes de crear cualquier rama. **Nunca deduzcas la base de `git branch --show-current`.**
+> The source of truth for "how and where is this unit delivered?". The `git-flow` skill reads
+> it before creating any branch. **Never infer the base from `git branch --show-current`.**
 
-## Modo
+## Mode
 
 **`{{pr | local}}`**
 
-| Modo | Cuándo | Cierre de una unidad |
+| Mode | When | Closing a unit |
 |---|---|---|
-| `pr` | Hay remoto y `main` protegida (lo normal en cuanto el repo está en GitHub) | commit(s) en la rama → push de la rama → `gh pr create` → **César revisa y mergea** (squash) |
-| `local` | Sin remoto, o César lo prefiere | pausa de aprobación → commit → merge `--no-ff` a la base → push solo si la base ≠ `main` |
+| `pr` | There is a remote and a protected `main` (the normal case once the repo is on GitHub) | commit(s) on the branch → push of the branch → `gh pr create` → **César reviews and merges** (squash) |
+| `local` | No remote, or César prefers it | approval pause → commit → `--no-ff` merge into the base → push only if base ≠ `main` |
 
-En modo `pr` el estado de las ramas es `gh pr list`: la tabla de abajo sobra (déjala vacía).
+In `pr` mode the branches' status is `gh pr list`: the table below is not needed (leave it empty).
 
-## Rama base de la próxima unidad
+## Base branch of the next unit
 
-`{{main | nombre-de-la-rama-madre}}`
+`{{main | parent-branch-name}}`
 
-## Rama madre activa (solo modo `local`, bloques grandes)
+## Active parent branch (`local` mode only, big blocks)
 
-`{{nombre-de-la-rama-madre | ninguna}}`
+`{{parent-branch-name | none}}`
 
-## Ramas de trabajo (solo modo `local`)
+## Working branches (`local` mode only)
 
-| Rama | Base | Unidad | Estado |
+| Branch | Base | Unit | Status |
 |---|---|---|---|
-| {{design/hero}} | {{design/integration}} | {{Sección hero}} | {{abierta / en revisión / mergeada}} |
+| {{design/hero}} | {{design/integration}} | {{Hero section}} | {{open / in review / merged}} |
 
-<!-- No se borran ramas mergeadas: borrar es destructivo y lo decide César. -->
+<!-- Merged branches are not deleted: deleting is destructive and César decides it. -->

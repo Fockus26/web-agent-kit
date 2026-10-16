@@ -1,51 +1,51 @@
-# Fase 07 — Backend
+# Phase 07 — Backend
 
-## Objetivo
+## Goal
 
-La funcionalidad: autenticación, sesiones, persistencia, formularios reales, pagos.
+The functionality: authentication, sessions, persistence, real forms, payments.
 
-Ejecuta `backend-build`.
+Run by `backend-build`.
 
-## Alcance
+## Scope
 
-- Modelo de datos y migraciones.
-- Autenticación: registro, login, sesión, cierre, recuperación de contraseña.
-- Autorización: protección de rutas **en el servidor**.
-- Persistencia de datos de usuario.
-- Formularios con validación de servidor (esquema zod compartido).
-- Pasarela de pago: checkout, webhooks idempotentes con firma verificada.
-- Variables de entorno documentadas en `.env.example`.
+- Data model and migrations (in `supabase/migrations/`, in git).
+- Authentication: sign-up, login, session, logout, password recovery.
+- Authorization: route protection **on the server**.
+- User data persistence.
+- Forms with server validation (shared zod schema).
+- Payment gateway: checkout, idempotent webhooks with verified signature.
+- Environment variables documented in `.env.example`.
 
-## Entradas
+## Inputs
 
-`context/PROJECT_CONTEXT.md` (servicios externos decididos) · el contrato de UI que espera el
-frontend · fases 01-06 cerradas
+`context/PROJECT_CONTEXT.md` (decided external services) · the UI contract the frontend
+expects · phases 01-06 closed
 
-## Unidades de trabajo
+## Units of work
 
-1. Modelo de datos y conexión
-1b. Correos: `EmailLayout` y plantillas de auth en `supabase/templates/` (antes del registro,
-    que ya manda el primero) — solo si `PROJECT_CONTEXT.md` § "Correos" aplica
-2. Auth: registro y login
-3. Auth: sesión, protección de rutas, cierre
-4. Auth: recuperación de contraseña
-5. {{Dominio del proyecto: productos, pedidos, reservas…}}
-6. Pagos: checkout
-7. Pagos: webhooks y confirmación
-8. Formularios de contacto / envío de correo (con sus correos de acuse y aviso)
+1. Data model and connection
+1b. Emails: `EmailLayout`, sending provider (decision) and auth templates in
+    `supabase/templates/` (before sign-up, which already sends the first one) — only if
+    `PROJECT_CONTEXT.md` § "Emails" applies
+2. Auth: sign-up and login
+3. Auth: session, route protection, logout
+4. Auth: password recovery
+5. {{The project's domain: products, orders, bookings…}}
+6. Payments: checkout
+7. Payments: webhooks and confirmation
+8. Contact forms / email sending (with their acknowledgment and notice emails)
 
-Los correos siguen `reference/EMAIL-TEMPLATES.md` del kit y el diseño de `design/HANDOFF.md`
-§ 5c: cada transaccional va en la unidad del flujo que lo manda.
+Emails follow the kit's `reference/EMAIL-TEMPLATES.md` and the design in
+`design/HANDOFF.md` § 5c: each transactional email goes in the unit of the flow that sends it.
 
-## Criterio de cierre
+## Closing criteria
 
-- [ ] Cero secretos en el código; `.env.example` completo y sin valores reales.
-- [ ] Validación de servidor en toda entrada.
-- [ ] Rutas protegidas en el servidor, no solo escondidas en la UI.
-- [ ] El precio se calcula en el servidor; nunca se confía en el monto del cliente.
-- [ ] Webhooks con firma verificada e idempotentes.
-- [ ] Contrato de UI documentado para el frontend.
-- [ ] Correos: criterio de cierre de `reference/EMAIL-TEMPLATES.md` cumplido (si aplica).
-- [ ] `functional-qa` lanzado al cerrar cada flujo completo, y sus hallazgos críticos
-      resueltos.
-- [ ] Acciones manuales de César documentadas con pasos exactos.
+- [ ] Zero secrets in the code; `.env.example` complete and without real values.
+- [ ] Server validation on every input.
+- [ ] Routes protected on the server, not just hidden in the UI.
+- [ ] The price is computed on the server; the client's amount is never trusted.
+- [ ] Webhooks with verified signature and idempotent.
+- [ ] UI contract documented for the frontend.
+- [ ] Emails: closing criteria of `reference/EMAIL-TEMPLATES.md` met (if it applies).
+- [ ] `functional-qa` launched when each full flow closes, and its critical findings resolved.
+- [ ] César's manual actions documented with exact steps.

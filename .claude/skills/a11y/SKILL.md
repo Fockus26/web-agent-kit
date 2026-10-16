@@ -1,41 +1,43 @@
 ---
 name: a11y
-description: Puerta de accesibilidad WCAG 2.1 AA obligatoria antes de cerrar cualquier unidad de trabajo de frontend. Úsala siempre que termines un componente, una sección, una página o una fase de UI, ANTES de pedirle revisión a César y ANTES de cualquier commit. Cubre semántica, teclado, foco, ARIA, contraste, estados no visuales y movimiento, con verificación automática vía axe-core cuando hay entorno.
+description: Mandatory WCAG 2.1 AA accessibility gate before closing any frontend unit of work. Use it whenever you finish a component, a section, a page or a UI phase, BEFORE asking César for review and BEFORE any commit. Covers semantics, keyboard, focus, ARIA, contrast, non-visual states and motion, with automatic verification through axe-core when there is an environment.
 ---
 
-# Accesibilidad (WCAG 2.1 AA)
+# Accessibility (WCAG 2.1 AA)
 
-Esta skill es una **puerta**, no una sugerencia. Ninguna unidad de frontend llega a la
-revisión de César sin haber pasado por aquí. El orden es siempre:
+This skill is a **gate**, not a suggestion. No frontend unit reaches César's review without
+passing through here. The order is always:
 
 ```
-implementar → [a11y] → (seo si aplica) → pedir revisión → [git-flow] commit
+implement → [a11y] → (seo if it applies) → ask for review → [git-flow] commit
 ```
 
-Nunca al revés. Arreglar accesibilidad después del commit significa un segundo commit para
-algo que debió salir bien la primera vez.
+Never the other way round. Fixing accessibility after the commit means a second commit for
+something that should have been right the first time.
+
+**Language:** the report you give César (section 5) is in Spanish.
 
 ---
 
-## 1. Verificación automática primero
+## 1. Automatic verification first
 
-Si el proyecto tiene entorno ejecutable, corre axe antes de leer nada a mano — es más rápido
-y encuentra lo mecánico.
+If the project has a runnable environment, run axe before reading anything by hand — it is
+faster and catches the mechanical issues.
 
 ```bash
-bun add -d @axe-core/playwright   # si no está (los proyectos del kit lo traen desde la 3.7.0)
+bun add -d @axe-core/playwright   # if missing (kit projects have it since 3.7.0)
 ```
 
-En un slot del pool (worker de `orchestrate`) no se añaden dependencias: si falta, inyecta
-`axe-core` en la página como último recurso, dilo en el PR y anótalo en `KIT_FEEDBACK.md`
-(`/kit-update` lo instala).
+In a pool slot (an `orchestrate` worker) dependencies are not added: if it is missing,
+inject `axe-core` into the page as a last resort, say so in the PR and log it in
+`KIT_FEEDBACK.md` (`/kit-update` installs it).
 
 ```ts
-// scripts/a11y-check.ts
+// .qa/a11y-check.ts
 import { chromium } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 
-const URLS = ['/', '/pricing']            // ajusta a lo que acabas de tocar
+const URLS = ['/', '/pricing']            // adjust to what you just touched
 const BASE = process.env.BASE_URL ?? 'http://localhost:3000'
 
 const browser = await chromium.launch()
@@ -43,7 +45,7 @@ let failed = false
 
 for (const path of URLS) {
   const page = await browser.newPage()
-  await page.goto(BASE + path, { waitUntil: 'networkidle' })
+  await page.goto(BASE + path, { waitUntil: 'load' })
 
   const { violations } = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -63,35 +65,38 @@ process.exit(failed ? 1 : 0)
 ```
 
 ```bash
-# El servidor lo levanta César, no tú. Pídeselo y espera confirmación:
+# César starts the server, not you. Ask him and wait for confirmation:
 #   "Necesito el server corriendo para pasar axe. Levanta `bun dev` y avísame."
-node scripts/a11y-check.ts   # con node, no con bun: en Windows, Playwright bajo Bun se cuelga al lanzar Chromium
+node .qa/a11y-check.ts   # with node, not bun: on Windows, Playwright under Bun hangs launching Chromium
 ```
 
-Si César no quiere levantarlo ahora, **no insistas ni lo levantes tú**: haz la revisión
-manual, y marca en la salida que axe quedó sin correr.
+The script lives in `.qa/` (ignored by git): inside the project, so it resolves Playwright
+from `node_modules`. (`waitUntil: 'load'`: in dev, `networkidle` may never arrive.)
 
-axe cubre aproximadamente el 40% de los criterios WCAG. **El resto es la revisión manual de
-abajo — no la saltes porque axe salió verde.**
+If César does not want to start it now, **do not insist or start it yourself**: do the
+manual review, and flag in the output that axe did not run.
 
-### Lighthouse (además de axe, no en lugar de)
+axe covers roughly 40% of the WCAG criteria. **The rest is the manual review below — do not
+skip it because axe came out green.**
 
-axe es más preciso para accesibilidad; Lighthouse suma la categoría **Best Practices**
-(errores de consola, imágenes sin dimensiones, libs con vulnerabilidades conocidas) y da
-un número comparable en el tiempo. Corre el build de producción, no `dev`.
+### Lighthouse (on top of axe, not instead of it)
+
+axe is more precise for accessibility; Lighthouse adds the **Best Practices** category
+(console errors, images without dimensions, libraries with known vulnerabilities) and gives
+a number you can compare over time. Run the production build, not `dev`.
 
 ```bash
-bun add -d lighthouse chrome-launcher   # si no está
+bun add -d lighthouse chrome-launcher   # if missing
 ```
 
 ```ts
-// scripts/lighthouse.ts — corre con `node`, no `bun` (Lighthouse lanza Chrome real)
+// .qa/lighthouse.ts — run with `node`, not `bun` (Lighthouse launches real Chrome)
 import { launch } from 'chrome-launcher'
 import lighthouse from 'lighthouse'
 import desktopConfig from 'lighthouse/core/config/desktop-config.js'
 
 const BASE = process.env.BASE_URL ?? 'http://localhost:3000'
-const ROUTES = ['/', '/pricing']         // ajusta
+const ROUTES = ['/', '/pricing']         // adjust
 const CATS = ['performance', 'accessibility', 'best-practices', 'seo'] as const
 
 const chrome = await launch({ chromeFlags: ['--headless=new', '--no-sandbox'] })
@@ -106,154 +111,154 @@ for (const route of ROUTES) {
       .map((r) => lhr.audits[r.id])
       .filter((a) => a && a.score !== null && a.score < 1 && !['informative', 'manual', 'notApplicable'].includes(a.scoreDisplayMode))
     if (!problems.length) continue
-    // el dashboard/panel privado es `noindex` a propósito: no falles su SEO
+    // the private dashboard/panel is `noindex` on purpose: do not fail its SEO
     if ((cat === 'accessibility' || (cat === 'seo' && !route.startsWith('/dashboard'))) && (lhr.categories[cat].score ?? 0) < 1) failed = true
     console.log(`  ${cat}:`)
     for (const a of problems) console.log(`    • ${a.title}\n      ${a.description.replace(/\s*\[.*?\]\(.*?\)/g, '').replace(/\n/g, ' ').trim()}`)
   }
 }
-await chrome.kill().catch(() => {})   // EPERM al borrar el temp en Windows, inofensivo
+await chrome.kill().catch(() => {})   // EPERM deleting the temp dir on Windows, harmless
 process.exit(failed ? 1 : 0)
 ```
 
 ```bash
-# `--mobile` para pasar `undefined` como config (el default de Lighthouse emula móvil)
-bun run build && bun run start   # otra terminal
-node scripts/lighthouse.ts
+# pass `undefined` as config for mobile (Lighthouse's default emulates mobile)
+bun run build && bun run start   # another terminal
+node .qa/lighthouse.ts
 ```
 
-Metas: **accesibilidad y best-practices = 100**, **SEO = 100** en rutas públicas.
-Performance ≥ 90 (el resto lo cubre la skill `seo`). El score de SEO en una página
-`noindex` intencional no cuenta.
+Targets: **accessibility and best-practices = 100**, **SEO = 100** on public routes.
+Performance ≥ 90 (the rest is covered by the `seo` skill). The SEO score of an intentionally
+`noindex` page does not count.
 
-Los ítems de accesibilidad que Lighthouse marca casi siempre ya los agarró axe; los de
-Best Practices son nuevos y hay que atender: un `errors-in-console` suele ser un `fetch`
-roto o un script de terceros que no existe en ese entorno (ej. `@vercel/analytics` fuera
-de Vercel — condiciónalo a `process.env.VERCEL`).
+The accessibility items Lighthouse flags were almost always caught by axe already; the
+Best Practices ones are new and need attention: an `errors-in-console` is usually a broken
+`fetch` or a third-party script that does not exist in that environment (e.g.
+`@vercel/analytics` outside Vercel — gate it on `process.env.VERCEL`).
 
 ---
 
-## 2. Revisión manual — checklist base
+## 2. Manual review — base checklist
 
-Aplica a todo lo que hayas tocado.
+Applies to everything you touched.
 
-### Semántica
-- [ ] Un solo `<h1>` por página; jerarquía `h1 → h2 → h3` sin saltar niveles.
-- [ ] Landmarks presentes: `<header>`, `<nav>`, `<main>`, `<footer>`, `<aside>`. Un solo
-      `<main>`. Si hay dos `<nav>`, cada uno con `aria-label` distinto.
-- [ ] Listas reales (`<ul>/<li>`) para lo que es una lista, no `<div>` apilados.
-- [ ] Cero `<div onClick>` sin rol: si es clickeable, es `<button>` o `<a>`. Un `<a>` sin
-      `href` no es enfocable.
-- [ ] `<a>` navega, `<button>` acciona. No los intercambies porque uno se veía mejor.
+### Semantics
+- [ ] A single `<h1>` per page; hierarchy `h1 → h2 → h3` without skipping levels.
+- [ ] Landmarks present: `<header>`, `<nav>`, `<main>`, `<footer>`, `<aside>`. A single
+      `<main>`. If there are two `<nav>`, each with a different `aria-label`.
+- [ ] Real lists (`<ul>/<li>`) for what is a list, not stacked `<div>`s.
+- [ ] Zero `<div onClick>` without a role: if it is clickable, it is a `<button>` or an
+      `<a>`. An `<a>` without `href` is not focusable.
+- [ ] `<a>` navigates, `<button>` acts. Do not swap them because one looked better.
 
-### Teclado
-- [ ] Todo lo interactivo se alcanza con `Tab` y se activa con `Enter` (y `Space` en botones).
-- [ ] El orden de tab sigue el orden visual. Cero `tabindex` positivo.
-- [ ] Anillo de foco **visible siempre** y con contraste ≥ 3:1 contra el fondo. Si quitaste
-      el outline por diseño, tienes que haber puesto algo en su lugar:
+### Keyboard
+- [ ] Everything interactive is reachable with `Tab` and activated with `Enter` (and
+      `Space` on buttons).
+- [ ] Tab order follows visual order. Zero positive `tabindex`.
+- [ ] Focus ring **always visible** with contrast ≥ 3:1 against the background. If you
+      removed the outline by design, you must have put something in its place:
       `focus-visible:ring-2 focus-visible:ring-offset-2`.
-- [ ] Cero trampas de foco: de todo se sale con `Tab` o `Escape`.
-- [ ] Modales/drawers: el foco entra al abrir, queda atrapado dentro mientras está abierto,
-      `Escape` cierra, y al cerrar el foco **vuelve al elemento que lo abrió**.
-- [ ] Foco movido por código al cambiar de vista o de paso: la condición se compara con el
-      **estado que se muestra** (`paso !== pasoAnterior`), no con un `useRef` de "ya montado".
-      Con StrictMode en desarrollo el efecto corre dos veces, el ref ya vale `true` en la
-      segunda y el foco salta al `h1` al montar, sin error visible.
-- [ ] Hay un "skip to content" si el nav tiene más de ~5 enlaces.
+- [ ] Zero focus traps: you can leave everything with `Tab` or `Escape`.
+- [ ] Modals/drawers: focus goes in on open, stays trapped inside while open, `Escape`
+      closes, and on close focus **returns to the element that opened it**.
+- [ ] Focus moved by code when the view or step changes: the condition compares with the
+      **state being shown** (`step !== previousStep`), not with a "mounted already"
+      `useRef`. With StrictMode in development the effect runs twice, the ref is already
+      `true` on the second run and focus jumps to the `h1` on mount, with no visible error.
+- [ ] There is a "skip to content" if the nav has more than ~5 links.
 
-### Nombre accesible
-- [ ] Todo control tiene nombre: texto visible, `aria-label`, o `aria-labelledby`.
-- [ ] Botones de solo ícono → `aria-label` descriptivo de la **acción**, no del ícono
-      ("Cerrar menú", no "equis").
-- [ ] Enlaces con texto que significa algo fuera de contexto. "Leer más" ×6 en una página es
-      un fallo real: usa `aria-label` para diferenciarlos.
-- [ ] `<img>` con `alt` real; decorativas con `alt=""` (vacío, no ausente).
-- [ ] SVG informativo: `role="img"` + `<title>`. SVG decorativo: `aria-hidden="true"`.
+### Accessible name
+- [ ] Every control has a name: visible text, `aria-label`, or `aria-labelledby`.
+- [ ] Icon-only buttons → `aria-label` describing the **action**, not the icon ("Cerrar
+      menú", not "equis").
+- [ ] Links whose text means something out of context. "Leer más" ×6 on a page is a real
+      failure: use `aria-label` to tell them apart.
+- [ ] `<img>` with a real `alt`; decorative ones with `alt=""` (empty, not missing).
+- [ ] Informative SVG: `role="img"` + `<title>`. Decorative SVG: `aria-hidden="true"`.
 
-### Formularios
-- [ ] Cada input con `<label>` asociado por `htmlFor`/`id`. Un placeholder **no** es label.
-- [ ] Errores asociados por `aria-describedby` y anunciados con `role="alert"` o
+### Forms
+- [ ] Every input with a `<label>` linked by `htmlFor`/`id`. A placeholder is **not** a label.
+- [ ] Errors linked through `aria-describedby` and announced with `role="alert"` or
       `aria-live="polite"`.
-- [ ] Campo inválido marcado con `aria-invalid="true"`.
-- [ ] El mensaje de error dice **cómo arreglarlo**, no solo que está mal.
-- [ ] `autocomplete` correcto en campos de datos personales (`email`, `name`, `tel`,
+- [ ] Invalid field flagged with `aria-invalid="true"`.
+- [ ] The error message says **how to fix it**, not only that it is wrong.
+- [ ] Correct `autocomplete` on personal data fields (`email`, `name`, `tel`,
       `street-address`, `cc-number`…).
-- [ ] Campos requeridos indicados con texto o `aria-required`, no solo con un asterisco rojo.
+- [ ] Required fields indicated with text or `aria-required`, not only with a red asterisk.
 
-### Estados no visuales
-- [ ] Ningún estado se comunica **solo con color**. Error, éxito, seleccionado, activo:
-      siempre color **+** ícono, texto o forma.
-- [ ] Loading: `aria-busy="true"` o un `aria-live` que anuncie el resultado al terminar.
-- [ ] Deshabilitado: `disabled` real (no solo `opacity-50` + `pointer-events-none`).
-- [ ] Toggles/tabs/accordions con `aria-expanded`, `aria-selected`, `aria-controls` según
-      el patrón APG correspondiente.
+### Non-visual states
+- [ ] No state is conveyed **only by color**. Error, success, selected, active: always
+      color **+** icon, text or shape.
+- [ ] Loading: `aria-busy="true"` or an `aria-live` that announces the result when done.
+- [ ] Disabled: a real `disabled` (not just `opacity-50` + `pointer-events-none`).
+- [ ] Toggles/tabs/accordions with `aria-expanded`, `aria-selected`, `aria-controls` per
+      the matching APG pattern.
 
-### Contraste
-- [ ] Texto normal ≥ 4.5:1 contra su fondo real.
-- [ ] Texto grande (≥24px, o ≥19px bold) ≥ 3:1.
-- [ ] Bordes de inputs, íconos informativos y anillos de foco ≥ 3:1.
-- [ ] Texto sobre imagen o gradiente: verifica contra la zona **más clara** de la imagen, no
-      contra el promedio. Si no da, hace falta un overlay o un scrim.
-- [ ] Verifica en modo claro **y** oscuro si el proyecto tiene ambos.
+### Contrast
+- [ ] Normal text ≥ 4.5:1 against its real background.
+- [ ] Large text (≥24px, or ≥19px bold) ≥ 3:1.
+- [ ] Input borders, informative icons and focus rings ≥ 3:1.
+- [ ] Text over an image or gradient: check against the **lightest** area of the image,
+      not the average. If it does not pass, it needs an overlay or a scrim.
+- [ ] Check in light **and** dark mode if the project has both.
 
-### Movimiento y tiempo
-- [ ] `prefers-reduced-motion: reduce` respetado: animaciones de decoración se apagan o se
-      reducen a un fade.
-- [ ] Nada parpadea más de 3 veces por segundo.
-- [ ] Carruseles y autoplay con control de pausa. Nada que se mueva solo sin poder pararlo.
-- [ ] Sin límites de tiempo que no se puedan extender.
+### Motion and time
+- [ ] `prefers-reduced-motion: reduce` respected: decorative animations turn off or reduce
+      to a fade.
+- [ ] Nothing flashes more than 3 times per second.
+- [ ] Carousels and autoplay with a pause control. Nothing moves on its own without a way
+      to stop it.
+- [ ] No time limits that cannot be extended.
 
 ### Media
-- [ ] Video con subtítulos (`<track kind="captions">`). Sin subtítulos, el video no está
-      terminado.
-- [ ] Audio con transcripción.
-- [ ] Nada con autoplay y sonido.
+- [ ] Video with captions (`<track kind="captions">`). Without captions, the video is not done.
+- [ ] Audio with a transcript.
+- [ ] Nothing autoplaying with sound.
 
-### Zoom y reflow
-- [ ] A 200% de zoom no se pierde contenido ni funcionalidad.
-- [ ] A 320px de ancho **no hay scroll horizontal** (WCAG 1.4.10). Esta es la que más falla:
-      revisa tablas, `min-width` fijos, y texto largo sin `break-words`.
-
----
-
-## 3. Hallazgo de implementación vs. decisión de diseño
-
-Esta distinción decide si arreglas o escalas.
-
-- **De implementación** — falta un `alt`, falta un `aria-label`, el foco no es visible, el
-  orden de tab está mal, no hay `<label>`. **Arréglalo tú mismo, en el momento.**
-
-- **De decisión de diseño** — el token `primary` de la paleta no llega a 4.5:1 sobre el
-  fondo claro; la tipografía base de 13px es ilegible; el estado activo solo se distingue
-  por color en todo el sistema. **No lo parches en un componente suelto.** Parchear el
-  síntoma en un sitio deja el mismo bug en los otros veinte y rompe la consistencia del
-  sistema.
-
-  Para estos: repórtalo, propón el cambio concreto de token, y escálalo a César. Si él lo
-  aprueba, el cambio va en `context/COLORS.md` o `DESIGN_TOKENS.md` **y** en el theme, con
-  su fila en `decisions/` — no en el componente.
-
-**Nunca inventes contenido para tapar un hallazgo.** Si falta un `alt` real, un texto de
-error o una transcripción, pon un placeholder marcado y agrega la fila a
-`context/CONTENT_CHECKLIST.md`. Redactar tú el copy final y entregarlo como definitivo es
-peor que dejarlo pendiente: se cuela a producción sin que nadie lo revise.
+### Zoom and reflow
+- [ ] At 200% zoom no content or functionality is lost.
+- [ ] At 320px width there is **no horizontal scroll** (WCAG 1.4.10). This is the one that
+      fails most: check tables, fixed `min-width`s, and long text without `break-words`.
 
 ---
 
-## 4. Severidades
+## 3. Implementation finding vs. design decision
 
-| Nivel | Qué es | Qué hacer |
+This distinction decides whether you fix or escalate.
+
+- **Implementation** — a missing `alt`, a missing `aria-label`, focus not visible, wrong
+  tab order, no `<label>`. **Fix it yourself, right away.**
+
+- **Design decision** — the palette's `primary` token does not reach 4.5:1 on the light
+  background; the 13px base type is illegible; the active state is told apart only by color
+  across the whole system. **Do not patch it in a single component.** Patching the symptom
+  in one place leaves the same bug in the other twenty and breaks the system's consistency.
+
+  For these: report it, propose the concrete token change, and escalate it to César. If he
+  approves it, the change goes into `context/COLORS.md` or `DESIGN_TOKENS.md` **and** into
+  the theme, with its file in `decisions/` — not into the component.
+
+**Never invent content to cover a finding.** If a real `alt`, an error text or a transcript
+is missing, put a flagged placeholder and add the row to `context/CONTENT_CHECKLIST.md`.
+Writing the final copy yourself and delivering it as final is worse than leaving it pending:
+it slips into production without anyone reviewing it.
+
+---
+
+## 4. Severities
+
+| Level | What it is | What to do |
 |---|---|---|
-| **Crítico** | Bloquea a usuarios de teclado o lector de pantalla; falla AA en texto de uso común | Arreglar antes de cerrar. Sin excepción. |
-| **Alto** | Degrada mucho pero tiene workaround (jerarquía de headings rota, landmark faltante) | Arreglar antes de cerrar, salvo que César diga otra cosa. |
-| **Medio** | Mejora recomendada, no bloqueante | Arreglar si es barato; si no, registrar. |
-| **Bajo** | Buena práctica | Registrar y seguir. |
+| **Critical** | Blocks keyboard or screen reader users; fails AA on commonly used text | Fix before closing. No exceptions. |
+| **High** | Degrades a lot but has a workaround (broken heading hierarchy, missing landmark) | Fix before closing, unless César says otherwise. |
+| **Medium** | Recommended improvement, not blocking | Fix if cheap; otherwise, record it. |
+| **Low** | Good practice | Record it and move on. |
 
 ---
 
-## 5. Salida
+## 5. Output
 
-Cierra siempre con este bloque, aunque salga limpio:
+Always close with this block (in Spanish), even if it comes out clean:
 
 ```
 ## a11y — <componente/sección/página>
@@ -274,15 +279,15 @@ Cierra siempre con este bloque, aunque salga limpio:
 **Estado de la puerta:** ✅ pasa / ⚠️ pasa con N hallazgos abiertos / ❌ no pasa
 ```
 
-Si el estado es ❌, **no continúes al commit**. Si es ⚠️, César tiene que aceptar
-explícitamente los hallazgos abiertos antes de que `git-flow` siga.
+If the status is ❌, **do not go on to the commit**. If it is ⚠️, César has to explicitly
+accept the open findings before `git-flow` continues.
 
 ---
 
-## 6. Referencias de patrones
+## 6. Pattern references
 
-Cuando implementes un widget compuesto (tabs, combobox, menú, disclosure, dialog, tooltip,
-treeview), **no lo improvises**: sigue el patrón de WAI-ARIA Authoring Practices para ese
-widget exacto. Si el proyecto usa shadcn/ui o Radix, esos primitivos ya implementan el patrón
-correcto — úsalos en vez de reescribir el comportamiento de teclado a mano. Es el caso donde
-"lo hago yo rápido" produce más bugs de accesibilidad que cualquier otro.
+When you implement a composite widget (tabs, combobox, menu, disclosure, dialog, tooltip,
+treeview), **do not improvise it**: follow the WAI-ARIA Authoring Practices pattern for that
+exact widget. If the project uses shadcn/ui or Radix, those primitives already implement
+the correct pattern — use them instead of rewriting the keyboard behavior by hand. It is
+the case where "I'll do it quickly" produces more accessibility bugs than any other.

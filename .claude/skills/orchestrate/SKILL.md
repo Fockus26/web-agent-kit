@@ -1,265 +1,276 @@
 ---
 name: orchestrate
-description: Orquestador de tandas y fases. Úsala cuando César llega con una lista de varias cosas a la vez, cuando arranca una fase para hacerla en olas, o cuando pide "la ola N" / "inicia la tanda". Mapea cada pedido al código, agrupa por archivos que se tocan, ordena en olas (una por sesión), reserva números, toma un slot del pool por unidad, hace de una vez las preguntas que bloquean, lanza workers feature-worker en segundo plano, consolida sus PRs, tras el merge lanza wave-qa con las cuentas de prueba, y cierra la ola diciendo en qué fase y ola se está y qué ola sigue.
+description: Batch and phase orchestrator. Use it when César arrives with a list of several things at once, when a phase starts and is to be done in waves, or when he asks for "wave N" / "start the batch" ("la ola N", "inicia la tanda"). Maps each request to the code, groups by the files touched, orders into waves (one per session), reserves numbers, takes a pool slot per unit, asks the blocking questions once, launches feature-worker agents in the background, consolidates their PRs, launches wave-qa with the test accounts after the merge, and closes the wave stating the phase, the wave and what comes next.
 ---
 
-# Orquestar una tanda
+# Orchestrate a batch
 
-Tú planificas; los workers ejecutan. Tu trabajo caro (leer código, decidir agrupaciones,
-escribir prompts precisos) se hace **una vez**; cada worker arranca en frío y solo lee lo
-que su prompt le señala. Por eso tú vas con esfuerzo alto y ellos con medio (ver
+You plan; the workers execute. Your expensive work (reading code, deciding groupings,
+writing precise prompts) happens **once**; each worker starts cold and reads only what its
+prompt points to. That is why you run at high effort and they at medium (see
 `reference/TOKEN-ECONOMY.md` §11-12).
 
-Requisito: los agentes `feature-worker` y `wave-qa` instalados (`~/.claude/agents/` o `.claude/agents/`)
-**antes de abrir la sesión**. Los agentes se cargan al arrancar: uno creado a mitad de
-sesión da "Agent type not found" hasta que se abre una sesión nueva.
+**Language:** everything you say to César — questions, the closing summary, PR bodies,
+commit messages — is in Spanish. Projects created before kit 3.8.0 keep their `context/` in
+Spanish (same files; Spanish headings and plan names such as `pendientes.md`,
+`fase-0N-*.md`, `orquestacion-*.md`): use what exists, do not rename it.
 
-Los workers trabajan en el **pool de worktrees** que gestiona `scripts/wt.ps1` (en esta
-carpeta; PowerShell 7). En esta skill, `wt` es:
+Requirement: the `feature-worker` and `wave-qa` agents installed (`~/.claude/agents/` or
+`.claude/agents/`) **before the session opens**. Agents load at startup: one created
+mid-session gives "Agent type not found" until a new session is opened.
+
+Workers run in the **worktree pool** managed by `scripts/wt.ps1` (in this folder;
+PowerShell 7). In this skill, `wt` means:
 
 ```bash
-pwsh -NoProfile -File "$USERPROFILE/.claude/skills/orchestrate/scripts/wt.ps1" <comando>
+pwsh -NoProfile -File "$USERPROFILE/.claude/skills/orchestrate/scripts/wt.ps1" <command>
 ```
 
-(Con el kit instalado en el proyecto, la ruta es `.claude/skills/orchestrate/scripts/wt.ps1`.)
+(With the kit installed inside the project, the path is `.claude/skills/orchestrate/scripts/wt.ps1`.)
 
-**Una ola por sesión.** César usa "ola" y "tanda" para lo mismo: un grupo de unidades que
-corren en paralelo, se mergean y pasan QA juntas. Cada ola vive en su propia sesión: la
-que la lanza acumula mapeo, prompts e informes, y arrastrar eso a la ola siguiente cuesta
-tokens en cada mensaje sin aportar nada (`reference/TOKEN-ECONOMY.md`). Lo que la ola
-siguiente necesita va a disco (§9).
+**One wave per session.** César uses "wave" (ola) and "batch" (tanda) for the same thing: a
+group of units that run in parallel, get merged and go through QA together. Each wave lives
+in its own session: the one that launches it piles up mapping, prompts and reports, and
+dragging that into the next wave costs tokens on every message for nothing
+(`reference/TOKEN-ECONOMY.md`). What the next wave needs goes to disk (§9).
 
-| César dice | Qué haces |
+| César says | What you do |
 |---|---|
-| una lista de pedidos | §1-§7 sobre la lista. Si sale más de una ola, el plan en olas va a `context/plans/tanda-<fecha>.md` (misma plantilla que una fase) |
-| "fase 0N" / "arranca la fase 04" | §0 y luego la ola 1 |
-| "ola N de la fase 0N" (el prompt de arranque) | lee **solo** el plan y `CURRENT_PHASE.md`, y §1-§7 para las unidades de esa ola |
+| a list of requests | §1-§7 on the list. If it comes out as more than one wave, the wave plan goes to `context/plans/batch-<date>.md` (same template as a phase) |
+| "phase 0N" / "start phase 04" | §0, then wave 1 |
+| "wave N of phase 0N" (the start prompt) | read **only** the plan and `CURRENT_PHASE.md`, and §1-§7 for that wave's units |
 
 ---
 
-## 0. Partir una fase en olas
+## 0. Split a phase into waves
 
-Con `phases/0N-*.md` del proyecto, el inventario que toque y el handoff de esa fase (por
-partes, no entero): lista las unidades, agrúpalas en olas con las reglas de §3 y escribe
-`context/plans/fase-0N-<nombre>.md` (plantilla: `fase-plan-template.md` en esta carpeta).
-Una línea por unidad: rama, qué, archivos principales. Los prompts detallados **no** van
-aquí: los escribe la sesión de cada ola, sobre el `main` que dejó la anterior.
+With the project's `phases/0N-*.md`, the relevant inventory and that phase's part of the
+handoff (in pieces, not whole): list the units, group them into waves with the rules of §3
+and write `context/plans/phase-0N-<name>.md` (template: `phase-plan-template.md` in this
+folder). One line per unit: branch, what, main files. The detailed prompts do **not** go
+here: each wave's session writes them, on the `main` the previous wave left.
 
-En `CURRENT_PHASE.md`, "Ahora" pasa a: fase, ola en curso de cuántas, y la ruta del plan.
+In `CURRENT_PHASE.md`, "Now" becomes: phase, current wave out of how many, and the plan path.
 
-## 1. Mapear cada pedido al código
+## 1. Map each request to the code
 
-Por cada punto de la lista, localiza dónde vive (grep, rangos, no archivos enteros): qué
-archivos toca, qué decisiones previas lo condicionan (`grep -rhi "^# D.*<tema>" context/decisions/`),
-qué trampas conocidas hay. Anota ruta:línea — irá al prompt.
+For each item, find where it lives (grep, line ranges, not whole files): which files it
+touches, which earlier decisions constrain it (`grep -rhi "^# D.*<topic>" context/decisions/`),
+which known traps there are. Write down path:line — it goes into the prompt.
 
-Contra lo que hay en `origin/main`, no contra tu copia: `git fetch` antes de mapear. Y antes
-de convertir un pedido en prompt, comprueba que sigue haciendo falta y que se puede hacer
-como lo vas a pedir:
+Against what is on `origin/main`, not your copy: `git fetch` before mapping. And before
+turning a request into a prompt, check that it is still needed and can be done the way you
+are about to ask:
 
-- **¿Ya está hecho?** Una migración pendiente puede estar ya en
-  `git ls-tree --name-only origin/main supabase/migrations/` (y aplicada: `list_migrations`
-  del MCP). Un pendiente viejo no es un pedido vigente.
-- **¿Contradice una decisión implementada?** Si el pedido trae valores (bandas, topes,
-  colores), busca la decisión del tema y compáralos; si no coinciden, es una pregunta de
-  §2, no un prompt. (Se pidieron 5 bandas cuando la decisión implementada usaba 4 topes.)
-- **¿Hay con qué verificarlo?** Antes de pedir un test de DOM, mira si el proyecto tiene
-  entorno de DOM para tests (`happy-dom`/`jsdom` en `package.json`); si no, pide "verificar
-  midiendo con Playwright". Antes de llamar bug a algo, mídelo (p. ej. dos clases `font-*`
-  que `cn` ya resuelve no son un bug).
-- **¿Hay una imagen de por medio?** Ábrela antes de proponer su `alt` o su texto: un alt
-  escrito sin verla no describe nada.
+- **Already done?** A pending migration may already be in
+  `git ls-tree --name-only origin/main supabase/migrations/` (and applied: the MCP's
+  `list_migrations`). An old backlog item is not a live request.
+- **Does it contradict an implemented decision?** If the request carries values (bands,
+  caps, colors), find the decision on that topic and compare; if they differ, it is a §2
+  question, not a prompt. (5 bands were requested when the implemented decision used 4 caps.)
+- **Is there a way to verify it?** Before asking for a DOM test, check that the project has
+  a DOM test environment (`happy-dom`/`jsdom` in `package.json`); if not, ask for "verify by
+  measuring with Playwright". Before calling something a bug, measure it (e.g. two `font-*`
+  classes that `cn` already resolves are not a bug).
+- **Is there an image involved?** Open it before proposing its `alt` or its text: an alt
+  written without seeing it describes nothing.
 
-Señales de que un pedido es más grande de lo que parece:
-- Toca datos guardados o la base (merge, migraciones, columnas) → necesita tests de la capa
-  pura y probablemente acción manual.
-- Cambia una regla que afecta datos ya existentes (p. ej. un castigo que vuelve
-  incomparables los tiempos guardados) → pregunta qué hacer con lo viejo.
-- Es transversal (estilos de foco, hover, tokens) → toca muchos archivos: va al final.
-- Es de otro sistema (plantilla de correo en un dashboard, config externa) → no es un PR:
-  el worker prepara los archivos y César los aplica.
+Signs that a request is bigger than it looks:
+- It touches stored data or the database (merge, migrations, columns) → needs tests of the
+  pure layer and probably a manual action.
+- It changes a rule that affects existing data (e.g. a penalty that makes stored times
+  incomparable) → ask what to do with the old data.
+- It is cross-cutting (focus styles, hover, tokens) → touches many files: it goes last.
+- It belongs to another system (an email template in a dashboard, external config) → not a
+  PR: the worker prepares the files and César applies them.
 
-## 2. Preguntar lo que bloquea — una vez, al principio
+## 2. Ask what blocks — once, at the start
 
-Los workers corren en segundo plano y **no pueden preguntar**. Todo lo que cambie qué
-hacen se pregunta ahora, en una sola tanda (máx. 4 preguntas, con opción recomendada):
+Workers run in the background and **cannot ask**. Everything that changes what they do is
+asked now, in a single round (max. 4 questions, with a recommended option):
 
-- ¿Pueden levantar su propio servidor de desarrollo (cada uno en su puerto)?
-- ¿Pueden aplicar cambios **aditivos** en la base (columnas nuevas) vía MCP, o los deja
-  escritos para César?
-- Decisiones de producto que el pedido deja abiertas y que cambian el diseño de la unidad.
+- May they start their own dev server (each on its own port)?
+- May they apply **additive** database changes (new columns) through the MCP, or leave them
+  written for César?
+- Product decisions the request leaves open that change the unit's design.
 
-No preguntes por la QA de cierre: el servidor y las cuentas de prueba de `wave-qa` ya están
-autorizados (§8).
+Do not ask about the closing QA: the server and test accounts for `wave-qa` are already
+authorized (§8).
 
-Lo demás (detalles visuales, copy) lo decide el worker de forma conservadora y lo deja
-explicado en el PR con su alternativa.
+Everything else (visual details, copy) the worker decides conservatively and explains in
+the PR with its alternative.
 
-## 3. Agrupar y ordenar
+## 3. Group and order
 
-- **Agrupa** lo que toca los mismos archivos o gira alrededor de la misma pieza (ranking:
-  top N + avatares + skeleton + la regla que lo alimenta = una unidad).
-- **Separa** lo independiente: cada unidad = una rama = un PR, revisable en poco tiempo.
-- **Olas:** unidades que se pisan (mismos archivos) van en olas distintas; lo transversal
-  (estilos globales, cabeceras compartidas de modales) va en la última, sobre `main` ya
-  actualizado.
-- Una unidad sin código de repo (plantilla externa) corre sin slot del pool ni PR.
+- **Group** what touches the same files or revolves around the same piece (ranking: top N
+  + avatars + skeleton + the rule that feeds it = one unit).
+- **Separate** what is independent: each unit = one branch = one PR, reviewable quickly.
+- **Waves:** units that step on each other (same files) go in different waves; cross-cutting
+  work (global styles, shared modal headers) goes last, on an updated `main`.
+- A unit with no repo code (external template) runs without a pool slot and without a PR.
 
-## 4. Reservar números
+## 4. Reserve numbers
 
-Para que las unidades en paralelo no choquen, asigna a cada una:
+So that parallel units do not collide, assign each one:
 
-| Qué | Ejemplo |
+| What | Example |
 |---|---|
-| Rama | `feat/ranking-top20` |
-| Rango de IDs de decisión (un archivo por ID) | D075–D079 |
-| Filas de `CONTENT_CHECKLIST` | 26–27 |
-| Salto del changeset | `minor` (o `ninguno`) |
-| Rango de códigos de error propios, si el proyecto los usa (SQLSTATE de `raise … using errcode`) | MS010–MS014 |
+| Branch | `feat/ranking-top20` |
+| Range of decision IDs (one file per ID) | D075–D079 |
+| `CONTENT_CHECKLIST` rows | 26–27 |
+| Changeset bump | `minor` (or `none`) |
+| Range of custom error codes, if the project uses them (SQLSTATE of `raise … using errcode`) | MS010–MS014 |
 
-**Los IDs se reservan contra `origin/main`**, no contra la carpeta local, que puede ir
-atrasada (se reservó D186 mirando `context/decisions/` sin pull y ya existía en `main`):
+**IDs are reserved against `origin/main`**, not against the local folder, which may be
+behind (D186 was reserved by looking at `context/decisions/` without a pull and it already
+existed on `main`):
 
 ```bash
 git fetch origin --quiet
 git ls-tree --name-only origin/main context/decisions/ | sort | tail -3
 ```
 
-Y por encima de eso, los rangos reservados en PRs aún abiertos de otra tanda, si los hay.
+And above that, the ranges reserved in still-open PRs of another batch, if any.
 
-El slot y su puerto no se reservan aquí: los da `wt take` al lanzar (wt2 → 4302, §6).
+The slot and its port are not reserved here: `wt take` assigns them at launch (wt2 → 4302, §6).
 
-Versiones: ya no hay números que reservar ni orden de merge por versión. Ningún PR toca
-`version` ni `CHANGELOG.md`: cada unidad con cambio visible agrega su `.changeset/<desc>.md`
-con su salto, y la Action del proyecto los junta en el PR de versión (ver `git-flow` §2.1).
-Dos changesets en paralelo no chocan: son archivos distintos. Tú decides el salto de cada
-unidad y va en su prompt.
+Versions: there are no version numbers to reserve and no merge order by version. No PR
+touches `version` or `CHANGELOG.md`: each unit with a visible change adds its
+`.changeset/<desc>.md` with its bump, and the project's Action gathers them in the version
+PR (see `git-flow` §2.1). Two changesets in parallel do not collide: they are different
+files. You decide each unit's bump and it goes in its prompt. A project **without
+versioning** (its `CLAUDE.md` says so) has no changesets at all.
 
-## 5. Escribir el brief y los prompts — en disco
+## 5. Write the brief and the prompts — to disk
 
-Dos archivos en `context/plans/` (local):
+Two files in `context/plans/` (local):
 
-- `orquestacion-<fecha>.md` — **brief común** (plantilla: `brief-template.md` en esta
-  carpeta): tabla de unidades, olas, números reservados y las reglas de la tanda.
-- `orquestacion-<fecha>-prompts.md` — **un prompt por unidad** (plantilla:
-  `unit-prompt-template.md`): qué pidió César (cita literal), dónde está el código
-  (ruta:línea), decisiones que condicionan, trampas conocidas, enfoque ya decidido,
-  cómo verificar, cierre.
+- `orchestration-<date>.md` — **shared brief** (template: `brief-template.md` in this
+  folder): units table, waves, reserved numbers and the batch rules.
+- `orchestration-<date>-prompts.md` — **one prompt per unit** (template:
+  `unit-prompt-template.md`): what César asked (literal quote), where the code is
+  (path:line), constraining decisions, known traps, the approach already decided, how to
+  verify, closing.
 
-En disco y no solo en el mensaje: sobreviven a un reinicio de sesión y al worker le basta
-con "tu prompt es la sección W3 de ese archivo" — lo escribes una vez, no dos.
+On disk and not only in the message: they survive a session restart and the worker only
+needs "your prompt is section W3 of that file" — you write it once, not twice.
 
-Guarda también una memoria del proyecto que apunte a esos dos archivos y al plan de la
-fase o tanda, y diga en qué ola va.
+Also save a project memory pointing to those two files and to the phase or batch plan, and
+saying which wave it is on.
 
-## 6. Lanzar
+## 6. Launch
 
-Sin `isolation: "worktree"`: crearía y borraría un worktree (y su `node_modules`) por
-unidad. Cada unidad con código toma un slot del pool, desde la carpeta principal y **una
-tras otra** (en paralelo elegirían el mismo slot):
+No `isolation: "worktree"`: it would create and delete a worktree (and its `node_modules`)
+per unit. Each unit with code takes a pool slot, from the main folder and **one after
+another** (in parallel they would pick the same slot):
 
 ```bash
 wt take feat/ranking-top20
-# slot=wt2 · rama=feat/ranking-top20 · ruta=C:\…\<repo>-wt\wt2 · puerto=4302
+# slot=wt2 · branch=feat/ranking-top20 · path=C:\…\<repo>-wt\wt2 · port=4302
 ```
 
-`wt take` crea la rama desde `origin/main` (o la retoma si ya existe), instala solo si
-cambió `bun.lock` y refresca los `.env*`. Si no quedan slots libres, las unidades que
-sobran esperan a la ola siguiente, o se amplía el pool con `wt init -Count <N>`.
+`wt take` creates the branch from `origin/main` (or resumes it if it exists), installs only
+if `bun.lock` changed, refreshes the `.env*` files and stops anything still listening on the
+slot's port. If there are no free slots, the leftover units wait for the next wave, or the
+pool grows with `wt init -Count <N>`.
 
 ```
 Agent(
   subagent_type: "feature-worker",
   run_in_background: true,
-  description: "W3 modales",
-  prompt: "Trabaja SOLO en `C:\…\<repo>-wt\wt2` (rama feat/…, ya creada); tu puerto es 4302.
-           Tu prompt completo es la sección '## W3 — …' de <ruta>/orquestacion-<fecha>-prompts.md.
-           Léela entera y síguela. Resumen para orientarte: …(3-4 líneas)"
+  description: "W3 modals",
+  prompt: "Work ONLY in `C:\…\<repo>-wt\wt2` (branch feat/…, already created); your port is 4302.
+           Your full prompt is section '## W3 — …' of <path>/orchestration-<date>-prompts.md.
+           Read all of it and follow it. Summary to orient you: …(3-4 lines)"
 )
 ```
 
-Una unidad sin código de repo no toma slot. Todas las unidades de una ola en el **mismo
-mensaje** (corren en paralelo). No sondees: te avisan al terminar.
+A unit with no repo code takes no slot. All units of a wave in the **same message** (they
+run in parallel). Do not poll: you are notified when they finish.
 
-## 7. Consolidar
+## 7. Consolidate
 
-Cuando llega cada informe:
+When each report arrives:
 
-- Copia su `PHASE_LOG` y los archivos locales que dejó (SQL, plantillas) a la carpeta
-  principal si el worker no pudo escribir ahí (un worktree en sandbox no suele poder).
-- Actualiza `CURRENT_PHASE.md` (una fila por PR, tablero corto) y `CONTENT_CHECKLIST.md`.
-- Pasa su "Feedback para el kit" a `context/KIT_FEEDBACK.md` (si ya hay una fila del mismo
-  problema, suma a "Veces"). Si varios workers tropezaron con lo mismo, es una señal fuerte:
-  dilo en el resumen a César.
-- A César: tabla de PRs (número, salto patch/minor/major o ninguno, qué cambia, slot),
-  orden de merge solo si una unidad depende de otra, decisiones abiertas y acciones
-  manuales. Nada más.
-- Pedidos que surgen después → `context/plans/pendientes.md`, no la tanda en curso.
+- Copy its `PHASE_LOG` and the local files it left (SQL, templates) to the main folder if
+  the worker could not write there (a sandboxed worktree usually cannot).
+- Update `CURRENT_PHASE.md` (one row per PR, short board) and `CONTENT_CHECKLIST.md`.
+- Move its "Kit feedback" to `context/KIT_FEEDBACK.md` (if a row for the same problem
+  exists, add to "Times"). If several workers tripped on the same thing, it is a strong
+  signal: say so in the summary to César.
+- To César: table of PRs (number, bump patch/minor/major or none, what changes, slot),
+  merge order only if a unit depends on another, open decisions and manual actions.
+  Nothing else.
+- Requests that come up later → `context/plans/backlog.md`, not the running batch.
 
-Cuando César pide cambios en un PR o `main` avanzó: continúa al worker con `SendMessage`
-(conserva su contexto) en vez de lanzar uno nuevo. El slot sigue siendo suyo hasta el merge.
+When César asks for changes on a PR or `main` moved: continue the worker with `SendMessage`
+(it keeps its context) instead of launching a new one. The slot stays its own until merge.
 
-Tras el merge de cada PR: `wt free <slot>`. Vuelve a `origin/main` detached y borra la rama
-local si ya está mergeada; `node_modules` se queda. Si `free` aborta por cambios sin
-commitear, pregúntale al worker qué son antes de tocar nada.
+After each PR is merged: `wt free <slot>`. It goes back to `origin/main` detached and deletes
+the local branch if merged; `node_modules` stays. If `free` aborts because of uncommitted
+changes, ask the worker what they are before touching anything.
 
-El PR `chore(release): versión` lo abre la Action y lo mergea César cuando quiere publicar:
-no es de la tanda, ni tú ni los workers lo editan o mergean.
+The `chore(release): version` PR is opened by the Action and merged by César when he wants
+to publish: it is not part of the batch; neither you nor the workers edit or merge it.
 
-La ola no se cierra con PRs abiertos. Cuando César diga que están mergeados (compruébalo:
-`gh pr view <n> --json state`), libera sus slots y sigue con §8.
+A wave does not close with open PRs. When César says they are merged (check it:
+`gh pr view <n> --json state`), free their slots and go on with §8.
 
-## 8. QA de la ola
+## 8. Wave QA
 
-Cuando **todos** los PRs de la ola están mergeados. Una QA por ola, no por PR: lo que
-nadie ha probado son las unidades juntas, en `main`, con sesión iniciada.
+When **all** the wave's PRs are merged. One QA per wave, not per PR: what nobody has tested
+yet is the units together, on `main`, logged in.
 
 ```bash
-wt take qa/f0N-ola-N        # rama sin commits sobre origin/main: reserva el slot
+wt take qa/p0N-wave-N        # branch with no commits on origin/main: reserves the slot
 ```
 
 ```
 Agent(
   subagent_type: "wave-qa",
   run_in_background: true,
-  description: "QA ola N fase 0N",
-  prompt: "Slot `C:\…\<repo>-wt\wt1` (main @ <sha>), puerto 4301. Carpeta principal: `…`.
-           Fase 0N, ola N. PRs: #12 (W1 hero: <su 'Cómo probarlo' en 2 líneas>), #13 (…).
-           Flujos con sesión o datos: <cuáles y qué rol los usa>.
-           Costuras: <#12 y #13 tocan la misma página X>."
+  description: "QA wave N phase 0N",
+  prompt: "Slot `C:\…\<repo>-wt\wt1` (main @ <sha>), port 4301. Main folder: `…`.
+           Phase 0N, wave N. PRs: #12 (W1 hero: <its 'How to test' in 2 lines>), #13 (…).
+           Flows with login or data: <which, and which role uses them>.
+           Seams: <#12 and #13 touch the same page X>."
 )
 ```
 
-No hace falta repetirle lo que el agente ya trae: levanta su servidor con `bun run
-qa:local` contra la base local (Supabase en Docker; nunca la real); inicia sesión con
-`EMAIL_TEST`/`PASSWORD_TEST`, `ADMIN_EMAIL_TEST`/`ADMIN_PASSWORD_TEST` y
-`<ROL>_EMAIL_TEST`/`<ROL>_PASSWORD_TEST` de `.env.test.local` sin ver los valores. Si Docker
-no está abierto, lo dirá como acción de César: no lo arranques tú.
+No need to repeat what the agent already knows: it starts its server with `bun run
+qa:local` against the local database (Supabase in Docker; never the real one); it logs in
+with `EMAIL_TEST`/`PASSWORD_TEST`, `ADMIN_EMAIL_TEST`/`ADMIN_PASSWORD_TEST` and
+`<ROLE>_EMAIL_TEST`/`<ROLE>_PASSWORD_TEST` from `.env.test.local` without seeing the values.
+If Docker is not running, it will report it as an action for César: do not start it yourself.
 
-**Sin base local posible** (la máquina no tiene Docker, o el proyecto aún no tiene
-`supabase/config.toml` ni migraciones): la ola no se queda bloqueada. Lánzalo igual, con
-"sin base local: `qa:local -- --offline`" en el prompt; prueba como invitado con las
-variables de la base apuntando a ninguna parte. En el cierre (§9), "QA: solo invitado —
-<motivo>", y la QA con sesión de esa ola pasa a "Bloquea" hasta que haya base local.
+**No local database possible** (the machine has no Docker, or the project has no
+`supabase/config.toml` or migrations yet): the wave does not stay blocked. Launch it anyway,
+with "no local database: `qa:local -- --offline`" in the prompt; it tests as a guest with the
+database variables pointing nowhere. In the closing (§9), "QA: guest only — <reason>", and
+that wave's logged-in QA goes to "Blocked" until there is a local database.
 
-Con el informe:
-- Guárdalo en `context/plans/qa-ola-0N-N.md` y `wt free` del slot de QA.
-- **Crítico o Alto** → unidad de arreglo al principio de la ola siguiente. Si bloquea lo que
-  se construye encima, es una ola de arreglo propia antes de la siguiente planificada.
-- **Medio o Bajo** → `context/plans/pendientes.md`.
-- **Datos sin borrar** y **acciones de César** → "Bloquea" de `CURRENT_PHASE.md`.
-- Su "Feedback para el kit" → `context/KIT_FEEDBACK.md`, como el de los workers.
+With the report:
+- Save it to `context/plans/qa-wave-0N-N.md` and `wt free` the QA slot.
+- **Critical or High** → a fix unit at the start of the next wave. If it blocks what is
+  built on top, it is a fix wave of its own before the next planned one.
+- **Medium or Low** → `context/plans/backlog.md`.
+- **Data not deleted** and **actions for César** → "Blocked" in `CURRENT_PHASE.md`.
+- Its "Kit feedback" → `context/KIT_FEEDBACK.md`, like the workers'.
 
-Si hay flujos con login y `.env.test.local` no tiene cuentas de prueba: lánzalo igual
-(prueba lo público y lo marca), y en el cierre pide a César que las ponga (`backend-build`
-§2, Secretos).
+If there are login flows and `.env.test.local` has no test accounts: launch it anyway (it
+tests what is public and flags it), and in the closing ask César to add them
+(`backend-build` §2, Secrets).
 
-## 9. Cerrar la ola y pasar a la siguiente
+## 9. Close the wave and move to the next
 
-1. Plan de la fase: estado de la ola, fila de "Cierres", arreglos añadidos a la ola
-   siguiente, y el **prompt de arranque** de la siguiente.
-2. `CURRENT_PHASE.md`: "Ahora" con la fase y la ola siguiente; "Bloquea" con lo de la QA.
-3. A César, y nada más:
+1. Phase plan: the wave's status, its "Closings" row, fixes added to the next wave, and the
+   **start prompt** of the next one.
+2. `CURRENT_PHASE.md`: "Now" with the phase and the next wave; "Blocked" with the QA items.
+3. **Back up the local state:** `bun run context:backup` (copies the local `context/` to the
+   `context-state` branch; see `git-flow` §2.1.2). Without it, losing the main folder means
+   the next session does not know where the project stood. If the project does not have
+   the script yet, say so in the closing (`/kit-update` adds it).
+4. To César (in Spanish), and nothing else:
 
 ```
 **Fase 04 — Secciones · ola 2 de 3 cerrada**
@@ -271,40 +282,42 @@ Bloquea: <datos sin borrar / cuentas que faltan / nada>
 Para lanzarla: "inicia la ola en otra sesión"
 ```
 
-Si era la última ola, "Sigue" es la fase siguiente del track (su ola 1 empieza por §0).
+If it was the last wave, "Sigue" is the next phase of the track (its wave 1 starts with §0).
 
-4. Cuando César diga "inicia la ola/tanda en otra sesión" (o lo equivalente):
-   - Comprueba antes que todo lo que la ola siguiente necesita está en disco (plan,
-     `CURRENT_PHASE.md`, `pendientes.md`): la sesión nueva no ve esta conversación.
-   - Si tienes la herramienta de la app para abrir otra sesión (en la app de escritorio,
-     `start_session`), ábrela en la carpeta principal con el prompt de arranque como primer
-     mensaje y dile a César cuál es. Esta sesión no lanza nada más.
-   - Si no la tienes: el prompt de arranque en un bloque, para pegarlo en una sesión nueva
-     abierta en el proyecto.
+5. When César says "start the wave/batch in another session" ("inicia la ola en otra
+   sesión", or equivalent):
+   - First check that everything the next wave needs is on disk (plan, `CURRENT_PHASE.md`,
+     `backlog.md`): the new session does not see this conversation.
+   - If you have the app's tool to open another session (in the desktop app,
+     `start_session`), open it in the main folder with the start prompt as its first
+     message and tell César which one it is. This session launches nothing else.
+   - If you do not: the start prompt in a block, to paste into a new session opened in the
+     project.
 
-## 10. Lo que ya se aprendió (no lo redescubras)
+## 10. Already learned (do not rediscover it)
 
-- **Archivos locales compartidos:** los workers no editan `CURRENT_PHASE` ni
-  `CONTENT_CHECKLIST` (se pisarían); escriben su propio `PHASE_LOG/<rama>.md` o lo
-  entregan en el informe.
-- **Primer uso en un proyecto:** `wt init` (4 slots; `-Count` para más). Cuesta un
-  `bun install` por slot, una sola vez. `wt status` dice qué slot tiene qué rama.
-- **Lo gitignored en el pool:** `wt` ya copió los `.env*` de la carpeta principal a cada
-  slot (y los refresca en cada `take`); nunca se commitean. `context/` local no se copia: el
-  prompt dice dónde está la carpeta principal.
-- **Para que el pool vaya rápido** (acción manual de César, no del agente; recomiéndasela la
-  primera vez): excluir de Windows Defender la carpeta de trabajo, la del pool
-  (`..\<repo>-wt`) y `%USERPROFILE%\.bun\install\cache`; y activar en GitHub *Settings ›
-  General › Automatically delete head branches*.
-- **`.env` de producción:** los `feature-worker` verifican como invitados; no inician
-  sesión, no crean cuentas ni escriben datos reales. Para estados que dependen de datos
-  (rankings, listas largas), interceptan la respuesta en el navegador solo para depurar. La
-  prueba con sesión y datos es de `wave-qa`, tras el merge (§8), con las cuentas de prueba.
-- **Navegador compartido:** cada worker crea su propia pestaña y pasa su `tabId`.
-- **Operaciones destructivas en la base** (DELETE de filas viejas): las escribe el worker,
-  no las ejecuta; y el clasificador de seguridad puede bloquearlas también al orquestador
-  → quedan como acción de César, con el SQL exacto.
-- **Limpiar datos que el cliente vuelve a subir** (un ranking que el cliente resube en cada
-  carga) no se arregla borrando filas: hace falta que el cliente nuevo invalide lo viejo y
-  que clientes viejos cacheados escriban donde nadie lee (claves versionadas internas).
-- **Playwright se corre con node**, no con bun (en Windows se cuelga).
+- **Shared local files:** workers do not edit `CURRENT_PHASE` or `CONTENT_CHECKLIST` (they
+  would overwrite each other); they write their own `PHASE_LOG/<branch>.md` or deliver it in
+  the report.
+- **First use in a project:** `wt init` (4 slots; `-Count` for more). It costs one
+  `bun install` per slot, once. `wt status` says which slot holds which branch.
+- **Gitignored files in the pool:** `wt` already copied the `.env*` files from the main
+  folder to each slot (and refreshes them on every `take`); they are never committed. Local
+  `context/` is not copied: the prompt says where the main folder is. `.qa/` (measurement
+  scripts, logs) is ignored in every slot.
+- **To make the pool fast** (manual action for César, not the agent; recommend it the first
+  time): exclude from Windows Defender the working folder, the pool folder (`..\<repo>-wt`)
+  and `%USERPROFILE%\.bun\install\cache`; and enable in GitHub *Settings › General ›
+  Automatically delete head branches*.
+- **Production `.env`:** `feature-worker`s verify as guests; they do not log in, create
+  accounts or write real data. For states that depend on data (rankings, long lists), they
+  intercept the response in the browser, for debugging only. Logged-in testing with data
+  belongs to `wave-qa`, after the merge (§8), with the test accounts.
+- **Shared browser:** each worker creates its own tab and passes its `tabId`.
+- **Destructive database operations** (DELETE of old rows): the worker writes them, does
+  not run them; and the safety classifier may block them for the orchestrator too → they
+  stay as an action for César, with the exact SQL.
+- **Cleaning data the client keeps re-uploading** (a ranking the client re-uploads on every
+  load) is not fixed by deleting rows: the new client must invalidate the old data and old
+  cached clients must write where nobody reads (internal versioned keys).
+- **Playwright runs with node**, not bun (on Windows it hangs).

@@ -1,28 +1,29 @@
 /**
- * QA de diseño — barrido automatizado
+ * Design QA — automated sweep
  *
- * Uso:
+ * Usage:
  *   bun add -d @playwright/test @axe-core/playwright
  *   bunx playwright install chromium
- *   (el servidor corriendo, ver TOKEN-ECONOMY.md §1)
- *   node reference/qa-scripts/design-qa.ts
+ *   (the server running, see TOKEN-ECONOMY.md §1)
+ *   copy this file to .qa/design-qa.ts in the project, then: node .qa/design-qa.ts
  *
- * Con node, no con bun: en Windows, Playwright lanzado desde un script de Bun se cuelga
- * al arrancar Chromium (comprobado). Node ≥ 23.6 ejecuta el .ts directamente.
+ * With node, not bun: on Windows, Playwright launched from a Bun script hangs starting
+ * Chromium (checked). Node ≥ 23.6 runs the .ts directly. Inside the project (.qa/, ignored
+ * by git) it resolves Playwright from node_modules; from a temp folder it does not.
  *
- * Genera capturas en qa-output/ y un reporte en qa-output/report.md.
- * Este script NO decide si algo está bien: recoge evidencia. El agente design-qa
- * la interpreta.
+ * Writes screenshots and a report (report.md) to .qa/design-qa/.
+ * This script does NOT decide whether something is right: it collects evidence. The
+ * design-qa agent interprets it.
  */
 
 import { chromium, type Page } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 import { mkdir, writeFile } from 'node:fs/promises'
 
-// ── Configuración ────────────────────────────────────────────────────────────
+// ── Configuration ────────────────────────────────────────────────────────────
 const BASE = process.env.BASE_URL ?? 'http://localhost:3000'
-const ROUTES = ['/']                       // ajusta a las rutas del proyecto
-const OUT = 'qa-output'
+const ROUTES = ['/']                       // adjust to the project's routes
+const OUT = '.qa/design-qa'
 
 const WIDTHS = [320, 360, 390, 430, 768, 1024, 1280, 1440, 1920, 2560, 3840]
 
@@ -37,9 +38,9 @@ type Finding = { route: string; kind: string; detail: string }
 const findings: Finding[] = []
 const slug = (s: string) => s.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'root'
 
-// ── Comprobaciones ───────────────────────────────────────────────────────────
+// ── Checks ──────────────────────────────────────────────────────────────────
 
-/** Scroll horizontal: el fallo #1 en anchos pequeños (WCAG 1.4.10). */
+/** Horizontal scroll: failure #1 at small widths (WCAG 1.4.10). */
 async function checkOverflow(page: Page, route: string, width: number) {
   const r = await page.evaluate(() => {
     const d = document.documentElement
@@ -57,12 +58,12 @@ async function checkOverflow(page: Page, route: string, width: number) {
   if (r) {
     findings.push({
       route, kind: `overflow@${width}`,
-      detail: `scrollWidth ${r.scrollWidth} > viewport ${r.clientWidth}. Candidatos: ${r.guilty.join(', ')}`,
+      detail: `scrollWidth ${r.scrollWidth} > viewport ${r.clientWidth}. Candidates: ${r.guilty.join(', ')}`,
     })
   }
 }
 
-/** Objetivos táctiles por debajo de 44x44 en anchos de mobile. */
+/** Touch targets below 44x44 at mobile widths. */
 async function checkTapTargets(page: Page, route: string, width: number) {
   if (width > 768) return
   const small = await page.evaluate(() => {
@@ -82,7 +83,7 @@ async function checkTapTargets(page: Page, route: string, width: number) {
   }
 }
 
-/** Líneas de texto excesivamente largas en pantallas grandes. */
+/** Overly long text lines on large screens. */
 async function checkLineLength(page: Page, route: string, width: number) {
   if (width < 1920) return
   const long = await page.evaluate(() => {
@@ -92,14 +93,14 @@ async function checkLineLength(page: Page, route: string, width: number) {
       if (text.length < 100) continue
       const fontSize = parseFloat(getComputedStyle(el).fontSize)
       const chars = el.getBoundingClientRect().width / (fontSize * 0.5)
-      if (chars > 75) out.push(`~${Math.round(chars)} caracteres por línea: "${text.slice(0, 40)}…"`)
+      if (chars > 75) out.push(`~${Math.round(chars)} characters per line: "${text.slice(0, 40)}…"`)
     }
     return out.slice(0, 5)
   })
   if (long.length) findings.push({ route, kind: `line-length@${width}`, detail: long.join(' · ') })
 }
 
-/** Recorrido de foco: detecta paradas invisibles o fuera del viewport. */
+/** Focus walk: detects invisible or off-viewport stops. */
 async function checkFocusOrder(page: Page, route: string) {
   const stops: string[] = []
   for (let i = 0; i < 60; i++) {
@@ -119,17 +120,17 @@ async function checkFocusOrder(page: Page, route: string) {
     })
     if (!s) break
     const key = `${s.tag}:${s.name}`
-    if (stops.includes(key) && stops.length > 3) break        // dio la vuelta
+    if (stops.includes(key) && stops.length > 3) break        // wrapped around
     stops.push(key)
-    if (!s.visible) findings.push({ route, kind: 'focus-invisible', detail: `${key} — elemento enfocable sin dimensiones` })
-    else if (!s.inViewport) findings.push({ route, kind: 'focus-offscreen', detail: `${key} — foco fuera del viewport` })
-    else if (!s.hasRing) findings.push({ route, kind: 'focus-no-ring', detail: `${key} — sin indicador de foco visible` })
+    if (!s.visible) findings.push({ route, kind: 'focus-invisible', detail: `${key} — focusable element without dimensions` })
+    else if (!s.inViewport) findings.push({ route, kind: 'focus-offscreen', detail: `${key} — focus outside the viewport` })
+    else if (!s.hasRing) findings.push({ route, kind: 'focus-no-ring', detail: `${key} — no visible focus indicator` })
   }
 }
 
-/** Valores de color fuera de la paleta no se detectan aquí — eso es grep sobre el código. */
+/** Colors outside the palette are not detected here — that is grep on the code. */
 
-// ── Barrido ──────────────────────────────────────────────────────────────────
+// ── Sweep ────────────────────────────────────────────────────────────────────
 async function run() {
   await mkdir(OUT, { recursive: true })
   const browser = await chromium.launch()
@@ -137,11 +138,11 @@ async function run() {
   for (const route of ROUTES) {
     const rs = slug(route)
 
-    // 1. Barrido de anchos
+    // 1. Width sweep
     for (const width of WIDTHS) {
       const ctx = await browser.newContext({ viewport: { width, height: 900 } })
       const page = await ctx.newPage()
-      await page.goto(BASE + route, { waitUntil: 'networkidle' })
+      await page.goto(BASE + route, { waitUntil: 'load' })
       await page.screenshot({ path: `${OUT}/${rs}-w${width}.png`, fullPage: true })
       await checkOverflow(page, route, width)
       await checkTapTargets(page, route, width)
@@ -149,11 +150,11 @@ async function run() {
       await ctx.close()
     }
 
-    // 2. Daltonismo (a 1440)
+    // 2. Color blindness (at 1440)
     for (const [name, matrix] of Object.entries(CVD_FILTERS)) {
       const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } })
       const page = await ctx.newPage()
-      await page.goto(BASE + route, { waitUntil: 'networkidle' })
+      await page.goto(BASE + route, { waitUntil: 'load' })
       await page.addStyleTag({
         content: `html{filter:url(#cvd)}`,
       })
@@ -168,7 +169,7 @@ async function run() {
       await ctx.close()
     }
 
-    // 3. Preferencias del sistema
+    // 3. System preferences
     for (const [name, opts] of Object.entries({
       dark:           { colorScheme: 'dark' as const },
       'reduced-motion': { reducedMotion: 'reduce' as const },
@@ -177,7 +178,7 @@ async function run() {
       const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } })
       const page = await ctx.newPage()
       await page.emulateMedia(opts)
-      await page.goto(BASE + route, { waitUntil: 'networkidle' })
+      await page.goto(BASE + route, { waitUntil: 'load' })
       await page.screenshot({ path: `${OUT}/${rs}-${name}.png`, fullPage: true })
       await ctx.close()
     }
@@ -186,7 +187,7 @@ async function run() {
     {
       const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } })
       const page = await ctx.newPage()
-      await page.goto(BASE + route, { waitUntil: 'networkidle' })
+      await page.goto(BASE + route, { waitUntil: 'load' })
       await page.evaluate(() => { document.body.style.zoom = '400%' })
       await page.waitForTimeout(300)
       await checkOverflow(page, route, 1280)
@@ -194,21 +195,21 @@ async function run() {
       await ctx.close()
     }
 
-    // 5. Foco y teclado
+    // 5. Focus and keyboard
     {
       const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } })
       const page = await ctx.newPage()
-      await page.goto(BASE + route, { waitUntil: 'networkidle' })
+      await page.goto(BASE + route, { waitUntil: 'load' })
       await checkFocusOrder(page, route)
       await ctx.close()
     }
 
-    // 6. axe-core, en claro y oscuro
+    // 6. axe-core, light and dark
     for (const scheme of ['light', 'dark'] as const) {
       const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } })
       const page = await ctx.newPage()
       await page.emulateMedia({ colorScheme: scheme })
-      await page.goto(BASE + route, { waitUntil: 'networkidle' })
+      await page.goto(BASE + route, { waitUntil: 'load' })
       const { violations } = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
         .analyze()
@@ -224,27 +225,27 @@ async function run() {
 
   await browser.close()
 
-  // ── Reporte ────────────────────────────────────────────────────────────────
+  // ── Report ─────────────────────────────────────────────────────────────────
   const byRoute = new Map<string, Finding[]>()
   for (const f of findings) {
     if (!byRoute.has(f.route)) byRoute.set(f.route, [])
     byRoute.get(f.route)!.push(f)
   }
 
-  let md = `# QA de diseño — evidencia automatizada\n\n`
-  md += `**Base:** ${BASE}  ·  **Rutas:** ${ROUTES.join(', ')}  ·  **Hallazgos:** ${findings.length}\n\n`
-  md += `> Esto es evidencia recogida, no un juicio. El agente \`design-qa\` la interpreta,\n`
-  md += `> revisa las capturas de \`${OUT}/\` y produce el reporte final con severidades.\n\n`
+  let md = `# Design QA — automated evidence\n\n`
+  md += `**Base:** ${BASE}  ·  **Routes:** ${ROUTES.join(', ')}  ·  **Findings:** ${findings.length}\n\n`
+  md += `> This is collected evidence, not a judgment. The \`design-qa\` agent interprets it,\n`
+  md += `> reviews the screenshots in \`${OUT}/\` and produces the final report with severities.\n\n`
 
   for (const [route, fs] of byRoute) {
-    md += `## ${route}\n\n| Tipo | Detalle |\n|---|---|\n`
+    md += `## ${route}\n\n| Type | Detail |\n|---|---|\n`
     for (const f of fs) md += `| \`${f.kind}\` | ${f.detail.replace(/\|/g, '\\|')} |\n`
     md += `\n`
   }
-  if (!findings.length) md += `Sin hallazgos automáticos. **Revisa igual las capturas a mano** — lo visual no lo detecta un script.\n`
+  if (!findings.length) md += `No automatic findings. **Still review the screenshots by hand** — a script does not catch what is visual.\n`
 
   await writeFile(`${OUT}/report.md`, md)
-  console.log(`\n${findings.length} hallazgos. Reporte: ${OUT}/report.md · Capturas: ${OUT}/\n`)
+  console.log(`\n${findings.length} findings. Report: ${OUT}/report.md · Screenshots: ${OUT}/\n`)
 }
 
 run()

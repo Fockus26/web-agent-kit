@@ -1,34 +1,34 @@
-# Kit feedback — {{NOMBRE_DEL_PROYECTO}}
+# Kit feedback — {{PROJECT_NAME}}
 
-> Lo que el **web-agent-kit** hizo mal, de más o de menos en este proyecto, para mejorarlo.
-> No es el diario del proyecto: es material para el kit. Se busca con `grep`, no se lee por
-> defecto. Kit en el que arrancó / al que se actualizó: ver `.kit-version`.
+> What the **web-agent-kit** did wrong, too much or too little in this project, to improve
+> it. It is not the project's diary: it is material for the kit. Searched with `grep`, not
+> read by default. Kit version it started on / was updated to: see `.kit-version`.
 
-## Cuándo se anota (lo hace el agente, sin que se lo pidan)
+## When a row is added (the agent does it, without being asked)
 
-| Tipo | Señal |
+| Type | Signal |
 |---|---|
-| **Corrección** | César corrige algo que el agente hizo siguiendo el kit ("no, así no", "otra vez el…", revierte un cambio) |
-| **Repetición** | César tuvo que pedir lo mismo por segunda vez, o hacer a mano un paso que el kit podría hacer |
-| **Hueco** | El kit no decía qué hacer y el agente tuvo que improvisar o preguntar algo que debería estar resuelto |
-| **Fricción** | Un paso del kit costó mucho para lo que aportó (tokens, tiempo, ceremonia), o una instrucción estaba mal |
+| **Correction** | César corrects something the agent did following the kit ("no, así no", "otra vez el…", reverts a change) |
+| **Repetition** | César had to ask for the same thing a second time, or do by hand a step the kit could do |
+| **Gap** | The kit did not say what to do and the agent had to improvise or ask something that should be settled |
+| **Friction** | A kit step cost a lot for what it gave (tokens, time, ceremony), or an instruction was wrong |
 
-No se anota: errores del agente que el kit ya prohíbe con claridad (eso es otra cosa), ni
-preferencias de este proyecto solo (van a `decisions/`).
+Not logged: agent mistakes the kit already clearly forbids (that is something else), or
+preferences of this project alone (they go to `decisions/`).
 
-**Si ya existe una fila del mismo problema, no se duplica: se suma 1 a "Veces", se
-actualiza la fecha y, si estaba marcada como enviada (`→ PR …`), se quita la marca** (así
-el próximo envío la lleva con la cuenta nueva). Lo que se repite es lo que más vale arreglar.
+**If a row for the same problem already exists, it is not duplicated: add 1 to "Times",
+update the date and, if it was marked as sent (`→ PR …`), remove the mark** (so the next
+send carries it with the new count). What repeats is what is most worth fixing.
 
-## Registro
+## Log
 
-| # | Fecha | Tipo | Veces | Pieza del kit | Qué pasó (1 línea) | Propuesta (1 línea) |
+| # | Date | Type | Times | Kit piece | What happened (1 line) | Proposal (1 line) |
 |---|---|---|---|---|---|---|
-| 1 | {{AAAA-MM-DD}} | {{Corrección}} | 1 | {{skill git-flow §2.1.1}} | {{ej. las capturas no incluían el estado hover que César pidió}} | {{ej. que .pr-shots.json pida estados interactivos por defecto}} |
+| 1 | {{YYYY-MM-DD}} | {{Correction}} | 1 | {{git-flow skill §2.1.1}} | {{e.g. the screenshots did not include the hover state César asked for}} | {{e.g. .pr-shots.json should ask for interactive states by default}} |
 
-## Enviarlo al kit
+## Sending it to the kit
 
-Cuando César lo pida (o al cerrar la fase 09): skill **`kit-feedback`** (`/kit-feedback`).
-Arma el informe con las filas sin enviar, agrupado por pieza del kit y con lo repetido
-primero, y abre un PR en el repo del kit con la etiqueta `kit-feedback`. Las filas enviadas
-quedan marcadas con `→ PR <owner/repo#N>` en "Propuesta" (no se borran).
+When César asks for it (or when closing phase 09): the **`kit-feedback`** skill
+(`/kit-feedback`). It builds the report with the unsent rows, grouped by kit piece with the
+most repeated first, and opens a PR on the kit's repo with the `kit-feedback` label. Sent
+rows get marked with `→ PR <owner/repo#N>` in "Proposal" (they are not deleted).

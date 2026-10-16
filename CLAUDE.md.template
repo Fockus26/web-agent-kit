@@ -1,153 +1,159 @@
-# {{NOMBRE_DEL_PROYECTO}}
+# {{PROJECT_NAME}}
 
-> Copia este archivo a la raíz del proyecto como `CLAUDE.md` y llena los `{{...}}`.
-> Se carga solo en cada sesión: por eso es corto (**≤ 8 KB**) y funciona como **mapa**, no
-> como manual. Lo largo vive en `context/` y se lee solo cuando la tarea lo pide.
-> Borra este recuadro al copiarlo.
+> Copy this file to the project root as `CLAUDE.md` and fill in the `{{...}}`.
+> It loads by itself in every session: that is why it is short (**≤ 8 KB**) and works as a
+> **map**, not a manual. The long material lives in `context/` and is read only when the task
+> asks for it. Delete this box when copying it.
 
-{{DESCRIPCIÓN_EN_UNA_LÍNEA}}
+{{ONE_LINE_DESCRIPTION}}
 
-**Tipo:** {{landing | e-commerce | corporativo | dashboard | blog | app}} · **Cliente:** {{...}}
-**Track de fases:** {{Landing | Sitio | Producto}} · **Modo git:** {{pr | local}} (ver `context/GIT_STATE.md`)
-**Kit:** web-agent-kit, versión en `.kit-version` (se actualiza con `/kit-update`) ·
-**Despliegue:** {{Vercel <proyecto> · preview por PR | otro | ninguno}}
+**Type:** {{landing | e-commerce | corporate | dashboard | blog | app}} · **Client:** {{...}}
+**Phase track:** {{Landing | Site | Product}} · **Git mode:** {{pr | local}} (see `context/GIT_STATE.md`)
+**Kit:** web-agent-kit, version in `.kit-version` (updated with `/kit-update`) ·
+**Deployment:** {{Vercel <project> · preview per PR | other | none}}
+
+**Language:** talk to César in Spanish — questions, reports, PR titles and bodies, commit
+descriptions. Site copy in {{Spanish}}. Code and comments: like the code around them.
 
 ---
 
-## Qué leer — por niveles, no todo
+## What to read — by levels, not everything
 
-**Siempre:** este archivo + `context/CURRENT_PHASE.md` (una pantalla: qué está abierto y qué bloquea).
+**Always:** this file + `context/CURRENT_PHASE.md` (one screen: what is open and what blocks).
 
-**Según la tarea** — solo la fila que aplica:
+**Per task** — only the row that applies:
 
-| Si la tarea… | Lee además |
+| If the task… | Also read |
 |---|---|
-| toca UI (componente, sección, página, estilos) | `context/DESIGN_RULES.md`, y `COLORS.md` / `DESIGN_TOKENS.md` / `TYPOGRAPHY.md` solo si toca color, espaciado o tipo |
-| implementa algo del diseño | la parte de `design/HANDOFF.md` de esa pieza (no el handoff entero) |
-| toca datos, auth, pagos o API | `context/PROJECT_CONTEXT.md` › Stack y servicios |
-| abre o cierra una unidad | skill `git-flow` + `context/GIT_STATE.md` |
-| llega con un prompt de orquestador | **solo** lo que el prompt cite: ya trae rutas, líneas y decisiones |
+| touches UI (component, section, page, styles) | `context/DESIGN_RULES.md`, and `COLORS.md` / `DESIGN_TOKENS.md` / `TYPOGRAPHY.md` only if it touches color, spacing or type |
+| implements something from the design | that piece's part of `design/HANDOFF.md` (not the whole handoff) |
+| touches data, auth, payments or API | `context/PROJECT_CONTEXT.md` › Stack and services |
+| opens or closes a unit | `git-flow` skill + `context/GIT_STATE.md` |
+| arrives with an orchestrator prompt | **only** what the prompt cites: it already brings paths, lines and decisions |
 
-**Buscar, no leer:** `decisions/` (un archivo por decisión), `CONTENT_CHECKLIST.md`,
-inventarios, `PHASE_LOG/`. Se hace `grep` por la palabra o el ID y se abre solo lo que sale:
+**Search, don't read:** `decisions/` (one file per decision), `CONTENT_CHECKLIST.md`,
+inventories, `PHASE_LOG/`. `grep` for the word or the ID and open only what comes up:
 
 ```bash
-grep -rhi "^# D.*modal\|^# D.*ranking" context/decisions/   # ¿ya se decidió algo? No lo re-litigues
-grep -n "Button" context/COMPONENTS_INVENTORY.md       # ¿existe ya?
+grep -rhi "^# D.*modal\|^# D.*ranking" context/decisions/   # already decided? Don't re-litigate it
+grep -n "Button" context/COMPONENTS_INVENTORY.md            # does it exist already?
 ```
 
-Detalle y presupuestos de tamaño: `reference/TOKEN-ECONOMY.md` del kit (resumen abajo).
+Details and size budgets: the kit's `reference/TOKEN-ECONOMY.md`.
 
 ---
 
 ## Stack
 
-- {{Next.js (App Router) | Astro | Vite + React}} + **TypeScript** estricto
-- **Librería de componentes:** {{shadcn/ui | Hero UI | MUI}} · **Estilos:** {{Tailwind | sx de MUI}} — uno solo
-- **bun** para todo — nunca npm, yarn ni pnpm
-- {{Base de datos / ORM}} · {{Auth}} · {{Pagos}}
+- {{Next.js (App Router) | Astro | Vite + React}} + strict **TypeScript**
+- **Component library:** {{shadcn/ui | Hero UI | MUI}} · **Styling:** {{Tailwind | MUI sx}} — only one
+- **bun** for everything — never npm, yarn or pnpm
+- {{Database / ORM}} · {{Auth}} · {{Payments}}
 
 ```bash
-bun install
 bun run build
-bun run typecheck             # Next: next typegen && tsc --noEmit · Astro: astro check
+bun run typecheck            # Next: next typegen && tsc --noEmit · Astro: astro check
 bun run lint
-bun run test:related         # mientras trabajas: solo los tests afectados (grafo de imports)
-bun run test                 # antes del PR: toda la suite (CI la corre siempre)
-bun run shots                # capturas para el PR (node + Playwright, ver scripts/)
-bun run shots:publish        # las sube a la rama pr-shots e imprime el markdown
+bun run test:related         # while working: only the affected tests (import graph)
+bun run test                 # before the PR: the whole suite, alone (CI always runs it)
+bun run shots                # PR screenshots (node + Playwright, see scripts/)
+bun run shots:publish        # uploads them to the pr-shots branch; markdown in .pr-shots/README.md
+bun run context:backup       # local context/ → branch context-state (restore: context:restore)
 ```
 
-**Servidor de desarrollo:** lo levanta César. Excepciones: los agentes de QA (`wave-qa`,
-`functional-qa`) siempre, y los workers si César lo autoriza para una tanda (cada uno en su
-puerto, en segundo plano). Build, typecheck, lint y tests sí se corren sin preguntar.
+**Dev server:** César starts it. Exceptions: the QA agents (`wave-qa`, `functional-qa`)
+always, and the workers if César authorizes it for a batch (each on its port, in the
+background). Build, typecheck, lint and tests run without asking.
 
-**QA contra base local:** `bun run qa:local -- --port <p>` levanta {{Supabase}} en Docker
-(migraciones + seed), crea las cuentas de `.env.test.local` (`EMAIL_TEST`/`PASSWORD_TEST`,
-`ADMIN_…`, `<ROL>_…`) y arranca el servidor apuntando a lo local. Nunca contra la base real.
+**QA against a local database:** `bun run qa:local -- --port <p>` starts {{Supabase}} in
+Docker (migrations + seed), creates the `.env.test.local` accounts (`EMAIL_TEST`/
+`PASSWORD_TEST`, `ADMIN_…`, `<ROLE>_…`) and starts the server pointing at it. Never against
+the real database. Without Docker: `--offline` (guest only).
 
-**Scripts con Playwright se corren con `node`, no con `bun`:** en Windows, Playwright bajo
-Bun se cuelga al lanzar Chromium.
+**Playwright scripts run with `node`, not `bun`** (under Bun it hangs on Windows), saved in
+`.qa/` (ignored by git).
 
-**Documentación:** Context7 antes de usar la API de cualquier librería.
+**Documentation:** Context7 before using any library's API.
 
 ---
 
-## Cómo se trabaja aquí
+## How work is done here
 
-Una unidad a la vez (un componente, una sección, una pantalla, un flujo, un fix acotado):
-algo que se revisa en dos minutos. Una unidad = una rama = {{un PR | un merge local}}.
+One unit at a time (a component, a section, a screen, a flow, a bounded fix): something
+reviewable in two minutes. One unit = one branch = {{one PR | one local merge}}.
 
 ```
-[git-flow: abrir]  →  implementar  →  test:related  →  [a11y]  →  [seo si aplica]
-   →  build + typecheck + lint + test  →  capturas (si cambió la UI)
-   →  podar context/  →  [git-flow: cerrar → PR (o pausa + merge local)]
+[git-flow: open]  →  implement  →  test:related  →  [a11y]  →  [seo if it applies]
+   →  build + typecheck + lint + test  →  screenshots (if the UI changed)
+   →  prune and back up context/  →  [git-flow: close → PR (or pause + local merge)]
 ```
 
-- **Modo `pr`:** en tu rama puedes commitear y empujar sin pedir permiso — la aprobación de
-  César es la revisión del PR. **Nunca** push a `main`, nunca `gh pr merge`, nunca auto-merge.
-- **Modo `local`:** nada se commitea sin aprobación explícita de César (pausa de `git-flow`).
-- **Versión:** {{nadie toca `version` ni `CHANGELOG.md`. Cambio visible → `.changeset/<desc>.md`
-  (`git-flow` §2.1.3). El PR `chore(release): versión` lo abre la Action y lo mergea César. |
-  **sin versión** (no lleva `version` ni CHANGELOG ni Changesets, a propósito): ningún PR
-  lleva changeset.}}
-- Nada destructivo: ni `reset --hard`, ni `push --force`, ni reescribir historia, ni borrar ramas.
+- **`pr` mode:** on your branch you may commit and push without asking — César's approval is
+  the PR review. **Never** push to `main`, never `gh pr merge`, never auto-merge.
+- **`local` mode:** nothing gets committed without César's explicit approval (`git-flow` pause).
+- **Version:** {{nobody touches `version` or `CHANGELOG.md`. Visible change →
+  `.changeset/<desc>.md` (`git-flow` §2.1.3). The `chore(release): versión` PR is opened by
+  the Action and merged by César. | **no versioning** (no `version`, CHANGELOG or
+  Changesets, on purpose): no PR carries a changeset.}}
+- Nothing destructive: no `reset --hard`, no `push --force`, no history rewriting, no
+  deleting branches.
 
-### Qué va al repo y qué es local
+### What goes in the repo and what is local
 
-En git: `.kit-version` y {{los documentos fijos de context/: PROJECT_CONTEXT, DESIGN_RULES, COLORS,
-DESIGN_TOKENS, TYPOGRAPHY, decisions/}}.
-Local (gitignored): {{CURRENT_PHASE, CONTENT_CHECKLIST, KIT_FEEDBACK, inventarios, PHASE_LOG/, plans/, .env}}.
-Los slots del pool de worktrees (`orchestrate`, `..\<repo>-wt\wtN`) traen los `.env*`
-copiados, pero **no** `context/` local: se lee en la carpeta principal
-(`{{RUTA_ABSOLUTA_DEL_REPO}}`). Un subagente en un slot puede no tener permiso de escritura
-ahí: entonces los devuelve en su informe y el orquestador los copia.
+In git: `.kit-version`, `supabase/` (migrations, seed, templates) and the fixed documents
+of `context/`: {{PROJECT_CONTEXT, DESIGN_RULES, COLORS, DESIGN_TOKENS, TYPOGRAPHY, decisions/}}.
+Local (gitignored): {{CURRENT_PHASE, CONTENT_CHECKLIST, KIT_FEEDBACK, inventories, PHASE_LOG/,
+plans/, .env*}} — backed up to `context-state` with `bun run context:backup`.
+The worktree pool slots (`orchestrate`, `..\<repo>-wt\wtN`) get the `.env*` files copied,
+but **not** the local `context/`: it is read in the main folder
+(`{{ABSOLUTE_REPO_PATH}}`). A subagent in a slot may lack write permission there: then it
+returns them in its report and the orchestrator copies them.
 
-### Puertas de calidad
+### Quality gates
 
-| Skill / agente | Cuándo |
+| Skill / agent | When |
 |---|---|
-| `a11y` | Siempre que se toque UI, antes de pedir revisión |
-| `seo` | Init del repo · cierre de sección con contenido · cierre de página |
-| `git-flow` | Al abrir y al cerrar cada unidad |
-| `orchestrate` | Llega una lista, o una fase se hace en olas (una ola por sesión) |
-| `wave-qa` | Lo lanza `orchestrate` con la ola mergeada, antes de cerrarla |
-| `design-qa` / `functional-qa` | Al cerrar una página / un flujo completo |
+| `a11y` | Whenever UI is touched, before asking for review |
+| `seo` | Repo init · closing a section with content · closing a page |
+| `git-flow` | When opening and closing each unit |
+| `orchestrate` | A list arrives, or a phase is done in waves (one wave per session) |
+| `wave-qa` | Launched by `orchestrate` with the wave merged, before closing it |
+| `design-qa` / `functional-qa` | When a page / a full flow closes |
 
 ---
 
-## Reglas no negociables
+## Non-negotiable rules
 
-- **Cero valores mágicos.** Todo color, espaciado, radio y tamaño sale de los tokens.
-- **Cero secretos en el código.** Variables de entorno, `.env.example` sin valores reales.
-- **Cero contenido inventado.** Placeholder marcado + fila en `context/CONTENT_CHECKLIST.md`.
-- **Cero lorem ipsum.** Placeholder realista, en {{español}}, con la longitud del texto final.
-- **WCAG 2.1 AA** mínimo: 4.5:1 texto, foco visible, ningún estado solo por color, sin
-  scroll horizontal a 320 px.
-- **La librería del proyecto antes que reimplementar** un primitivo.
-- {{Reglas propias del proyecto: dónde vive la persistencia, qué capa toca el estado, etc.}}
+- **Zero magic values.** Every color, spacing, radius and size comes from the tokens.
+- **Zero secrets in the code.** Environment variables, `.env.example` without real values.
+- **Zero invented content.** Flagged placeholder + row in `context/CONTENT_CHECKLIST.md`.
+- **Zero lorem ipsum.** A realistic placeholder, in {{Spanish}}, with the final text's length.
+- **WCAG 2.1 AA** minimum: 4.5:1 text, visible focus, no state only by color, no horizontal
+  scroll at 320 px.
+- **The project's library before reimplementing** a primitive.
+- {{Project-specific rules: where persistence lives, which layer touches state, etc.}}
 
-## Cuándo parar y preguntar
+## When to stop and ask
 
-- Falta un dato del handoff → se pregunta, no se estima del mockup.
-- Decisión visual nueva → 3 opciones con ventaja y desventaja real, y se espera.
-  (Un worker en segundo plano no puede esperar: elige lo conservador y lo explica en el PR.)
-- Algo rompe una regla de accesibilidad → gana la regla, se escala.
-- Problema en código ya cerrado → se reporta, no se arregla dentro de la unidad actual.
-- Archivo sin uso → se señala, **no se borra**.
+- A handoff value is missing → ask, do not estimate it from the mockup.
+- New visual decision → 3 options with real advantage and disadvantage, and wait.
+  (A background worker cannot wait: it picks the conservative one and explains it in the PR.)
+- Something breaks an accessibility rule → the rule wins, escalate.
+- A problem in already-closed code → report it, do not fix it inside the current unit.
+- Unused file → point it out, **do not delete it**.
 
-## Feedback para el kit
+## Kit feedback
 
-Cuando César corrija algo que hiciste siguiendo el kit, te pida lo mismo por segunda vez,
-haga a mano un paso que el kit podría hacer, o el kit no diga qué hacer: fila en
-`context/KIT_FEEDBACK.md` (o +1 en "Veces" si ya está). Sin preguntar y sin anunciarlo
-más que en una línea. Se envía al kit con `/kit-feedback` (abre un PR en su repo).
+When César corrects something you did following the kit, asks you for the same thing a
+second time, does by hand a step the kit could do, or the kit does not say what to do: a row
+in `context/KIT_FEEDBACK.md` (or +1 in "Times" if it exists). Without asking and announcing
+it in one line at most. It goes to the kit with `/kit-feedback` (opens a PR on its repo).
 
 ---
 
-## Contexto del proyecto
+## Project context
 
-**Público:** {{...}} · **Acción principal:** {{...}} · **Tono:** {{...}} · **Idioma:** {{...}}
+**Audience:** {{...}} · **Main action:** {{...}} · **Tone:** {{...}} · **Language:** {{...}}
 
-**Particularidades:**
-- {{ej. "el service worker cachea agresivo: desregistrarlo y limpiar cachés tras cada cambio en dev"}}
+**Particulars:**
+- {{e.g. "the service worker caches aggressively: unregister it and clear caches after each change in dev"}}

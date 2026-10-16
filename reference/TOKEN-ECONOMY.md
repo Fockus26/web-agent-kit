@@ -1,142 +1,151 @@
-# Economía de tokens
+# Token economy
 
-Reglas de obligado cumplimiento para todos los agentes y skills del kit. El objetivo es que
-cada tarea cueste lo que tiene que costar: **el contexto justo para hacerla bien, ni un
-archivo más.**
+Mandatory rules for every agent and skill in the kit. The goal is for each task to cost what
+it has to cost: **just the context to do it well, not one file more.**
 
-> Lo que más tokens gastó en el primer proyecto real (World Flags) no fue el código: fue
-> **leer contexto que no hacía falta** en cada arranque. `CURRENT_PHASE.md` llegó a 38 KB
-> (debía caber en una pantalla) y `DECISIONS_INDEX.md` a 31 KB, y la regla "lee estos 5
-> archivos antes de empezar" hacía que cada sesión pagara ~20.000 tokens antes de tocar
-> una línea. Las reglas 1–3 existen por eso.
+> What spent the most tokens in the first real project (World Flags) was not the code: it
+> was **reading context that was not needed** on every start. `CURRENT_PHASE.md` reached
+> 38 KB (it should fit on one screen) and `DECISIONS_INDEX.md` 31 KB, and the rule "read
+> these 5 files before starting" made every session pay ~20,000 tokens before touching a
+> line. Rules 1–3 exist because of that.
 
 ---
 
-## 1. Lectura por niveles — no "lee todo antes de empezar"
+## 1. Reading by levels — not "read everything before starting"
 
-| Nivel | Qué | Cuándo |
+| Level | What | When |
 |---|---|---|
-| **Siempre** | `CLAUDE.md` (se carga solo) + `context/CURRENT_PHASE.md` | Toda sesión |
-| **Según la tarea** | Lo que diga la tabla "Qué leer según la tarea" de `CLAUDE.md` | Solo si la tarea es de ese tipo |
-| **Buscar, no leer** | `decisions/`, `CONTENT_CHECKLIST.md`, inventarios, `PHASE_LOG/` | `grep` por la palabra o el ID; se abre solo el archivo/rango que sale |
+| **Always** | `CLAUDE.md` (loads by itself) + `context/CURRENT_PHASE.md` | Every session |
+| **Per task** | What the "What to read per task" table in `CLAUDE.md` says | Only if the task is of that kind |
+| **Search, don't read** | `decisions/`, `CONTENT_CHECKLIST.md`, inventories, `PHASE_LOG/` | `grep` for the word or ID; open only the file/range that comes up |
 
-Ejemplos:
+Examples:
 
 ```bash
-grep -rhi "^# D.*ranking" context/decisions/                 # ¿hay algo decidido sobre esto?
-cat context/decisions/D042-*.md                                 # el detalle de una decisión citada
-grep -n "Modal" context/COMPONENTS_INVENTORY.md                 # ¿existe ya un componente?
+grep -rhi "^# D.*ranking" context/decisions/                 # anything decided about this?
+cat context/decisions/D042-*.md                              # the detail of a cited decision
+grep -n "Modal" context/COMPONENTS_INVENTORY.md              # does a component already exist?
 ```
 
-Si una unidad la prepara un orquestador, el prompt ya trae las rutas, líneas e IDs de
-decisión relevantes: **se lee eso y nada más** (ver skill `orchestrate`).
+If an orchestrator prepares a unit, the prompt already brings the relevant paths, lines and
+decision IDs: **read that and nothing else** (see the `orchestrate` skill).
 
-## 2. Presupuesto de tamaño de `context/`
+## 2. Size budget of `context/`
 
-Un archivo que se lee siempre tiene que ser corto; los que se consultan con `grep` pueden
-crecer, pero cada fila tiene que ser una línea.
+A file that is always read has to be short; the ones consulted with `grep` may grow, but
+each row has to be one line.
 
-| Archivo | Tope | Qué se hace al pasarlo |
+| File | Cap | What to do when it is exceeded |
 |---|---|---|
-| `CLAUDE.md` | ~8 KB | Lo que no es regla ni mapa se va a `context/` o a `docs/` |
-| `CURRENT_PHASE.md` | **~60 líneas / 4 KB** | Lo cerrado se mueve a `PHASE_LOG/<rama>.md`; aquí queda una línea con el enlace |
-| `decisions/D0NN-*.md` | Un archivo por decisión, **cabecera = 1 línea ≤ 160 caracteres** | El detalle va al cuerpo, nunca a la cabecera |
-| `CONTENT_CHECKLIST.md` | Sin tope, filas cortas | Las resueltas se marcan `Hecho`; no se reescriben párrafos |
-| Cualquier otro de lectura "siempre" | 4 KB | Partirlo |
+| `CLAUDE.md` | ~8 KB | What is neither rule nor map goes to `context/` or `docs/` |
+| `CURRENT_PHASE.md` | **~60 lines / 4 KB** | What is closed moves to `PHASE_LOG/<branch>.md`; one line with the link stays here |
+| `decisions/D0NN-*.md` | One file per decision, **header = 1 line ≤ 160 characters** | The detail goes in the body, never the header |
+| `CONTENT_CHECKLIST.md` | No cap, short rows | Resolved ones get marked `Resolved`; paragraphs are not rewritten |
+| Any other "always" file | 4 KB | Split it |
 
-Comprobación rápida (la corre `git-flow` al cerrar cada unidad):
+Quick check (`git-flow` runs it when closing each unit):
 
 ```bash
-wc -c CLAUDE.md context/CURRENT_PHASE.md    # >8000 / >4000 → podar antes del PR
-grep -rh "^# D" context/decisions/ | awk 'length > 200'   # cabeceras que son párrafos
+wc -c CLAUDE.md context/CURRENT_PHASE.md    # >8000 / >4000 → prune before the PR
+grep -rh "^# D" context/decisions/ | awk 'length > 200'   # headers that are paragraphs
 ```
 
-## 3. `CURRENT_PHASE.md` es un tablero, no un diario
+## 3. `CURRENT_PHASE.md` is a board, not a diary
 
-Solo tres cosas: **qué está abierto ahora** (PRs/ramas con su estado en una línea),
-**qué bloquea** (acciones del dueño), y **qué sigue**. La narrativa de lo que se hizo, lo
-que se verificó y lo que no, va a `PHASE_LOG/<rama>.md` al cerrar la unidad. Si al cerrar
-una unidad ves que el archivo creció, podarlo es parte del cierre, no una tarea aparte.
+Only three things: **what is open now** (PRs/branches with their status in one line),
+**what blocks** (the owner's actions), and **what is next**. The narrative of what was done,
+what was verified and what was not, goes to `PHASE_LOG/<branch>.md` when the unit closes. If
+when closing a unit you see the file grew, pruning it is part of the closing, not a
+separate task. It is local, and backed up to the `context-state` branch
+(`bun run context:backup`).
 
-## 4. El servidor de desarrollo
+## 4. The dev server
 
-**Por defecto lo levanta César.** Cuando un paso necesita el sitio corriendo, se pide y se
-espera; si dice que no, se sigue sin esa verificación y se marca como no verificado.
+**By default César starts it.** When a step needs the site running, ask and wait; if he
+says no, go on without that verification and flag it as not verified.
 
-**Excepción autorizada por tanda** (la usa `orchestrate` con workers en paralelo): si César
-lo autoriza, cada agente levanta el suyo **en segundo plano**, en su slot del pool y **en
-el puerto del slot**, no lee sus logs salvo que algo falle, y lo apaga al terminar. La
-autorización vale para esa tanda, no para siempre.
+**Exception authorized per batch** (used by `orchestrate` with parallel workers): if César
+authorizes it, each agent starts its own **in the background**, in its pool slot and **on
+the slot's port**, does not read its logs unless something fails, and shuts it down when
+done — killing its process tree, never with the framework's `stop`. The authorization holds
+for that batch, not forever.
 
-Por qué la regla existe: un servidor en primer plano escupe logs de compilación a cada
-cambio y cada línea pasa por el contexto; uno huérfano sigue ocupando el puerto.
+Why the rule exists: a foreground server spits compilation logs on every change and every
+line goes through the context; an orphaned one keeps holding the port.
 
-## 5. Tests: los afectados en el bucle, todos en CI
+## 5. Tests: the affected ones in the loop, all of them in CI
 
-- **Mientras se trabaja:** solo los tests afectados por el cambio, con salida mínima:
+- **While working:** only the tests affected by the change, with minimal output:
   ```bash
-  bun run test:related        # scripts/test-related.ts: elige por el grafo de imports, usa --dots
+  bun run test:related        # scripts/test-related.ts: picks by the import graph, uses --dots
   ```
-  Elige por dependencias reales, no por el nombre: un cambio en logros no corre el test del
-  tutorial… salvo que el tutorial importe algo de logros, que es justo cuando sí debe correr.
-  Si cambian dependencias, `tsconfig` o la config del bundler, corre todo.
-- **Antes de abrir el PR:** la suite unitaria completa, con `--dots` (un punto por test que
-  pasa; detalle solo de los que fallan). En verde son un par de líneas.
-- **CI corre siempre todo.** La selección por grafo es una heurística (no ve lo que un test
-  lee con `fs` salvo por nombre, ni efectos globales): acelera el bucle, no sustituye a la
-  suite. Para e2e, lo mismo con `playwright test --only-changed=origin/main` primero y la
-  suite completa después.
+  It picks by real dependencies, not by name: a change in achievements does not run the
+  tutorial's test… unless the tutorial imports something from achievements, which is
+  exactly when it should run. If dependencies, `tsconfig` or the bundler config change, it
+  runs everything.
+- **Before opening the PR:** the full unit suite, with `--dots` (one dot per passing test;
+  detail only for the failing ones). Green, it is a couple of lines. Alone and in the
+  background with several workers (see `STACK-NEXTJS.md` › bun).
+- **CI always runs everything.** Graph selection is a heuristic (it does not see what a test
+  reads with `fs` except by name, nor global effects): it speeds up the loop, it does not
+  replace the suite. For e2e, the same with `playwright test --only-changed=origin/main`
+  first and the full suite afterwards.
 
-## 6. Capturas: al disco, no al contexto
+## 6. Screenshots: to disk, not to the context
 
-- Una captura **vista** por el agente cuesta muchísimo más que medir el DOM. Para verificar
-  estructura, contraste, desbordes o foco: mediciones del DOM (texto).
-- Las capturas para el PR se **generan a disco y se publican sin abrirlas**
-  (`bun run shots` + `bun run shots:publish`, scripts en `scripts/`). Son para quien revisa.
-- El agente solo abre una imagen cuando el hallazgo es visual y no se puede medir.
+- A screenshot **looked at** by the agent costs far more than measuring the DOM. To verify
+  structure, contrast, overflows or focus: DOM measurements (text).
+- PR screenshots are **generated to disk and published without opening them**
+  (`bun run shots` + `bun run shots:publish`, scripts in `scripts/`). They are for whoever
+  reviews.
+- The agent only opens an image when the finding is visual and cannot be measured (and
+  always before writing its `alt`).
 
-## 7. No releas lo que ya leíste
+## 7. Do not reread what you already read
 
-El contenido de un archivo que ya está en la conversación no se vuelve a leer. Después de
-editar, **no releas para verificar**: si la edición hubiera fallado, la herramienta habría
-dado error.
+The content of a file that is already in the conversation is not read again. After editing,
+**do not reread to verify**: if the edit had failed, the tool would have errored. Exception:
+a file you changed through the shell (`sed`, `biome --write`) must be read before editing it.
 
-## 8. Lee lo justo
+## 8. Read just enough
 
-- Un archivo grande: el rango que necesitas, no las 2.000 líneas.
-- Buscar algo: `grep` con el patrón, no leer archivos completos a ver si está.
-- Explorar: lista nombres primero, abre solo lo que resulte relevante.
+- A big file: the range you need, not the 2,000 lines.
+- Looking for something: `grep` with the pattern, not reading whole files to see if it is
+  there — and with scoped paths (`app/`, `lib/`), never at the root (it walks
+  `node_modules` and `.next`).
+- Exploring: list names first, open only what turns out relevant.
 
-## 9. Una unidad, una vez
+## 9. One unit, once
 
-Lo que más tokens gasta no es un archivo largo: es implementar una sección entera con un
-dato inventado y tener que rehacerla. De ahí "si falta un dato del handoff, se pregunta" y
-"3 opciones antes de implementar lo ambiguo". Un worker en segundo plano que no puede
-preguntar elige lo conservador y lo deja explicado en el PR.
+What spends the most tokens is not a long file: it is implementing a whole section with an
+invented value and having to redo it. Hence "if a handoff value is missing, ask" and "3
+options before implementing what is ambiguous". A background worker that cannot ask picks
+the conservative option and explains it in the PR.
 
-## 10. Salidas concisas
+## 10. Concise outputs
 
-- No repitas en prosa el código que acabas de escribir.
-- No narres lo que vas a hacer antes de hacerlo.
-- El formato de entrega de cada skill ya es el resumen: no agregues otro encima.
-- Comandos con salida larga: filtra (`| tail -20`, `--dots`, `--quiet`) en vez de leerla entera.
+- Do not repeat in prose the code you just wrote.
+- Do not narrate what you are going to do before doing it.
+- Each skill's delivery format is already the summary: do not add another on top.
+- Commands with long output: filter (`| tail -20`, `--dots`, `--quiet`) or write to a file
+  instead of reading it all.
 
-## 11. Aislar lo ruidoso en subagentes
+## 11. Isolate what is noisy in subagents
 
-Barridos de QA, exploraciones amplias y unidades completas delegadas corren como
-subagentes: su ruido (capturas, salidas de axe, trazas, logs) se queda en su contexto y a
-la sesión principal vuelve solo el informe. El precio: un subagente arranca en frío, así
-que **el prompt tiene que traer el contexto mínimo suficiente** (rutas, líneas, decisiones,
-trampas conocidas) para que no lo redescubra leyendo el repo entero.
+QA sweeps, wide explorations and whole delegated units run as subagents: their noise
+(screenshots, axe outputs, traces, logs) stays in their context and only the report comes
+back to the main session. The price: a subagent starts cold, so **the prompt has to bring
+the minimal sufficient context** (paths, lines, decisions, known traps) so it does not
+rediscover it by reading the whole repo.
 
-## 12. Esfuerzo según el papel
+## 12. Effort by role
 
-El orquestador (planifica, agrupa, redacta prompts, consolida) justifica un esfuerzo alto.
-Los workers que ejecutan un prompt bien especificado rinden igual con esfuerzo medio. Se
-fija en la definición del agente (`effort:` en el frontmatter de `.claude/agents/*.md`).
+The orchestrator (plans, groups, writes prompts, consolidates) justifies high effort. The
+workers that run a well-specified prompt do just as well at medium effort. It is set in the
+agent's definition (`effort:` in the frontmatter of `.claude/agents/*.md`).
 
-## 13. Sesiones separadas por bloque
+## 13. Separate sessions per block
 
-Una sesión larguísima acumula todo el historial en cada turno. Es más barato cerrar y abrir
-una sesión nueva entre bloques grandes: el estado vive en `context/` y en la memoria del
-proyecto, no en la conversación.
+A very long session accumulates all its history on every turn. It is cheaper to close and
+open a new session between big blocks: the state lives in `context/` and in the project's
+memory, not in the conversation.

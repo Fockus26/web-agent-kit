@@ -1,125 +1,126 @@
-# Handoff de diseño — estructura esperada y verificación
+# Design handoff — expected structure and verification
 
-Este archivo tiene dos usos:
+This file has two uses:
 
-1. **El orquestador** lo usa para verificar el `HANDOFF.md` que vuelve de Claude Design,
-   antes de dejar que se escriba una sola línea de código.
-2. **`frontend-build`** lo usa como mapa: sabe dónde buscar cada dato mientras implementa.
+1. **The orchestrator** uses it to check the `HANDOFF.md` that comes back from Claude
+   Design, before letting a single line of code be written.
+2. **`frontend-build`** uses it as a map: it knows where to look for each value while
+   implementing.
 
-El handoff real vive en `design/HANDOFF.md` dentro del proyecto.
+The real handoff lives in `design/HANDOFF.md` inside the project.
 
 ---
 
-## Verificación de completitud
+## Completeness check
 
-Recorre esta lista contra el `HANDOFF.md` recibido. Cada ❌ es una pregunta que hay que
-devolverle a Claude Design **ahora**, no en la fase 5.
+Go through this list against the `HANDOFF.md` received. Each ❌ is a question to send back
+to Claude Design **now**, not in phase 5.
 
 ### 1. Tokens
-- [ ] Colores light **y** dark, todos los roles, con hex
-- [ ] Ratio de contraste anotado en cada par texto/fondo que se usa
-- [ ] Escala tipográfica con tamaño, interlineado, peso y tracking por rol
-- [ ] Escala de espaciado
-- [ ] Radios de borde
-- [ ] Sombras con valor CSS real
-- [ ] Duraciones y curvas de animación
-- [ ] Escala de z-index
-- [ ] Color de selección de texto (fondo y texto, claro y oscuro) con su ratio
-- [ ] Barra de scroll (thumb y track, claro y oscuro), thumb ≥ 3:1 contra el track
+- [ ] Light **and** dark colors, every role, with hex
+- [ ] Contrast ratio noted on each text/background pair used
+- [ ] Type scale with size, line height, weight and tracking per role
+- [ ] Spacing scale
+- [ ] Border radii
+- [ ] Shadows with a real CSS value
+- [ ] Animation durations and curves
+- [ ] z-index scale
+- [ ] Text selection color (background and text, light and dark) with its ratio
+- [ ] Scrollbar (thumb and track, light and dark), thumb ≥ 3:1 against the track
 
-### 2. Componentes
-Por cada componente:
-- [ ] Nombre + mapeo a shadcn/ui (o "componente nuevo")
-- [ ] Anatomía
-- [ ] Variantes y tamaños
-- [ ] Estados: reposo · hover · **foco** · activo · deshabilitado · cargando · error
-- [ ] Medidas concretas (padding, altura, gap, ícono, borde)
-- [ ] Comportamiento responsive
-- [ ] Notas de accesibilidad (rol, nombre accesible, teclado)
+### 2. Components
+For each component:
+- [ ] Name + mapping to the component library (or "new component")
+- [ ] Anatomy
+- [ ] Variants and sizes
+- [ ] States: rest · hover · **focus** · active · disabled · loading · error
+- [ ] Concrete measurements (padding, height, gap, icon, border)
+- [ ] Responsive behavior
+- [ ] Accessibility notes (role, accessible name, keyboard)
 
-> El estado de **foco** es el que más falta. Sin él, el frontend improvisa un anillo que no
-> encaja con el sistema y `a11y` lo rebota después.
+> The **focus** state is the one most often missing. Without it, the frontend improvises a
+> ring that does not fit the system and `a11y` bounces it later.
 
-### 3. Secciones
-Por cada sección, en el orden vertical de la página:
-- [ ] Layout (grid/flex, columnas, gaps, ancho máximo)
-- [ ] Componentes que usa
-- [ ] Espaciado vertical antes y después
-- [ ] **Comportamiento en cada breakpoint**, explícito
-- [ ] Qué contenido es real y qué es placeholder
+### 3. Sections
+For each section, in the page's vertical order:
+- [ ] Layout (grid/flex, columns, gaps, max width)
+- [ ] Components it uses
+- [ ] Vertical spacing before and after
+- [ ] **Behavior at each breakpoint**, explicit
+- [ ] Which content is real and which is a placeholder
 
-### 4. Grid global
-- [ ] Ancho máximo del contenedor
-- [ ] Columnas y gutters por breakpoint
-- [ ] Padding lateral por breakpoint
-- [ ] Ritmo vertical entre secciones
+### 4. Global grid
+- [ ] Container max width
+- [ ] Columns and gutters per breakpoint
+- [ ] Side padding per breakpoint
+- [ ] Vertical rhythm between sections
 
 ### 5. Assets
-- [ ] Lista completa con dimensiones y formato
-- [ ] Set de íconos identificado
-- [ ] Variantes del logo
-- [ ] Icono fuente (SVG) y sus derivados: favicon, apple touch icon 180×180 opaco, maskable
-      — o confirmado que los manda el cliente (ver `reference/BRAND-ASSETS.md`)
-- [ ] Plantilla de imagen Open Graph 1200×630 — o confirmado que la manda el cliente
+- [ ] Complete list with dimensions and format
+- [ ] Icon set identified
+- [ ] Logo variants
+- [ ] Source icon (SVG) and its derivatives: favicon, opaque apple touch icon 180×180,
+      maskable — or confirmed that the client sends them (see `reference/BRAND-ASSETS.md`)
+- [ ] Open Graph image template 1200×630 — or confirmed that the client sends it
 
-### 5b. Pantallas de estado (`reference/STATUS-SCREENS.md`)
-- [ ] 404 — con sesión e invitado si hay auth; una sola si no
-- [ ] 500 con código y sin código
-- [ ] Sin conexión
-- [ ] Mantenimiento con hora y sin hora
-- [ ] Copy de cada una (real o marcado como propuesto) y su versión mobile
+### 5b. Status screens (`reference/STATUS-SCREENS.md`)
+- [ ] 404 — logged in and guest if there is auth; a single one if not
+- [ ] 500 with a code and without
+- [ ] Offline
+- [ ] Maintenance with a time and without
+- [ ] Copy of each (real or marked as proposed) and its mobile version
 
-### 5c. Correos (`reference/EMAIL-TEMPLATES.md`) — solo si la app manda correos
-- [ ] Plantilla base con valores concretos: ancho, colores con ratio, tipografía de respaldo,
-      botón con medidas
-- [ ] Uno por cada correo de `PROJECT_CONTEXT.md` § "Correos", con asunto, preheader y copy
-- [ ] Datos variables de cada uno identificados (enlace, código, nombre, resumen)
-- [ ] Cómo se ve sin imágenes y con colores invertidos (logo legible en ambos)
+### 5c. Emails (`reference/EMAIL-TEMPLATES.md`) — only if the app sends emails
+- [ ] Base template with concrete values: width, colors with ratio, fallback typography,
+      button with measurements
+- [ ] One for each email in `PROJECT_CONTEXT.md` § "Emails", with subject, preheader and copy
+- [ ] Each one's variable data identified (link, code, name, summary)
+- [ ] How it looks without images and with inverted colors (logo legible in both)
 
-### 6. Movimiento
-- [ ] Qué anima, duración y curva
-- [ ] Qué se apaga bajo `prefers-reduced-motion`
+### 6. Motion
+- [ ] What animates, duration and curve
+- [ ] What turns off under `prefers-reduced-motion`
 
-### 7. Orden de implementación
-- [ ] Secuencia de pasos con dependencias señaladas
+### 7. Implementation order
+- [ ] Sequence of steps with dependencies marked
 
-### 8. Decisiones y trampas
-- [ ] Decisiones con su razón
-- [ ] Qué es fácil implementar mal
+### 8. Decisions and traps
+- [ ] Decisions with their reason
+- [ ] What is easy to implement wrong
 
-### 9. Preguntas abiertas
-- [ ] Listadas, con recomendación de Claude Design para cada una
+### 9. Open questions
+- [ ] Listed, with Claude Design's recommendation for each
 
 ---
 
-## Qué hacer cuando falta algo
+## What to do when something is missing
 
-| Situación | Acción |
+| Situation | Action |
 |---|---|
-| Falta un token o una medida concreta | Devolver la pregunta exacta a Claude Design. **No lo estimes del mockup** — un valor inventado se propaga a todo el sistema. |
-| Falta un estado de un componente | Devolver la pregunta. Es barata de responder y cara de adivinar. |
-| Falta el comportamiento en un breakpoint | Devolver la pregunta. Es el hallazgo #1 del QA de diseño. |
-| Falta un asset | Registrar en `CONTENT_CHECKLIST.md` e implementar con placeholder marcado. **Esto sí no bloquea.** |
-| Una decisión contradice `context/DESIGN_RULES.md` (ej. un par de colores que no llega a AA) | El handoff **no** manda sobre las reglas de accesibilidad. Escalar a César con la corrección propuesta. |
-| Una decisión contradice `COLORS.md` o `TYPOGRAPHY.md` sin romper ninguna regla | El handoff manda. Actualizar `context/` y registrar la decisión con su razón. |
+| A token or a concrete measurement is missing | Send the exact question back to Claude Design. **Do not estimate it from the mockup** — an invented value spreads through the whole system. |
+| A component state is missing | Send the question back. Cheap to answer, expensive to guess. |
+| The behavior at a breakpoint is missing | Send the question back. It is design QA's #1 finding. |
+| An asset is missing | Log it in `CONTENT_CHECKLIST.md` and implement with a flagged placeholder. **This one does not block.** |
+| A decision contradicts `context/DESIGN_RULES.md` (e.g. a color pair that does not reach AA) | The handoff does **not** override the accessibility rules. Escalate to César with the proposed correction. |
+| A decision contradicts `COLORS.md` or `TYPOGRAPHY.md` without breaking any rule | The handoff wins. Update `context/` and record the decision with its reason. |
 
-Regla general: **falta un dato de sistema → se pregunta; falta contenido → se pone
-placeholder y se registra.** Confundir las dos es lo que produce reimplementaciones.
+General rule: **a system value is missing → ask; content is missing → placeholder and log
+it.** Confusing the two is what produces reimplementations.
 
 ---
 
-## Reconciliación con `context/`
+## Reconciliation with `context/`
 
-Antes de arrancar el frontend, el orquestador sincroniza:
+Before starting the frontend, the orchestrator syncs:
 
-- `COLORS.md` ← tokens de color finales del handoff, con sus ratios
-- `TYPOGRAPHY.md` ← escala tipográfica final
-- `DESIGN_TOKENS.md` ← espaciado, radios, sombras, movimiento, z-index
-- `COMPONENTS_INVENTORY.md` ← una fila por componente del handoff, estado `pendiente`
-- `SECTION_INVENTORY.md` ← una fila por sección, estado `pendiente`
-- `CONTENT_CHECKLIST.md` ← todo placeholder y asset faltante
-- `PROJECT_CONTEXT.md` § "Correos" ← estado `diseñado` en los que trae el handoff
-- `decisions/` ← una fila por decisión relevante que el handoff traiga o cambie
+- `COLORS.md` ← the handoff's final color tokens, with their ratios
+- `TYPOGRAPHY.md` ← final type scale
+- `DESIGN_TOKENS.md` ← spacing, radii, shadows, motion, z-index
+- `COMPONENTS_INVENTORY.md` ← one row per handoff component, status `pending`
+- `SECTION_INVENTORY.md` ← one row per section, status `pending`
+- `CONTENT_CHECKLIST.md` ← every placeholder and missing asset
+- `PROJECT_CONTEXT.md` § "Emails" ← status `designed` on the ones the handoff brings
+- `decisions/` ← one file per relevant decision the handoff brings or changes
 
-A partir de aquí, `context/` y `HANDOFF.md` deben decir lo mismo. Si divergen, el frontend
-va a seguir uno de los dos al azar según cuál leyó de último.
+From here, `context/` and `HANDOFF.md` must say the same thing. If they diverge, the
+frontend will follow one of the two at random depending on which it read last.

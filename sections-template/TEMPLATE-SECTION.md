@@ -1,33 +1,33 @@
-# Brief de sección — {{NOMBRE_DE_LA_SECCIÓN}}
+# Section brief — {{SECTION_NAME}}
 
-> Usa este template para dar contexto de contenido a `frontend-build` antes de que
-> implemente una sección nueva. No es parte de `context/` (que documenta lo ya decidido) —
-> este archivo es un input puntual, uno por sección, que puedes descartar una vez la sección
-> esté implementada y documentada en `SECTION_INVENTORY.md`.
+> Use this template to give `frontend-build` content context before it implements a new
+> section. It is not part of `context/` (which documents what is already decided) — this
+> file is a one-off input, one per section, that you can discard once the section is
+> implemented and documented in `SECTION_INVENTORY.md`.
 
-## Página(s) donde vive
+## Page(s) where it lives
 
-{{ej. Home}}
+{{e.g. Home}}
 
-## Propósito de la sección
+## Purpose of the section
 
-{{1-2 líneas: qué debe comunicar/lograr esta sección}}
+{{1-2 lines: what this section must communicate/achieve}}
 
-## Contenido real disponible
+## Real content available
 
-- {{Texto/copy ya confirmado por el cliente, si existe}}
-- {{Imágenes/assets ya disponibles, con ruta}}
-- {{Si NO hay contenido real todavía, dilo explícitamente — el implementador debe usar
-  placeholder y registrarlo en CONTENT_CHECKLIST.md, no inventar el contenido final}}
+- {{Text/copy already confirmed by the client, if any}}
+- {{Images/assets already available, with path}}
+- {{If there is NO real content yet, say so explicitly — the implementer must use a
+  placeholder and log it in CONTENT_CHECKLIST.md, not invent the final content}}
 
-## Componentes que probablemente reutiliza
+## Components it probably reuses
 
-- {{ej. Card, Button — ver COMPONENTS_INVENTORY.md}}
+- {{e.g. Card, Button — see COMPONENTS_INVENTORY.md}}
 
-## Referencias visuales (si aplica)
+## Visual references (if any)
 
-- {{link o descripción}}
+- {{link or description}}
 
-## Restricciones específicas
+## Specific constraints
 
-{{ej. "debe caber en una sola pantalla en mobile", "el CTA debe llevar a #agenda"}}
+{{e.g. "must fit on a single screen on mobile", "the CTA must lead to #agenda"}}

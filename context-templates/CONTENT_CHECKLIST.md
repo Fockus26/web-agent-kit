@@ -1,14 +1,14 @@
-# Content Checklist — {{NOMBRE_DEL_PROYECTO}}
+# Content Checklist — {{PROJECT_NAME}}
 
-> Todo el contenido real (copy, imágenes, alt text, datos de contacto, precios) que hoy está
-> como placeholder en el código, pendiente de que el cliente lo confirme o lo mande. Ningún
-> agente debe inventar este contenido como si fuera final — cuando encuentren o creen un
-> placeholder, agregan una fila aquí.
+> All the real content (copy, images, alt text, contact details, prices) that is a
+> placeholder in the code today, waiting for the client to confirm or send it. No agent may
+> invent this content as if it were final — when they find or create a placeholder, they add
+> a row here.
 
-| # | Qué falta | Dónde (archivo/componente) | Quién lo marcó | Fase | Estado |
+| # | What is missing | Where (file/component) | Flagged by | Phase | Status |
 |---|---|---|---|---|---|
-| 1 | {{ej. Alt text real de las fotos de líderes}} | {{components/sections/Leaders.tsx}} | {{skill a11y}} | {{Fase 06}} | {{Pendiente}} |
-| 2 | {{ej. Textos de la línea de tiempo de Historia}} | {{components/sections/History.tsx}} | {{frontend-build}} | {{Fase 06}} | {{Pendiente}} |
+| 1 | {{e.g. Real alt text for the leaders' photos}} | {{components/sections/Leaders.tsx}} | {{a11y skill}} | {{Phase 06}} | {{Pending}} |
+| 2 | {{e.g. Texts of the History timeline}} | {{components/sections/History.tsx}} | {{frontend-build}} | {{Phase 06}} | {{Pending}} |
 
-<!-- Marca "Resuelto" (no borres la fila) cuando el cliente confirme el contenido real y se
-     actualice el código. -->
+<!-- Mark "Resolved" (do not delete the row) when the client confirms the real content and
+     the code is updated. -->

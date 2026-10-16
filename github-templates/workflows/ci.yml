@@ -1,16 +1,16 @@
-# CI de referencia del kit. Copiar a .github/workflows/ci.yml y ajustar los comandos
-# del framework (typecheck) y las variables de relleno que el build necesite.
+# The kit's reference CI. Copy to .github/workflows/ci.yml and adjust the framework's
+# commands (typecheck) and the placeholder variables the build needs.
 #
-# Corre SIEMPRE la suite completa: la selección de tests por grafo
-# (`bun run test:related`) es para el bucle local del agente, no sustituye a esto.
+# It ALWAYS runs the full suite: the graph-based test selection (`bun run test:related`)
+# is for the agent's local loop, it does not replace this.
 name: CI
 
 on:
   pull_request:
   push:
     branches: [main]
-  # Lo lanza release.yml sobre la rama del PR de versión: ese PR lo abre GITHUB_TOKEN y no
-  # dispara `pull_request`, así que sin esto se queda sin el check `ci` que exige main.
+  # release.yml triggers it on the version PR's branch: that PR is opened by GITHUB_TOKEN and
+  # does not fire `pull_request`, so without this it lacks the `ci` check main requires.
   workflow_dispatch:
 
 concurrency:
@@ -21,8 +21,8 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     env:
-      # Valores de relleno si el build crea clientes al importar (Supabase, etc.).
-      # Nunca secretos reales aquí: los reales van en Settings → Secrets.
+      # Placeholder values if the build creates clients on import (Supabase, etc.).
+      # Never real secrets here: the real ones go in Settings → Secrets.
       NEXT_PUBLIC_EXAMPLE_URL: https://placeholder.example.com
     steps:
       - uses: actions/checkout@v4
@@ -33,23 +33,23 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Typecheck
-        run: bun run typecheck        # next typegen + tsc (Next 16 genera LayoutProps en .next/). Astro: bunx astro check
+        run: bun run typecheck        # next typegen + tsc (Next 16 generates LayoutProps in .next/). Astro: bunx astro check
 
       - name: Lint
         run: bun run lint
 
       - name: Unit tests
-        run: bun run test             # el comando vive en package.json (tests/unit, --pass-with-no-tests)
+        run: bun run test             # the command lives in package.json (tests/unit, --pass-with-no-tests)
 
       - name: Build
         run: bun run build
 
-  # e2e opcional: primero lo afectado (feedback rápido), después todo.
+  # optional e2e: the affected tests first (fast feedback), then everything.
   # e2e:
   #   runs-on: ubuntu-latest
   #   steps:
   #     - uses: actions/checkout@v4
-  #       with: { fetch-depth: 0 }          # --only-changed necesita la historia
+  #       with: { fetch-depth: 0 }          # --only-changed needs the history
   #     - uses: oven-sh/setup-bun@v2
   #     - run: bun install --frozen-lockfile
   #     - run: bunx playwright install --with-deps chromium

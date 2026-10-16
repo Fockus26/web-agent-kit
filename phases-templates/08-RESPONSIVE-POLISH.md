@@ -1,37 +1,37 @@
-# Fase 08 — Responsive y pulido
+# Phase 08 — Responsive and polish
 
-## Objetivo
+## Goal
 
-Recorrer todo lo construido y corregir la deriva. A diferencia de la fase 09, aquí **sí se
-corrige**, no solo se reporta.
+Go over everything built and fix the drift. Unlike phase 09, here things **do get fixed**,
+not just reported.
 
-## Alcance
+## Scope
 
-- Cada página en cada breakpoint del proyecto: 320 · 360 · 390 · 768 · 1024 · 1440 · 1920
+- Each page at each breakpoint of the project: 320 · 360 · 390 · 768 · 1024 · 1440 · 1920
   {{· 2560 · 3840}}.
-- Mobile en horizontal y pantallas de altura corta.
-- Zoom al 200% y al 400%.
-- Coherencia de tokens: cero valores mágicos, espaciados de la escala, radios consistentes.
-- Coherencia entre páginas: los mismos elementos se ven iguales en todas.
-- Consistencia de hover y focus entre elementos equivalentes.
-- Modo oscuro revisado en todo, no solo donde se probó.
-- `prefers-reduced-motion` respetado.
+- Mobile in landscape and short-height screens.
+- Zoom at 200% and 400%.
+- Token consistency: zero magic values, spacings from the scale, consistent radii.
+- Consistency across pages: the same elements look the same on all of them.
+- Consistent hover and focus across equivalent elements.
+- Dark mode reviewed everywhere, not just where it was tested.
+- `prefers-reduced-motion` respected.
 
-## Entradas
+## Inputs
 
-Todo lo implementado · `design/HANDOFF.md` · `context/DESIGN_RULES.md`
+Everything implemented · `design/HANDOFF.md` · `context/DESIGN_RULES.md`
 
-## Criterio de cierre
+## Closing criteria
 
-- [ ] Sin scroll horizontal en ningún ancho, en ninguna página.
-- [ ] Sin texto cortado ni solapado en ningún breakpoint.
-- [ ] `grep -rnE '\[[0-9]+px\]|\[#[0-9a-fA-F]{3,8}\]' components/ app/` limpio o justificado.
-- [ ] Ritmo vertical consistente entre secciones equivalentes.
-- [ ] Objetivos táctiles ≥44px en mobile.
-- [ ] Modo oscuro revisado en todas las páginas.
-- [ ] Correcciones registradas en `decisions/` (un `D0NN-<tema>.md` por decisión, categoría Responsive).
+- [ ] No horizontal scroll at any width, on any page.
+- [ ] No cut or overlapping text at any breakpoint.
+- [ ] `grep -rnE '\[[0-9]+px\]|\[#[0-9a-fA-F]{3,8}\]' components/ app/` clean or justified.
+- [ ] Consistent vertical rhythm between equivalent sections.
+- [ ] Touch targets ≥44px on mobile.
+- [ ] Dark mode reviewed on every page.
+- [ ] Fixes recorded in `decisions/` (one `D0NN-<topic>.md` per decision, category Responsive).
 
-## Ambigüedad frecuente
+## Frequent ambiguity
 
-Una corrección responsive con más de un camino razonable (cómo colapsa una grid de 4
-columnas, dónde se corta una tabla ancha): 3 opciones y se espera.
+A responsive fix with more than one reasonable path (how a 4-column grid collapses, where a
+wide table gets cut): 3 options and wait.

@@ -1,29 +1,29 @@
-# Fase 05 — Páginas
+# Phase 05 — Pages
 
-## Objetivo
+## Goal
 
-Ensamblar las secciones en rutas reales, con su navegación y su metadata.
+Assemble the sections into real routes, with their navigation and their metadata.
 
-## Alcance
+## Scope
 
-- Una ruta por unidad de trabajo.
-- Composición de secciones en el orden del handoff.
-- Navegación entre páginas, con estado activo.
-- Metadata por página y JSON-LD del tipo correspondiente (skill `seo`).
-- Rutas dinámicas con `generateMetadata` y `notFound()` cuando el recurso no existe.
-- Entrada en `sitemap.ts`.
+- One route per unit of work.
+- Composition of sections in the handoff's order.
+- Navigation between pages, with an active state.
+- Per-page metadata and JSON-LD of the matching type (`seo` skill).
+- Dynamic routes with `generateMetadata` and `notFound()` when the resource does not exist.
+- Entry in `sitemap.ts`.
 
-## Entradas
+## Inputs
 
-`design/HANDOFF.md` · `context/PAGE_INVENTORY.md` · fase 04 cerrada
+`design/HANDOFF.md` · `context/PAGE_INVENTORY.md` · phase 04 closed
 
-## Criterio de cierre
+## Closing criteria
 
-- [ ] Todas las rutas del inventario existen y navegan entre sí.
-- [ ] Un solo `<h1>` por página.
-- [ ] Metadata única por página; canonical correcta.
-- [ ] Las páginas que no deben indexarse (gracias, cuenta, checkout) con
+- [ ] Every route in the inventory exists and they link to each other.
+- [ ] A single `<h1>` per page.
+- [ ] Unique metadata per page; correct canonical.
+- [ ] Pages that must not be indexed (thank-you, account, checkout) with
       `robots: { index: false }`.
-- [ ] Cero enlaces rotos.
-- [ ] Puerta `a11y` en verde · skill `seo` ejecutada en modo *página*.
-- [ ] `PAGE_INVENTORY.md` actualizado.
+- [ ] Zero broken links.
+- [ ] `a11y` gate green · `seo` skill run in *page* mode.
+- [ ] `PAGE_INVENTORY.md` updated.
