@@ -68,6 +68,8 @@ contigo**: hacer preguntas, presentar 3 opciones, esperar tu aprobación.
 | **`orchestrate`** | Mapea una lista de pedidos (o una fase) al código, agrupa, ordena en olas, reserva números, pregunta lo que bloquea y lanza un `feature-worker` por unidad; con la ola mergeada lanza `wave-qa`, la cierra diciendo fase, ola y lo que sigue, y abre la siguiente en otra sesión | Cuando llegan varias cosas a la vez · al hacer una fase en olas |
 | **`a11y`** | Puerta WCAG 2.1 AA | Siempre que se toque UI, antes de la revisión |
 | **`seo`** | Metadata, JSON-LD, sitemap, Core Web Vitals | Init del repo · sección con contenido · página |
+| **`kit-update`** | Compara la versión del proyecto con la publicada del kit; si va atrás, aplica el camino de `ACTUALIZACIONES.md` en un PR | `/kit-update` cuando sale una versión del kit |
+| **`kit-feedback`** | Envía `context/KIT_FEEDBACK.md` al repo del kit como un PR | `/kit-feedback` cuando quieras · al cerrar la fase 09 |
 
 ### Agentes — corren aislados y devuelven un reporte
 
@@ -117,7 +119,7 @@ Copia cada skill y cada agente del kit a `~/.claude/`, reemplazando la versión 
 dejar archivos viejos) y sin tocar lo que no es del kit. Para actualizar, el mismo comando
 con `-Pull` (`--pull` en bash): hace antes `git pull` en el kit.
 
-Verifica con `/skills` y `/agents`. Deberías ver las siete skills y los cuatro agentes.
+Verifica con `/skills` y `/agents`. Deberías ver las nueve skills y los cuatro agentes.
 
 > **Los agentes se cargan al abrir la sesión.** Si instalas o editas uno con una sesión
 > abierta, esa sesión no lo ve ("Agent type not found"): abre una sesión nueva.
@@ -246,10 +248,12 @@ web-agent-kit/
 ├── VERSION                        versión actual del kit (cada proyecto guarda la suya en .kit-version)
 ├── ACTUALIZACIONES.md             qué cambió en cada versión y los pasos para migrar un proyecto
 ├── CLAUDE.md                      cómo se mantiene el kit (procesar informes de feedback, versionar)
+├── feedback/                      informes de los proyectos (PRs `kit-feedback`); no va a ningún proyecto
 ├── CLAUDE.md.template             va a la raíz de cada proyecto (≤ 8 KB: mapa, no manual)
 ├── instalar-kit.ps1 / .sh         instala o reinstala skills y agentes en ~/.claude/ (-Pull: git pull antes)
+│                                    y deja ~/.claude/web-agent-kit.json (ruta + versión) para kit-update
 ├── .claude/
-│   ├── skills/                    las 7 skills → ~/.claude/skills/
+│   ├── skills/                    las 9 skills → ~/.claude/skills/
 │   │   └── orchestrate/           + brief-, unit-prompt- y fase-plan-template.md y
 │   │                                scripts/wt.ps1 (pool de worktrees reciclables)
 │   └── agents/                    design-qa, functional-qa, feature-worker, wave-qa → ~/.claude/agents/
@@ -257,7 +261,7 @@ web-agent-kit/
 │   ├── CLAUDE-DESIGN-BRIEF.template.md   lo que se le pega a Claude Design
 │   ├── DESIGN-HANDOFF.template.md        lo que debe volver, y su verificación
 │   ├── CLAUDE-DESIGN-ADENDA.template.md  piezas que faltan en un diseño ya hecho (estados, icono, OG, correos…)
-│   ├── ACTUALIZAR-KIT.md                 el que se pega para poner al día un proyecto (calcula el camino)
+│   ├── ACTUALIZAR-KIT.md                 aviso: desde la 3.6.0 lo hace la skill kit-update
 │   ├── ACTUALIZAR-PROYECTO.md            paso 3.0 → 3.1 (lo cita ACTUALIZACIONES.md)
 │   └── MIGRAR-DECISIONES-Y-CI.md         paso 3.1 → 3.2 (lo cita ACTUALIZACIONES.md)
 ├── context-templates/             → se copia como context/ en cada proyecto
@@ -328,13 +332,22 @@ Detalle en `reference/TOKEN-ECONOMY.md`. Lo que más pesa:
 
 ## Versiones y actualización de proyectos
 
-El kit lleva versión (`VERSION`, ahora **3.3.0**) y cada proyecto guarda en `.kit-version`
-con cuál quedó alineado. Para ponerlo al día: `prompts/ACTUALIZAR-KIT.md` en una sesión del
-proyecto. Calcula el camino con `ACTUALIZACIONES.md` y aplica cada versión en orden, en un PR.
+El kit lleva versión (`VERSION`, ahora **3.6.0**) y cada proyecto guarda en `.kit-version`
+con cuál quedó alineado. Para ponerlo al día: `/kit-update` en una sesión del proyecto.
+Compara con la versión publicada (`origin/main` del clon del kit); si va atrás, calcula el
+camino con `ACTUALIZACIONES.md` y aplica cada versión en orden, en un PR.
 
 Y el camino de vuelta: cada proyecto anota en `context/KIT_FEEDBACK.md` lo que César tuvo que
-corregir o repetir y lo que el kit no cubría. Al pedir "el informe para el kit" sale un bloque
-que se pega en una sesión abierta en este repo, donde `CLAUDE.md` dice cómo procesarlo.
+corregir o repetir y lo que el kit no cubría. `/kit-feedback` lo sube a este repo como un PR
+(`feedback/`, etiqueta `kit-feedback`); en una sesión abierta aquí, "revisa el feedback"
+hace el triaje de todos los PRs juntos (`CLAUDE.md` dice cómo).
+
+### 3.6.0
+
+| Antes | Ahora |
+|---|---|
+| `ACTUALIZAR-KIT.md`: copiar skills a mano, cambiar la ruta en el bloque y pegarlo | `/kit-update`: compara versiones, reinstala skills si hace falta, dice si ya está al día |
+| El informe de feedback se pegaba en el chat del kit, de uno en uno | `/kit-feedback` abre un PR por informe; el triaje junta todos y suma lo repetido entre proyectos |
 
 ### 3.3.0
 

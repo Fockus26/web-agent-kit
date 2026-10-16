@@ -16,8 +16,9 @@
 No se anota: errores del agente que el kit ya prohíbe con claridad (eso es otra cosa), ni
 preferencias de este proyecto solo (van a `decisions/`).
 
-**Si ya existe una fila del mismo problema, no se duplica: se suma 1 a "Veces" y se
-actualiza la fecha.** Lo que se repite es lo que más vale arreglar.
+**Si ya existe una fila del mismo problema, no se duplica: se suma 1 a "Veces", se
+actualiza la fecha y, si estaba marcada como enviada (`→ PR …`), se quita la marca** (así
+el próximo envío la lleva con la cuenta nueva). Lo que se repite es lo que más vale arreglar.
 
 ## Registro
 
@@ -25,22 +26,9 @@ actualiza la fecha.** Lo que se repite es lo que más vale arreglar.
 |---|---|---|---|---|---|---|
 | 1 | {{AAAA-MM-DD}} | {{Corrección}} | 1 | {{skill git-flow §2.1.1}} | {{ej. las capturas no incluían el estado hover que César pidió}} | {{ej. que .pr-shots.json pida estados interactivos por defecto}} |
 
-## Informe para el kit
+## Enviarlo al kit
 
-Cuando César pida "el informe para el kit" (o al cerrar la fase 09), el agente:
-
-1. Agrupa las filas por pieza del kit y ordena por **Veces** (lo repetido primero).
-2. Devuelve un bloque de código listo para pegar en una sesión abierta en la carpeta del kit:
-
-```text
-Informe de feedback — proyecto <nombre> — kit <versión de .kit-version> — <fecha>
-
-## <pieza del kit> (skill / plantilla / script / prompt)
-- [<Tipo> ×<Veces>] <qué pasó> → propuesta: <qué cambiar en el kit>
-  Evidencia: <rama/PR/archivo donde se vio, si sirve>
-
-## Lo que funcionó bien y no hay que tocar
-- <1-3 líneas>
-```
-
-3. Marca las filas incluidas con `→ informe <fecha>` en "Propuesta" (no las borra).
+Cuando César lo pida (o al cerrar la fase 09): skill **`kit-feedback`** (`/kit-feedback`).
+Arma el informe con las filas sin enviar, agrupado por pieza del kit y con lo repetido
+primero, y abre un PR en el repo del kit con la etiqueta `kit-feedback`. Las filas enviadas
+quedan marcadas con `→ PR <owner/repo#N>` en "Propuesta" (no se borran).

@@ -10,6 +10,9 @@
 
   Con -Pull hace antes `git pull` en el kit.
 
+  Al final escribe ~\.claude\web-agent-kit.json con la ruta de este clon y la versión
+  instalada: la skill kit-update lo lee para comparar con la versión publicada del kit.
+
   Después: abre una sesión nueva de Claude Code. Las skills y los agentes se cargan al
   arrancar; una sesión ya abierta sigue con los de antes ("Agent type not found").
 
@@ -48,6 +51,12 @@ foreach ($agente in Get-ChildItem (Join-Path $kit '.claude\agents') -Filter '*.m
   Copy-Item $agente.FullName (Join-Path $destino "agents\$($agente.Name)") -Force
   Write-Host "  + agente $($agente.BaseName)"
 }
+
+# Para kit-update: dónde está el clon y qué versión de las skills quedó instalada.
+# WriteAllText: UTF-8 sin BOM también en Windows PowerShell 5.1 (con BOM, un JSON.parse falla).
+$json = [ordered]@{ ruta = $kit; version = $version; instalado = (Get-Date -Format 'yyyy-MM-dd') } | ConvertTo-Json
+[IO.File]::WriteAllText((Join-Path $destino 'web-agent-kit.json'), $json + "`n")
+Write-Host "  + web-agent-kit.json (ruta y versión, para kit-update)"
 
 Write-Host ''
 Write-Host 'Listo. Abre una sesión nueva de Claude Code y comprueba con /skills y /agents.' -ForegroundColor Green

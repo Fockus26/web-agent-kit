@@ -37,7 +37,7 @@ Luego:
 
 1. **Abre una sesión nueva de Claude Code.** Los agentes se cargan al arrancar; una sesión
    que ya estaba abierta no los ve.
-2. Comprueba con `/skills` (7) y `/agents` (4: `feature-worker`, `wave-qa`, `design-qa`, `functional-qa`).
+2. Comprueba con `/skills` (9) y `/agents` (4: `feature-worker`, `wave-qa`, `design-qa`, `functional-qa`).
 3. Conecta el MCP de **Context7** (documentación al día de las librerías).
 4. Requisitos: **bun**, **Node ≥ 23.6** (para los scripts de Playwright), **git**, **gh**
    autenticado, **PowerShell 7** (`pwsh`). Si el proyecto usa Supabase: **Docker Desktop**
@@ -49,11 +49,13 @@ Luego:
 powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\Desktop\agents\web-agent-kit\instalar-kit.ps1" -Pull
 ```
 
-`-Pull` hace `git pull` en el kit antes de reinstalar. Después, sesión nueva.
+`-Pull` hace `git pull` en el kit antes de reinstalar. Después, sesión nueva. El instalador
+deja en `~\.claude\web-agent-kit.json` la ruta del clon y la versión instalada (lo lee
+`kit-update`).
 
 Los proyectos ya creados no cambian solos: cada uno guarda en `.kit-version` la versión con
-la que quedó, y se pone al día con `prompts/ACTUALIZAR-KIT.md` (ver §3, "Proyecto que
-seguía una versión anterior del kit").
+la que quedó, y se pone al día con `/kit-update` (ver §3, "Proyecto que seguía una versión
+anterior del kit").
 
 ---
 
@@ -130,10 +132,13 @@ Ya puedes abrir Claude Code en la carpeta.
 
 ### Proyecto que seguía una versión anterior del kit
 
-Un solo prompt para cualquier versión: `prompts/ACTUALIZAR-KIT.md`. Copia las skills desde la
-carpeta del kit actualizada (el prompt trae el comando), abre una sesión nueva en el proyecto
-y pega su bloque con la ruta del kit. Hace esto:
+Abre una sesión en el proyecto y escribe `/kit-update`, venga de la versión que venga. Hace
+esto:
 
+0. Hace `git fetch` en el clon del kit y compara tres versiones: la del proyecto, la de las
+   skills instaladas y la publicada (`origin/main`). Si el proyecto ya está en la publicada,
+   te lo dice y termina. Si las skills instaladas son más viejas, las reinstala y te pide
+   abrir otra sesión y repetir `/kit-update` (las skills se cargan al arrancar).
 1. Lee `.kit-version` del proyecto. Si no existe (proyectos anteriores a la 3.3.0), deduce
    la versión por señales (`.changeset/`, `DECISIONS_INDEX.md`, `PHASE_LOG/`…) y te las
    enseña.
@@ -353,17 +358,29 @@ pides lo mismo por segunda vez, haces a mano un paso que podría hacer él, o el
 qué hacer, el agente lo anota en `context/KIT_FEEDBACK.md` (si ya estaba, suma una "vez").
 No tienes que pedírselo.
 
-Cuando quieras (y siempre al cerrar la fase 09):
+Cuando quieras (y siempre al cerrar la fase 09), en el proyecto:
 
 ```
-Dame el informe para el kit
+/kit-feedback
 ```
 
-Te devuelve un bloque agrupado por pieza del kit, lo más repetido primero. Lo pegas en una
-sesión de Claude Code abierta en la carpeta del kit: su `CLAUDE.md` le dice cómo triarlo
-(qué ya está resuelto, qué es propio de ese proyecto), te deja elegir qué entra, lo
-implementa, sube la versión y escribe en `ACTUALIZACIONES.md` los pasos para que los demás
-proyectos se pongan al día.
+Arma el informe con lo que no se había enviado (agrupado por pieza del kit, lo más repetido
+primero) y abre un PR en el repo del kit con la etiqueta `kit-feedback`. No clona el kit ni
+toca tu copia local.
+
+Los PRs de varios proyectos se juntan ahí. Cuando quieras procesarlos, abre una sesión de
+Claude Code en la carpeta del kit y escribe:
+
+```
+Revisa el feedback
+```
+
+Su `CLAUDE.md` le dice cómo: un triaje de todos los PRs a la vez (lo repetido entre
+proyectos suma, qué ya está resuelto, qué es propio de un proyecto), te deja elegir qué
+entra, lo implementa, sube la versión, escribe en `ACTUALIZACIONES.md` los pasos para los
+demás proyectos y comenta en cada PR de feedback qué entró. Tú mergeas: el de la mejora y
+los de feedback (quedan en `feedback/` como histórico). Después, `/kit-update` en cada
+proyecto.
 
 ---
 
