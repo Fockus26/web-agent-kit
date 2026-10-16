@@ -221,7 +221,7 @@ scripts/                  · test-related.ts, pr-screenshots.ts, publish-pr-shot
 
 `nuevo-proyecto.ps1` ya escribe `.kit-version`; si no se usó, créalo con el contenido de
 `VERSION` del kit. Es lo que permite actualizar el proyecto más adelante
-(`prompts/ACTUALIZAR-KIT.md`).
+(skill `kit-update`).
 
 Copia también `CLAUDE.md.template` a la raíz del proyecto como `CLAUDE.md`, con los valores
 del proyecto — es lo que hace que las skills y agentes se comporten igual en cada sesión

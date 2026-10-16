@@ -5,17 +5,26 @@ skills, agentes, plantillas, scripts y prompts que usan los proyectos. (La plant
 cada proyecto es `CLAUDE.md.template`; este archivo no se copia a ningún lado.)
 
 Mapa: `README.md` (qué es cada pieza) · `GUIA.md` (cómo se usa) · `ACTUALIZACIONES.md`
-(versiones y migraciones) · `VERSION` (versión actual).
+(versiones y migraciones) · `VERSION` (versión actual) · `feedback/` (informes de los
+proyectos ya procesados).
 
-## Cuando César pega un "Informe de feedback" de un proyecto
+## Cuando llega feedback de los proyectos
 
-Viene de `context/KIT_FEEDBACK.md` de un proyecto (formato en
-`context-templates/KIT_FEEDBACK.md`).
+Llega de dos formas, las dos desde `context/KIT_FEEDBACK.md` de un proyecto:
+
+- **PRs con la etiqueta `kit-feedback`** (lo normal desde la 3.6.0): la skill `kit-feedback`
+  de cada proyecto sube su informe como `feedback/<fecha>-<proyecto>.md`. Cuando César pide
+  "revisa el feedback": `gh pr list --label kit-feedback --state open`, y el archivo de cada
+  uno con `gh pr diff <n>`.
+- Un "Informe de feedback" pegado en el chat (proyectos que aún no tienen la skill).
 
 1. **Triaje**, en una tabla, sin cambiar nada: por cada punto — pieza del kit afectada
    (archivo y sección), si ya está resuelto en la versión actual (búscalo: el proyecto puede
-   ir atrasado), y la propuesta concreta de cambio. Ordena por "Veces": lo repetido primero.
-   Marca lo que es **propio de ese proyecto** y no debe generalizarse.
+   ir atrasado; su versión va en la cabecera del informe), y la propuesta concreta de cambio.
+   **Consolidado entre informes:** el mismo problema en varios proyectos es una fila, con
+   "Veces" sumadas y la columna "Proyectos". Ordena por "Veces": lo repetido primero.
+   Marca lo que es **propio de un proyecto** o de un stack que el kit no cubre, y no debe
+   generalizarse.
 2. César elige qué entra. Si un punto admite varias soluciones razonables: 3 opciones con
    ventaja y desventaja real.
 3. Implementa lo elegido en una rama (`feat/…` o `fix/…`), cambiando el mínimo de piezas y
@@ -25,7 +34,11 @@ Viene de `context/KIT_FEEDBACK.md` de un proyecto (formato en
    cambio solo afecta a skills/agentes (se instalan globales), los pasos pueden ser
    "ninguno en el proyecto; reinstalar skills".
 5. Actualiza `README.md`/`GUIA.md` si cambia algo que César hace o ve.
-6. Commit (Conventional Commits, en español), push y PR. César mergea.
+6. Commit (Conventional Commits, en español), push y PR. César mergea. En el cuerpo, los PRs
+   de feedback que atiende (`Atiende: #12, #14`).
+7. **Cerrar el círculo:** en cada PR de feedback, un comentario con qué entró (y en qué PR)
+   y qué no y por qué (`gh pr comment`). César los mergea: quedan en `feedback/` como
+   histórico, y un punto que vuelva a llegar se compara con lo que ya se decidió ahí.
 
 ## Reglas al editar el kit
 

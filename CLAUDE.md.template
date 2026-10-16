@@ -9,7 +9,7 @@
 
 **Tipo:** {{landing | e-commerce | corporativo | dashboard | blog | app}} · **Cliente:** {{...}}
 **Track de fases:** {{Landing | Sitio | Producto}} · **Modo git:** {{pr | local}} (ver `context/GIT_STATE.md`)
-**Kit:** web-agent-kit, versión en `.kit-version` (se actualiza con `prompts/ACTUALIZAR-KIT.md` del kit) ·
+**Kit:** web-agent-kit, versión en `.kit-version` (se actualiza con `/kit-update`) ·
 **Despliegue:** {{Vercel <proyecto> · preview por PR | otro | ninguno}}
 
 ---
@@ -139,7 +139,7 @@ ahí: entonces los devuelve en su informe y el orquestador los copia.
 Cuando César corrija algo que hiciste siguiendo el kit, te pida lo mismo por segunda vez,
 haga a mano un paso que el kit podría hacer, o el kit no diga qué hacer: fila en
 `context/KIT_FEEDBACK.md` (o +1 en "Veces" si ya está). Sin preguntar y sin anunciarlo
-más que en una línea. Cuando pida "el informe para el kit", sigue el formato de ese archivo.
+más que en una línea. Se envía al kit con `/kit-feedback` (abre un PR en su repo).
 
 ---
 

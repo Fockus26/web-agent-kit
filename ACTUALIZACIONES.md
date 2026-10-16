@@ -3,10 +3,11 @@
 Cada proyecto guarda en **`.kit-version`** (raíz del repo, en git, una línea) la versión del
 kit con la que quedó alineado. La versión actual del kit está en [`VERSION`](./VERSION).
 
-Para actualizar un proyecto no se elige a mano qué migración correr: se pega
-[`prompts/ACTUALIZAR-KIT.md`](./prompts/ACTUALIZAR-KIT.md) en una sesión abierta en el
-proyecto. Lee `.kit-version`, calcula el camino (todas las versiones posteriores, en orden)
-y aplica cada paso de esta lista en una sola rama, un commit por versión.
+Para actualizar un proyecto no se elige a mano qué migración correr: en una sesión abierta
+en el proyecto, la skill [`kit-update`](./.claude/skills/kit-update/SKILL.md)
+(`/kit-update`). Compara `.kit-version` con la versión publicada del kit (`origin/main`),
+calcula el camino (todas las versiones posteriores, en orden) y aplica cada paso de esta
+lista en una sola rama, un commit por versión.
 
 ---
 
@@ -24,6 +25,42 @@ nueva a la más vieja (la primera que se cumple gana):
 
 Si las señales se contradicen (p. ej. proyecto creado con `-SinVersion`, sin Changesets), el
 agente lo dice y pregunta antes de elegir.
+
+---
+
+## 3.6.0 — 2026-10-16 · Skills `kit-update` y `kit-feedback`
+
+**Qué cambió**
+
+- **`kit-update`** sustituye a `prompts/ACTUALIZAR-KIT.md` (que queda como aviso). Compara
+  tres versiones: la del proyecto (`.kit-version`), la de las skills instaladas y la
+  publicada (`origin/main` del clon del kit, tras `git fetch`). Si coinciden, dice que está
+  al día y termina; si las skills instaladas están viejas, las reinstala y pide sesión nueva
+  (antes se migraba con las skills viejas cargadas); si el proyecto va atrás, aplica el
+  camino como hacía el prompt. Lee el kit siempre como está en `origin/main`, aunque el clon
+  esté en otra rama. Por qué: el prompt pedía copiar skills a mano, cambiar la ruta en el
+  bloque y pegarlo, y no avisaba si el proyecto ya estaba al día.
+- **`kit-feedback`** envía `context/KIT_FEEDBACK.md` como un PR en el repo del kit
+  (`feedback/<fecha>-<proyecto>.md`, etiqueta `kit-feedback`) con `gh api`, sin clonar. En el
+  kit, "revisa el feedback" hace un triaje consolidado de todos los PRs abiertos (ver
+  `CLAUDE.md` del kit). Por qué: los informes pegados en el chat llegaban de uno en uno y se
+  perdían; lo que se repetía entre proyectos no se veía.
+- **`instalar-kit`** escribe `~/.claude/web-agent-kit.json` (ruta del clon y versión
+  instalada), que es lo que lee `kit-update`.
+
+**Pasos para un proyecto en 3.5.0**
+
+1. Piezas globales: `powershell -ExecutionPolicy Bypass -File <kit>\instalar-kit.ps1 -Pull`
+   y sesión nueva (skills nuevas, y el instalador deja `web-agent-kit.json`). Si la
+   actualización la hace `kit-update`, este paso ya está hecho.
+2. `CLAUDE.md` del proyecto, desde `<kit>\CLAUDE.md.template`: la línea **Kit:** (se
+   actualiza con `/kit-update`) y la última frase de "Feedback para el kit" (se envía con
+   `/kit-feedback`). Sustituyen a las de antes; el tamaño no cambia.
+3. `context/KIT_FEEDBACK.md` (local): la sección "Informe para el kit" se sustituye por
+   "Enviarlo al kit" de `<kit>\context-templates\KIT_FEEDBACK.md`, y la frase en negrita de
+   "Si ya existe una fila…". Las filas marcadas `→ informe <fecha>` cuentan como enviadas.
+4. `phases/09-QA-FINAL.md`, si existe y la fase 09 no está cerrada: la casilla "Feedback
+   para el kit" de `<kit>\phases-templates\09-QA-FINAL.md`.
 
 ---
 
@@ -154,7 +191,7 @@ agente lo dice y pregunta antes de elegir.
      (`gh api repos/<dueño>/<repo> -q .delete_branch_on_merge`), y enlace con Vercel
      (`.vercel/project.json`).
 2. **Archivos del kit** (sin pisar lo propio del proyecto):
-   - `.kit-version` con `3.3.0` (lo escribe el paso final de `ACTUALIZAR-KIT.md`).
+   - `.kit-version` con `3.3.0` (lo escribe `kit-update` al cerrar cada versión).
    - `context/KIT_FEEDBACK.md` desde `<kit>\context-templates\KIT_FEEDBACK.md`, local como el
      resto de `context/` no fijo (añádelo al `.gitignore` si el proyecto ignora
      `CURRENT_PHASE.md`).
@@ -184,7 +221,7 @@ lanza `ci.yml` (con `workflow_dispatch`) sobre el PR de versión.
 
 **Pasos para un proyecto en 3.1.0:** el bloque de
 [`prompts/MIGRAR-DECISIONES-Y-CI.md`](./prompts/MIGRAR-DECISIONES-Y-CI.md), pasos 1 y 3 a 6
-(la rama, la verificación y el cierre los hace `ACTUALIZAR-KIT.md`; las "Acciones manuales"
+(la rama, la verificación y el cierre los hace `kit-update`; las "Acciones manuales"
 de su paso 8 van al PR). Sin Changesets, solo la parte de
 decisiones.
 
@@ -198,7 +235,7 @@ borrar uno por unidad. Versión y CHANGELOG con Changesets: cada PR trae su
 
 **Pasos para un proyecto en 3.0.0:** el bloque de
 [`prompts/ACTUALIZAR-PROYECTO.md`](./prompts/ACTUALIZAR-PROYECTO.md), pasos 1, 3, 4, 5 y 8
-(la rama, la verificación y el cierre los hace `ACTUALIZAR-KIT.md`; las "Acciones manuales"
+(la rama, la verificación y el cierre los hace `kit-update`; las "Acciones manuales"
 de su paso 7 van al PR).
 
 ---

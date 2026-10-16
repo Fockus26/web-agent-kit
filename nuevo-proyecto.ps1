@@ -56,7 +56,7 @@ try {
 
   Write-Host "Copiando el kit en $Ruta"
   # Si ya había context/, el proyecto seguía una versión anterior del kit: no se le pone la
-  # versión actual (no está migrado); ACTUALIZAR-KIT.md la deduce y lo pone al día.
+  # versión actual (no está migrado); la skill kit-update la deduce y lo pone al día.
   $kitAnterior = Test-Path context
   Copiar "$kit\context-templates" 'context'
   Copiar "$kit\phases-templates" 'phases'
@@ -75,12 +75,12 @@ try {
     Copiar "$kit\github-templates\workflows\release.yml" '.github\workflows\release.yml'
   }
 
-  # .kit-version: con qué versión del kit arranca el proyecto (prompts/ACTUALIZAR-KIT.md la lee
+  # .kit-version: con qué versión del kit arranca el proyecto (la skill kit-update la lee
   # para calcular el camino de actualización).
   if (Test-Path .kit-version) {
     Write-Host "  = .kit-version ya existe ($((Get-Content .kit-version -Raw).Trim())), no se toca" -ForegroundColor Yellow
   } elseif ($kitAnterior) {
-    Write-Host "  = context/ ya existía: sin .kit-version. Pega <kit>\prompts\ACTUALIZAR-KIT.md para ponerlo al día" -ForegroundColor Yellow
+    Write-Host "  = context/ ya existía: sin .kit-version. En una sesión del proyecto, /kit-update lo pone al día" -ForegroundColor Yellow
   } else {
     $version = (Get-Content "$kit\VERSION" -Raw).Trim()
     Set-Content .kit-version "$version`n" -NoNewline
