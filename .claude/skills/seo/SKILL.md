@@ -124,7 +124,14 @@ obligatorio. Si la fuente es de un CDN externo que no se puede autohospedar, ent
 - [ ] Imágenes con `next/image`, `width`/`height` o `fill` + `sizes` explícitos (evita CLS).
 - [ ] La imagen principal del *above the fold* con `priority`; todo lo demás lazy por defecto.
 - [ ] `alt` descriptivo en imágenes informativas. Coordina con `a11y`: es el mismo atributo,
-      no lo escribas dos veces distinto.
+      no lo escribas dos veces distinto. Abre la imagen antes de escribirlo (también el de
+      la OG): un alt escrito sin verla no la describe.
+
+**Cómo contar headings** (aquí y en una auditoría): sobre el DOM renderizado, por rol y
+nombre accesible (Playwright `getByRole('heading', { level: 1 })`, o
+`document.querySelectorAll('h1')` con su `textContent`), nunca con `grep` sobre el código.
+Un grep contó 0 `<h1>` donde había uno vacío (el del skeleton, con `aria-hidden`), y el
+arreglo partió de esa premisa falsa. El hallazgo correcto era "un h1 sin nombre accesible".
 - [ ] Enlaces internos con `next/link` y texto de ancla con significado. Nunca "click aquí".
 - [ ] Enlaces externos: `rel="noopener noreferrer"`, y `rel="nofollow"` si es patrocinado.
 - [ ] JSON-LD si la sección lo amerita: `FAQPage` en un FAQ, `BreadcrumbList` en breadcrumbs,

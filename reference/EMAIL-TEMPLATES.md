@@ -122,12 +122,55 @@ Supabase manda los de la tabla con plantillas HTML propias, con variables de Go
   Templates) o se aplican por la Management API: `config.toml` no se sube solo. Aplicarlas
   es **acción de César** con los HTML del repo (o del agente, si César autoriza el acceso),
   y cada cambio de plantilla repite la acción — anótalo en el PR.
-- **SMTP propio en producción.** El correo por defecto de Supabase es limitado y solo para
-  pruebas: con correos de auth reales, se configura el SMTP del proveedor (Authentication →
-  SMTP) con el dominio verificado (SPF, DKIM, DMARC). Acción de César con pasos exactos.
+- **SMTP propio desde el primer correo real.** Sin él, Supabase solo entrega a las
+  direcciones del equipo del proyecto ("Email address not authorized" para el resto), sin
+  garantías, y en el plan gratis el dashboard no deja editar las plantillas (visto en un
+  proyecto: hubo que poner SMTP antes de poder pegar el HTML). Proveedor: § "Proveedor de
+  envío". Se configura en Authentication → SMTP o por la Management API
+  (`PATCH /v1/projects/<ref>/config/auth`, campos `smtp_*`). Acción de César con pasos
+  exactos.
+
+### Correos de auth — Firebase Auth
+
+Firebase no tiene plantillas en el repo ni las aplica el emulador: viven en la consola
+(Authentication → Templates), con HTML limitado, y **pueden estar bloqueadas** para el
+proyecto (pasó: "no se pueden actualizar las plantillas… comunícate con Asistencia de
+Firebase"; solo lo desbloquea soporte, y poner un SMTP propio no lo quita). Un correo
+diseñado se quedó sin poder aplicarse por no comprobarlo antes.
+
+1. **Antes de diseñar los correos de auth**, César abre Authentication → Templates y prueba
+   a editar uno. Si deja, se pega el HTML de `EmailLayout` (dentro de lo que la consola
+   admite) y es acción de César como con Supabase.
+2. **Si está bloqueada, o el diseño no cabe en lo que la consola admite: envío propio.** El
+   servidor genera el enlace con el Admin SDK (`getAuth().generatePasswordResetLink(email,
+   actionCodeSettings)`, y `generateEmailVerificationLink` / `generateSignInWithEmailLink`
+   para los otros) y lo manda con React Email por el proveedor de envío. Ese endpoint:
+   - responde lo mismo exista o no el correo (no revela qué cuentas hay);
+   - limita intentos por IP y por correo;
+   - solo corre en el servidor (el Admin SDK lleva credenciales de servicio).
+3. **En la QA**: con el emulador de Auth, el endpoint propio funciona igual (el Admin SDK
+   apunta al emulador con `FIREBASE_AUTH_EMULATOR_HOST`); el correo se ve en la bandeja
+   del proveedor de pruebas o en el log, no en la consola de Firebase.
 
 Con otro proveedor de auth la idea es la misma: plantillas en el repo, diseño desde el mismo
-`EmailLayout`, y aplicarlas en el proveedor como acción documentada.
+`EmailLayout`, y aplicarlas en el proveedor como acción documentada, comprobando antes que
+el proveedor deja aplicarlas.
+
+### Proveedor de envío
+
+Se decide en el arranque (pregunta del Bloque de correos de `project-kickoff`) y queda en
+una decisión (`context/decisions/D0NN-correo.md`): proveedor, remitente, y dónde está la
+clave (nunca en el repo). Sin decisión, el proveedor solo queda en la memoria de una sesión
+(pasó).
+
+- **Por defecto: Brevo por SMTP.** Plan gratis con 300 correos al día, sirve para los de
+  auth (SMTP de Supabase) y los de la app con el mismo remitente. Servidor
+  `smtp-relay.brevo.com`, puerto 587; usuario y clave SMTP de Brevo → SMTP & API (una clave
+  por proyecto, para poder revocarla sola).
+- **Resend** si la app ya usa su API o el cliente lo prefiere: también da SMTP para auth.
+- El remitente se verifica en el proveedor; con dominio propio, se autentica (SPF, DKIM,
+  DMARC) antes del lanzamiento. Sin dominio, el remitente verificado sirve para empezar,
+  pero es más fácil que caiga en spam: dilo en el PR.
 
 ### Remitente y dominio
 

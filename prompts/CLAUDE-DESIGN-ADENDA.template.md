@@ -35,9 +35,18 @@ Copy: {{real: ... | propón uno en {{IDIOMA}} con la voz de la marca, que se ent
 Color de fondo y de texto de `::selection` en claro y oscuro, con su ratio (≥ 4.5:1 del texto
 seleccionado sobre el fondo de selección) y que se distinga del foco y de los enlaces.
 
+## Barra de scroll
+
+Colores del thumb y del track en claro y oscuro, del sistema de color del sitio (no el gris
+del navegador sobre un fondo de marca). El thumb ≥ 3:1 contra el track, también al pasar
+el ratón. Grosor: {{fino | normal}}. Vale para la página y para las zonas con scroll propio
+(modales, listas, tablas).
+
 ## Icono y favicon
 
-{{El cliente tiene logo pero no icono | no hay logo}}. Diseña un icono cuadrado derivado de
+{{El cliente tiene logo pero no icono | no hay logo | el cliente tiene logo pero aún no lo
+ha entregado: diseña uno provisional (monograma o nombre en la tipografía del sitio) que se
+pueda cambiar por el real sin rehacer el icono ni la OG}}. Diseña un icono cuadrado derivado de
 {{la marca / el logo adjunto}}, legible a 16 px, en SVG, con versión para fondo claro y oscuro,
 y su variante para apple touch icon (180×180, fondo opaco) y maskable (símbolo dentro del
 80 % central).

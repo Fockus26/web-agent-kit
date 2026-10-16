@@ -129,6 +129,35 @@ try {
     Write-Host "  + .gitignore: .env*.local"
   }
 
+  # Worktrees que Claude Desktop crea dentro del proyecto: traen su propio biome.json raíz y
+  # rompían `bun run lint` en la carpeta principal. Fuera de git y fuera de Biome.
+  if ($ignore -notmatch '\.claude/worktrees') {
+    Add-Content .gitignore "`n# worktrees de Claude Desktop (web-agent-kit)`n.claude/worktrees/"
+    Write-Host "  + .gitignore: .claude/worktrees/"
+  }
+  if (Test-Path biome.json) {
+    $biome = Get-Content biome.json -Raw | ConvertFrom-Json
+    if (-not $biome.files) { $biome | Add-Member -NotePropertyName files -NotePropertyValue ([pscustomobject] @{}) }
+    $antes = $biome | ConvertTo-Json -Depth 20
+    if ($biome.files.PSObject.Properties['ignore']) {
+      # Biome 1.x
+      if ($biome.files.ignore -notcontains '.claude/worktrees') { $biome.files.ignore += '.claude/worktrees' }
+    } else {
+      # Biome 2.x: files.includes con negación; sin includes, "**" es lo que procesaba antes.
+      if (-not $biome.files.PSObject.Properties['includes']) {
+        $biome.files | Add-Member -NotePropertyName includes -NotePropertyValue @('**')
+      }
+      if ($biome.files.includes -notcontains '!**/.claude/worktrees') {
+        $biome.files.includes = @($biome.files.includes) + '!**/.claude/worktrees'
+      }
+    }
+    $despues = $biome | ConvertTo-Json -Depth 20
+    if ($despues -ne $antes) {
+      $despues + "`n" | Set-Content biome.json -NoNewline
+      Write-Host "  + biome.json: fuera .claude/worktrees"
+    }
+  }
+
   # bash falla con un .sh en CRLF: git lo convertiría al clonar en Windows.
   if (-not (Test-Path .gitattributes) -or (Get-Content .gitattributes -Raw) -notmatch '\*\.sh') {
     Add-Content .gitattributes "* text=auto`n*.sh text eol=lf"
@@ -138,7 +167,9 @@ try {
   # Los scripts importan 'bun' y '@playwright/test': sin sus tipos, `tsc` y `next build`
   # fallan (tsconfig incluye **/*.ts). Los navegadores de Playwright no se bajan aquí:
   # `bunx playwright install chromium` cuando haga falta capturar o auditar.
-  $deps = @('@types/bun', '@playwright/test')
+  # @axe-core/playwright: la puerta a11y lo usa en cada unidad, y un worker del pool no
+  # añade dependencias (acababa inyectando axe desde un CDN).
+  $deps = @('@types/bun', '@playwright/test', '@axe-core/playwright')
   if (-not $SinVersion) { $deps += '@changesets/cli' }
   $faltan = $deps | Where-Object {
     -not ($pkg.devDependencies -and $pkg.devDependencies.PSObject.Properties[$_])
@@ -152,6 +183,7 @@ try {
   # Lo copiado adopta el formato del proyecto (comillas, punto y coma, sangría).
   if ($pkg.devDependencies -and $pkg.devDependencies.PSObject.Properties['@biomejs/biome']) {
     $rutas = @('package.json', 'scripts')
+    if (Test-Path biome.json) { $rutas += 'biome.json' }
     if (Test-Path .changeset) { $rutas += '.changeset' }
     bunx biome check --write @rutas | Out-Null
     Write-Host "  ~ formateado con el Biome del proyecto: $($rutas -join ', ')"

@@ -14,6 +14,9 @@ y estilos globales.
 - Estilos globales mínimos: reset, `scroll-behavior`, `focus-visible` por defecto.
 - **Selección de texto:** `::selection` con los tokens `selection` (fondo y texto) en claro
   y oscuro — nunca el azul del sistema sobre un sitio con identidad propia.
+- **Barra de scroll:** tokens `scrollbar` (thumb y track) en claro y oscuro, con
+  `scrollbar-color` y `::-webkit-scrollbar` como respaldo donde no se soporte. Sin ella,
+  el gris del navegador queda encima de un fondo de marca (se pidió aparte en un proyecto).
 - **Assets de marca** del init de `seo`: favicon, `icon.svg`, `apple-icon.png`, manifest y
   OG por defecto, según lo que se decidió en el arranque (`reference/BRAND-ASSETS.md`).
 - Header y footer estructurales (aunque su contenido llegue después).
@@ -31,6 +34,7 @@ y estilos globales.
 - [ ] Skip link funcional y visible al enfocarlo.
 - [ ] Sin scroll horizontal a 320px en la página vacía.
 - [ ] Texto seleccionado con el color del sistema y ratio ≥ 4.5:1, en claro y oscuro.
+- [ ] Barra de scroll con los tokens `scrollbar`, thumb ≥ 3:1 contra el track, en claro y oscuro.
 - [ ] Favicon visible en la pestaña; lo que falte del cliente, en `CONTENT_CHECKLIST.md`.
 - [ ] Puerta `a11y` en verde.
 - [ ] Skill `seo` ejecutada en modo *init*: metadata base, `robots.ts`, `sitemap.ts`,

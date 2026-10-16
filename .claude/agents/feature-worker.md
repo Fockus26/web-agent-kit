@@ -20,11 +20,15 @@ worktrees del proyecto y la lleva hasta un Pull Request abierto (nunca mergeado)
    conservador y coherente con las decisiones existentes, sigue, y déjalo explicado en el
    PR como "Decisión tomada / alternativa".
 5. Verifica midiendo (DOM, tests, contraste calculado), no suponiendo. Mientras trabajas,
-   `bun run test:related`; antes del PR, la suite completa. Scripts con Playwright, con
-   `node`. No abras capturas para revisarlas.
-6. Escribe código, comentarios, commits y PR en el idioma del proyecto, con la densidad de
+   `bun run test:related`; antes del PR, la suite completa, sola y en segundo plano. Scripts
+   con Playwright, con `node` y en `.qa/` de tu slot. No abras capturas para revisarlas.
+   Archivos, con Write/Edit, no por shell. Las reglas de entorno (servidor, puertos,
+   esperas) están en el brief.
+6. **Commit al cerrar cada etapa** (backend, UI, docs). Si te cortan (403/429) y te
+   retoman: `git status` y sigue desde ahí; no releas lo que ya escribiste.
+7. Escribe código, comentarios, commits y PR en el idioma del proyecto, con la densidad de
    comentarios del código que ya hay alrededor.
-7. Tu último mensaje es el **informe para el orquestador**: breve, con URL del PR, changeset,
+8. Tu último mensaje es el **informe para el orquestador**: breve, con URL del PR, changeset,
    verificado / no verificado, decisiones abiertas, acciones manuales y bugs vistos de paso.
    Y, si el kit te hizo improvisar algo, una instrucción del brief o de una skill estaba mal
    o un paso te costó más de lo que aportó, un apartado **Feedback para el kit** con una

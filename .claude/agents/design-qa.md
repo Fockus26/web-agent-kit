@@ -196,6 +196,8 @@ axe atrapa el contraste sobre fondos planos. Revisa a mano lo que no puede medir
 - Bordes de inputs contra el fondo (≥ 3:1).
 - **Texto seleccionado** (`::selection`) en claro y oscuro: selecciona un párrafo y mide el
   texto contra el fondo de selección (≥ 4.5:1). Que no sea el azul del sistema.
+- **Barra de scroll** en claro y oscuro: `scrollbar-color` del documento con los tokens, y
+  el thumb ≥ 3:1 contra el track.
 
 ## 8b. Pantallas de estado
 

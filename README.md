@@ -332,7 +332,7 @@ Detalle en `reference/TOKEN-ECONOMY.md`. Lo que más pesa:
 
 ## Versiones y actualización de proyectos
 
-El kit lleva versión (`VERSION`, ahora **3.6.0**) y cada proyecto guarda en `.kit-version`
+El kit lleva versión (`VERSION`, ahora **3.7.0**) y cada proyecto guarda en `.kit-version`
 con cuál quedó alineado. Para ponerlo al día: `/kit-update` en una sesión del proyecto.
 Compara con la versión publicada (`origin/main` del clon del kit); si va atrás, calcula el
 camino con `ACTUALIZACIONES.md` y aplica cada versión en orden, en un PR.
@@ -341,6 +341,16 @@ Y el camino de vuelta: cada proyecto anota en `context/KIT_FEEDBACK.md` lo que C
 corregir o repetir y lo que el kit no cubría. `/kit-feedback` lo sube a este repo como un PR
 (`feedback/`, etiqueta `kit-feedback`); en una sesión abierta aquí, "revisa el feedback"
 hace el triaje de todos los PRs juntos (`CLAUDE.md` dice cómo).
+
+### 3.7.0 (feedback de cuatro proyectos)
+
+| Antes | Ahora |
+|---|---|
+| Cada worker redescubría el entorno: heredocs rotos, suites colgadas, servidores huérfanos, Playwright sin resolver | Reglas de entorno en el brief; `wt` para lo que quede en el puerto del slot; scripts en `.qa/` |
+| Sin Docker, la QA de la ola quedaba bloqueada | `qa:local -- --offline`: QA de invitado y la de sesión, pendiente |
+| Un proyecto "al día" podía no tener `test:related`, `shots` o axe | `kit-update` revisa las piezas y añade lo que falte |
+| Correos de auth sin proveedor decidido; Firebase sin cubrir | Brevo por SMTP por defecto, en una decisión; envío propio con Firebase si la consola está bloqueada |
+| Barra de scroll del navegador sobre el fondo de marca | Tokens `scrollbar` junto a `::selection` |
 
 ### 3.6.0
 

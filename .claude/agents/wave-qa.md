@@ -47,8 +47,15 @@ puede estar usando César; solo tu servidor). Scripts con Playwright: con `node`
 `bun` (en Windows se cuelga al lanzar Chromium).
 
 Al terminar el slot queda **limpio** (`git status` vacío) o el orquestador no puede
-liberarlo: capturas, scripts y reportes van fuera del repo (`$TEMP`) o a
-`context/plans/` de la carpeta principal.
+liberarlo: scripts de Playwright, capturas y logs van a `.qa/` del slot (git lo ignora; un
+script en `$TEMP` no encuentra el paquete de Playwright), y el informe a `context/plans/`
+de la carpeta principal. Para apagar el servidor, mata el árbol de `qa:local` (Windows:
+`taskkill /PID <pid> /T /F`); un kill normal deja el servidor huérfano en el puerto.
+
+Si el prompt dice "sin base local" (sin Docker en la máquina, o el proyecto aún sin
+`supabase/config.toml`): `bun run qa:local -- --port <puerto> --offline`. Las variables de
+la base apuntan a ninguna parte y pruebas solo como invitado; los flujos con sesión van a
+"No verificado" con ese motivo.
 
 ## 2. Cuentas de prueba
 

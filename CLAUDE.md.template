@@ -87,8 +87,10 @@ algo que se revisa en dos minutos. Una unidad = una rama = {{un PR | un merge lo
 - **Modo `pr`:** en tu rama puedes commitear y empujar sin pedir permiso — la aprobación de
   César es la revisión del PR. **Nunca** push a `main`, nunca `gh pr merge`, nunca auto-merge.
 - **Modo `local`:** nada se commitea sin aprobación explícita de César (pausa de `git-flow`).
-- **Versión:** nadie toca `version` ni `CHANGELOG.md`. Cambio visible → `.changeset/<desc>.md`
-  (`git-flow` §2.1.3). El PR `chore(release): versión` lo abre la Action y lo mergea César.
+- **Versión:** {{nadie toca `version` ni `CHANGELOG.md`. Cambio visible → `.changeset/<desc>.md`
+  (`git-flow` §2.1.3). El PR `chore(release): versión` lo abre la Action y lo mergea César. |
+  **sin versión** (no lleva `version` ni CHANGELOG ni Changesets, a propósito): ningún PR
+  lleva changeset.}}
 - Nada destructivo: ni `reset --hard`, ni `push --force`, ni reescribir historia, ni borrar ramas.
 
 ### Qué va al repo y qué es local

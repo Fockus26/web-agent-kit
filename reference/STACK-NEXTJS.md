@@ -126,6 +126,15 @@ phases/                     las fases del track elegido
 - Colócalo **lo más abajo posible en el árbol**: en un layout arrastra todo el subárbol al
   bundle del cliente y desaparece el beneficio de los Server Components.
 - Los datos se piden en el servidor; los Client Components los reciben por props.
+- Un módulo `'use client'` solo exporta componentes: una constante importada desde él en un
+  Server Component llega como referencia de cliente, no como valor (`undefined`, 500). Lo
+  compartido va en `lib/`.
+
+### Servidor de desarrollo (Turbopack)
+
+- Con varios servidores a la vez (workers del pool), Turbopack puede agotar el tiempo de
+  sus subprocesos ("Node.js subprocess crashed … deadline has elapsed") y dejar un 500 en
+  la caché de `.next/dev`. Reiniciar no basta: apagar, borrar `.next/dev` y relanzar.
 
 ### TypeScript
 

@@ -108,7 +108,12 @@ Para que funcione, desde la primera unidad con base de datos:
 - Si el flujo manda un correo que el handoff no diseñó, **no lo inventes**: márcalo en
   "Pendiente de decisión visual" y usa la plantilla base con copy provisional.
 - Plantillas al dashboard del proveedor, SMTP propio y dominio verificado (SPF/DKIM/DMARC)
-  son acciones de César con pasos exactos en la entrega.
+  son acciones de César con pasos exactos en la entrega. El proveedor de envío (Brevo por
+  defecto) va en una decisión, no solo en la conversación.
+- Con Supabase, sin SMTP propio los correos solo llegan al equipo del proyecto: va antes
+  del primer usuario real. Con Firebase Auth, comprueba antes de diseñar que las plantillas
+  de la consola se pueden editar; si no, envío propio con el Admin SDK
+  (`reference/EMAIL-TEMPLATES.md` § Firebase).
 
 ### General
 - Consultas parametrizadas siempre (el ORM ya lo hace; el SQL crudo no).

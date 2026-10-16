@@ -334,6 +334,10 @@ crea las cuentas de prueba y arranca el servidor apuntando a esa base. Ahí la Q
 romper y cambiar lo que quiera: cada corrida empieza de cero, y los correos que mande la app
 se quedan en Mailpit. Por eso la base local es **desechable**: no guardes en ella nada tuyo.
 
+Sin Docker en la máquina (o sin base local todavía), la ola no se bloquea: la QA corre con
+`bun run qa:local -- --offline`, solo como invitado, y el cierre de la ola te dice que la
+prueba con sesión quedó pendiente.
+
 **Cuentas de prueba.** En cuanto el sitio tiene login, `backend-build` te pide rellenar
 `.env.test.local` con una pareja por rol:
 

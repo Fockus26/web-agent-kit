@@ -19,7 +19,11 @@
   Slot libre = HEAD detached y `git status --porcelain` vacío.
 
   Puerto fijo por slot: 4300 + N (wt1 → 4301, wt2 → 4302…). El servidor de desarrollo de
-  ese slot va siempre en su puerto: `bun run dev -- --port <puerto>`.
+  ese slot va siempre en su puerto: `bun run dev -- --port <puerto>`. `take` y `free` paran
+  lo que siga escuchando en ese puerto (servidores huérfanos de la unidad anterior).
+
+  `.qa/` (scripts de medición y logs de cada slot) queda ignorado por git en todos los
+  slots: `init` y `take` lo añaden a `.git/info/exclude`.
 
   Los `.env*` (menos `.env.example`) se copian desde la carpeta principal solo si git los
   ignora en el slot: nunca se commitean.
@@ -133,6 +137,33 @@ function CopiarEnv([string] $ruta) {
     }
 }
 
+# El puerto es del slot: lo que escuche ahí al tomarlo o liberarlo es un servidor que dejó
+# la unidad anterior (un kill que solo mató la shell, una sesión cortada). Si se queda, el
+# siguiente servidor salta a otro puerto sin avisar y cae en el de otro slot.
+function PararServidores([string] $s) {
+  $puerto = $PuertoBase + (NumeroSlot $s)
+  $pids = if ($IsWindows) {
+    Get-NetTCPConnection -LocalPort $puerto -State Listen -ErrorAction SilentlyContinue |
+      Select-Object -ExpandProperty OwningProcess -Unique
+  } elseif (Get-Command lsof -ErrorAction SilentlyContinue) {
+    lsof -ti "tcp:$puerto" -sTCP:LISTEN
+  }
+  foreach ($p in $pids | Where-Object { $_ -gt 0 }) {
+    Write-Host "  - servidor huérfano en el puerto $puerto (PID $p): se para"
+    if ($IsWindows) { taskkill /PID $p /T /F | Out-Null } else { kill $p }
+  }
+}
+
+# `.qa/` del slot (scripts de medición, logs de la suite) no se commitea nunca. Va al exclude
+# común del repo, que vale para todos los worktrees sin tocar el .gitignore del proyecto.
+function ExcluirQa {
+  $exclude = Join-Path (Join-Path (GitOk rev-parse --path-format=absolute --git-common-dir) 'info') 'exclude'
+  New-Item -ItemType Directory -Force (Split-Path $exclude) | Out-Null
+  if (-not (Test-Path $exclude) -or -not (Select-String -LiteralPath $exclude -Pattern '^/?\.qa/$' -Quiet)) {
+    Add-Content -LiteralPath $exclude '.qa/'
+  }
+}
+
 function MostrarEstado {
   $filas = foreach ($d in Slots) {
     $rama = Rama $d.FullName
@@ -151,6 +182,7 @@ function MostrarEstado {
 switch ($Comando) {
   'init' {
     Actualizar
+    ExcluirQa
     New-Item -ItemType Directory -Force $pool | Out-Null
     foreach ($n in 1..$Count) {
       $ruta = Join-Path $pool "wt$n"
@@ -182,6 +214,8 @@ switch ($Comando) {
     }
 
     Actualizar
+    ExcluirQa
+    PararServidores $Slot
     $remota = if ($Base -match '^([^/]+)/') { "$($Matches[1])/$Nombre" }
     git show-ref --verify --quiet "refs/heads/$Nombre"
     $existeLocal = $LASTEXITCODE -eq 0
@@ -210,6 +244,7 @@ switch ($Comando) {
     $s = if ($Nombre) { $Nombre } else { $Slot }
     if (-not $s) { throw 'Falta el slot: wt free <wtN>' }
     $ruta = RutaSlot $s
+    PararServidores $s
     $sucio = Sucio $ruta
     if ($sucio) {
       throw "El slot $s tiene cambios sin commitear; no se libera. Commitea y empuja, o descártalos a mano:`n$($sucio -join "`n")"
