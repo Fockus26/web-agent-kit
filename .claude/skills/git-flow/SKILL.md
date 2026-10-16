@@ -121,7 +121,8 @@ Antes de siquiera mencionar un commit:
 4. `bunx tsc --noEmit` y el linter pasan, si el proyecto los tiene configurados.
 5. **Tests:** durante el trabajo bastó `bun run test:related`; aquí va la suite completa
    (`bun run test`, con `--dots`). CI la vuelve a correr en el PR.
-6. **Changeset**, si el proyecto lleva versión (tiene `.changeset/`): si quien usa el sitio
+6. **Changeset**, si el proyecto lleva versión (tiene `.changeset/`; si su `CLAUDE.md` dice
+   "sin versión", nunca: es una decisión, no algo que falte por migrar): si quien usa el sitio
    nota el cambio, agrega `.changeset/<desc>.md` (ver 2.1.3). No toques `version` ni
    `CHANGELOG.md`: los genera el PR de versión. Docs, tests, CI y refactors: sin changeset.
 7. **Capturas**, si cambió algo visible (ver 2.1.1).
@@ -137,12 +138,19 @@ Si alguna falla, no es momento de commitear: arréglalo o repórtalo.
 
 Si la unidad cambió algo visible y el sitio está corriendo:
 
-1. Escribe `.pr-shots.json` (gitignored) con los estados que cambiaron: móvil (375) y
+1. **Reescribe** `.pr-shots.json` (gitignored) con los estados que cambiaron: móvil (375) y
    escritorio (1280), claro y oscuro (`"scheme": "both"`), y "antes" solo si ayuda a ver
-   el cambio. Para llegar a un estado usa `steps` (clics, esperas) o `storage`.
+   el cambio. Para llegar a un estado usa `steps` (clics, esperas) o `storage`. La URL del
+   servidor va en `base` (no `baseUrl`). Nunca reutilices el que hay: en un slot del pool es
+   el de la unidad anterior, y se publicaron capturas ajenas por eso.
 2. `bun run shots` (node + Playwright; no con bun: en Windows se cuelga).
-3. Modo `pr`: `bun run shots:publish` → pega el markdown que imprime en la sección
-   "Capturas" del PR. Modo `local`: da las rutas de los PNG en la pausa de aprobación.
+3. Modo `pr`: `bun run shots:publish` en segundo plano (en Windows tarda varios minutos).
+   El markdown queda en `.pr-shots/README.md`: pégalo en la sección "Capturas" del PR. Modo
+   `local`: da las rutas de los PNG en la pausa de aprobación.
+
+Si el proyecto no tiene `shots` / `shots:publish` en `package.json` (creado antes de la
+3.0.0 o sin `nuevo-proyecto.ps1`), no improvises otra carpeta: dilo en el PR ("Capturas: el
+proyecto no tiene los scripts") y anótalo en `KIT_FEEDBACK.md`; `/kit-update` los instala.
 
 **No abras las imágenes** para revisarlas: tu verificación ya la hiciste midiendo el DOM,
 y cada imagen vista cuesta muchos tokens. Si una captura falla, no bloquea: se dice en el

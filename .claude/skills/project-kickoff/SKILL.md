@@ -83,8 +83,11 @@ Me faltan estas para armar el plan:
    enlace mágico, cambio de correo, invitación si aplican); pagos/pedidos/reservas → sus
    transaccionales; formulario con envío → acuse al visitante y aviso al cliente. Pregunta
    solo lo que no se deduce: ¿bienvenida?, ¿notificaciones o recordatorios?, ¿a qué correo
-   llegan los avisos internos? Sin correos, la sección no aplica
-   (`reference/EMAIL-TEMPLATES.md`).
+   llegan los avisos internos? Y el **proveedor de envío** (propón Brevo por SMTP, gratis
+   hasta 300/día; ¿hay dominio propio para el remitente?): sin SMTP propio, Supabase solo
+   manda correos al equipo del proyecto. Con Firebase Auth, que César compruebe ya si puede
+   editar las plantillas en la consola (pueden estar bloqueadas). Sin correos, la sección no
+   aplica (`reference/EMAIL-TEMPLATES.md`).
 9. **Cómo se entrega el trabajo** — ¿el repo va a GitHub con `main` protegida y cada unidad
    llega por Pull Request (modo `pr`, lo recomendado), o se trabaja en local con merges y
    pausa de aprobación (modo `local`)? Alimenta `GIT_STATE.md`.

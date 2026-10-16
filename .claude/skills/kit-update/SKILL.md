@@ -44,7 +44,10 @@ Enséñalas en una línea: `proyecto 3.4.0 · skills 3.5.0 · publicada 3.6.0`.
 ## 2. Qué toca hacer
 
 **a) Proyecto = publicada:** "El proyecto está al día con el kit <versión>." Si además las
-skills instaladas son más viejas, di que conviene reinstalarlas (paso b) y termina.
+skills instaladas son más viejas, di que conviene reinstalarlas (paso b). Haz la
+"Revisión de piezas" (abajo), solo leyendo: si todo está, termina; si falta algo, dilo en
+una tabla y pregunta si se añade (rama `chore/kit-piezas`, paso 3 para `<kit>` y el cierre
+del paso 9).
 
 **b) Skills instaladas < publicada:** las skills nuevas solo se cargan al abrir sesión, y
 las migraciones las usan. Antes de migrar nada:
@@ -97,6 +100,33 @@ preguntar; no preguntes versión a versión.
 Si un paso edita un archivo que el proyecto no tiene (p. ej. `context/COLORS.md` en un
 proyecto que arrancó corto), créalo solo con las secciones que pide ese paso y dilo en el
 diagnóstico.
+
+Si el proyecto es **sin versión** (su `CLAUDE.md` lo dice, o no tiene `.changeset/` y César
+lo confirma), los pasos de Changesets de cualquier versión se saltan: no son una migración
+pendiente, y no se pregunta otra vez.
+
+Añade al diagnóstico la **revisión de piezas** (§ abajo).
+
+## Revisión de piezas
+
+Un proyecto puede estar en la versión correcta y aun así no tener piezas que las skills dan
+por hechas (pasó: un proyecto en la 3.5.0 sin `test:related` ni `shots`, porque arrancó
+antes de que `nuevo-proyecto.ps1` los pusiera; los workers improvisaron cuatro veces). Sin
+cambiar nada, comprueba:
+
+| Pieza | Cómo |
+|---|---|
+| Scripts de `package.json`: `test`, `test:related`, `shots`, `shots:publish`, `qa:local` y sus archivos en `scripts/` | `package.json` y `ls scripts/` |
+| devDependencies: `@types/bun`, `@playwright/test`, `@axe-core/playwright` (y `@changesets/cli` si lleva versión) | `package.json` |
+| `.gitignore` con `.pr-shots`, `.env*.local` (o `.env*`) y `.claude/worktrees/` | `git check-ignore -q <ruta>` |
+| `biome.json` (si lo hay) sin `.claude/worktrees` | `files.includes` / `files.ignore` |
+| `CLAUDE.md` ≤ 8 KB | `wc -c CLAUDE.md` |
+
+Lo que falte se añade con el propio script del kit, que solo añade lo que no existe y no
+pisa nada: `pwsh -File "<kit>/nuevo-proyecto.ps1" -Ruta . -Existente` (más `-SinVersion` si
+el proyecto es sin versión). Va en el mismo PR, en su propio commit
+(`chore(kit): piezas que faltaban`). Si el stack no es Next.js (Astro, Vite), dilo antes:
+los scripts pueden necesitar ajuste, y es una pregunta de la tanda única.
 
 ## 7. Rama
 

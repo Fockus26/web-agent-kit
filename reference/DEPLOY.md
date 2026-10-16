@@ -73,6 +73,23 @@ bunx vercel env add NEXT_PUBLIC_SITE_URL preview
   que César revise sin levantar nada. Si el proyecto es privado y tiene Deployment
   Protection, el preview pide sesión de Vercel: normal.
 
+### 2b. Adoptar un proyecto de Vercel que ya existe
+
+Cuando el despliegue ya se hizo a mano (pasó: el proyecto vivía en Vercel y el repo no lo
+sabía). No se crea otro: se enlaza el que hay y se comprueba que hace lo que el kit espera.
+
+1. **Localizarlo** sin enlazar nada todavía: `bunx vercel project ls --scope <equipo>` (o
+   el MCP de Vercel, `list_projects`). César confirma cuál es si hay dudas.
+2. **Enlazar** ese, no uno nuevo: `bunx vercel link --yes --project <nombre> --scope <equipo>`
+   → escribe `.vercel/project.json`. Comprueba el resultado con
+   `bunx vercel project inspect --non-interactive` (dueño y proyecto correctos).
+3. **Conexión con git**: que esté conectado al repo de GitHub del proyecto y que la rama
+   de producción sea `main` (`vercel git connect` si no lo está). Sin eso no hay preview
+   por PR.
+4. **Variables**: `bunx vercel env ls` contra `.env.example`; lo que falte, como en §2
+   (los valores secretos, César).
+5. Abre un PR de prueba y confirma que el bot de Vercel deja el enlace del preview.
+
 ## 3. Después del primer despliegue
 
 - [ ] Producción responde 200 en `/`, 404 en una ruta inventada (con la pantalla del sitio),

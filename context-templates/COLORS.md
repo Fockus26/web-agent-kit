@@ -17,6 +17,7 @@
 | info.main | {{#______}} | | |
 | divider | {{#______}} | | |
 | selection.bg / selection.text | {{#______ / #______}} | `::selection` | {{texto sobre fondo de selección → ratio X.X:1}} |
+| scrollbar.thumb / scrollbar.track | {{#______ / #______}} | barra de scroll | {{thumb contra track → ratio X.X:1 (≥ 3:1)}} |
 
 ## Dark mode
 
@@ -35,6 +36,7 @@
 | info.main | {{#______}} | | |
 | divider | {{#______}} | | |
 | selection.bg / selection.text | {{#______ / #______}} | `::selection` | |
+| scrollbar.thumb / scrollbar.track | {{#______ / #______}} | barra de scroll | |
 
 ## Notas de contraste
 

@@ -25,6 +25,20 @@ Lo que falte va a `CONTENT_CHECKLIST.md` con su fila. Lo que hay que crear, va a
 > El caso que más se escapa: el cliente tiene logo pero **no icono**. Un logo horizontal
 > reducido a 16 px es una mancha. Pregunta explícitamente por el icono.
 
+### El cliente tiene logo pero todavía no lo ha entregado
+
+No se espera ni se inventa una marca. Se monta un **logo provisional** que se cambia por el
+real sin rehacer nada (pasó en un proyecto: el logo llegó con el sitio ya en marcha):
+
+- Un solo archivo fuente provisional (`public/brand/logo.svg`, `icon.svg`): un monograma o
+  el nombre en la tipografía del sitio, con los colores de los tokens. Marcado como
+  provisional en el código y con su fila en `CONTENT_CHECKLIST.md`.
+- Todo lo demás **se deriva** de ese archivo, como con el real: favicon, touch icon,
+  manifest y la OG (`ImageResponse` lee el SVG). Nada copia el provisional a mano.
+- Cuando llega el real: se sustituye el archivo fuente, se regeneran los derivados y la
+  fila del checklist se cierra. Si el real no encaja en el hueco (proporción, versión
+  oscura), es una decisión nueva, no un retoque en cada sitio.
+
 ---
 
 ## Qué se implementa (Next.js App Router, convenciones de archivo)

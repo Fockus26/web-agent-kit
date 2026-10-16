@@ -60,7 +60,9 @@ En un PR propio, `chore/decisiones-por-archivo`, sin mezclar con otra cosa:
 1. Por cada `## D0NN — <título>` de `decisions/NN-<tema>.md`, un archivo
    `decisions/D0NN-<tema-kebab>.md` con la cabecera armada desde su fila de
    `DECISIONS_INDEX.md` (ID · Categoría · Resumen · Estado) y el cuerpo sin cambios (sin la
-   línea `**Estado:**`, que pasa a la cabecera).
+   línea `**Estado:**`, que pasa a la cabecera). Una sección que agrupa varias
+   (`## D037 / D038 / D039`) da un archivo por ID: el cuerpo en el primero y
+   `**Agrupa:** ver D037` en los demás.
 2. Comprueba que no se pierde ninguna: el número de IDs de `DECISIONS_INDEX.md` es el mismo
    que `ls context/decisions/D*.md | wc -l`.
 3. Borra `DECISIONS_INDEX.md` y los `NN-<tema>.md` viejos; cambia las citas

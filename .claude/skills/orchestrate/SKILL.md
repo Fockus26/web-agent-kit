@@ -53,6 +53,23 @@ Por cada punto de la lista, localiza dónde vive (grep, rangos, no archivos ente
 archivos toca, qué decisiones previas lo condicionan (`grep -rhi "^# D.*<tema>" context/decisions/`),
 qué trampas conocidas hay. Anota ruta:línea — irá al prompt.
 
+Contra lo que hay en `origin/main`, no contra tu copia: `git fetch` antes de mapear. Y antes
+de convertir un pedido en prompt, comprueba que sigue haciendo falta y que se puede hacer
+como lo vas a pedir:
+
+- **¿Ya está hecho?** Una migración pendiente puede estar ya en
+  `git ls-tree --name-only origin/main supabase/migrations/` (y aplicada: `list_migrations`
+  del MCP). Un pendiente viejo no es un pedido vigente.
+- **¿Contradice una decisión implementada?** Si el pedido trae valores (bandas, topes,
+  colores), busca la decisión del tema y compáralos; si no coinciden, es una pregunta de
+  §2, no un prompt. (Se pidieron 5 bandas cuando la decisión implementada usaba 4 topes.)
+- **¿Hay con qué verificarlo?** Antes de pedir un test de DOM, mira si el proyecto tiene
+  entorno de DOM para tests (`happy-dom`/`jsdom` en `package.json`); si no, pide "verificar
+  midiendo con Playwright". Antes de llamar bug a algo, mídelo (p. ej. dos clases `font-*`
+  que `cn` ya resuelve no son un bug).
+- **¿Hay una imagen de por medio?** Ábrela antes de proponer su `alt` o su texto: un alt
+  escrito sin verla no describe nada.
+
 Señales de que un pedido es más grande de lo que parece:
 - Toca datos guardados o la base (merge, migraciones, columnas) → necesita tests de la capa
   pura y probablemente acción manual.
@@ -98,6 +115,17 @@ Para que las unidades en paralelo no choquen, asigna a cada una:
 | Rango de IDs de decisión (un archivo por ID) | D075–D079 |
 | Filas de `CONTENT_CHECKLIST` | 26–27 |
 | Salto del changeset | `minor` (o `ninguno`) |
+| Rango de códigos de error propios, si el proyecto los usa (SQLSTATE de `raise … using errcode`) | MS010–MS014 |
+
+**Los IDs se reservan contra `origin/main`**, no contra la carpeta local, que puede ir
+atrasada (se reservó D186 mirando `context/decisions/` sin pull y ya existía en `main`):
+
+```bash
+git fetch origin --quiet
+git ls-tree --name-only origin/main context/decisions/ | sort | tail -3
+```
+
+Y por encima de eso, los rangos reservados en PRs aún abiertos de otra tanda, si los hay.
 
 El slot y su puerto no se reservan aquí: los da `wt take` al lanzar (wt2 → 4302, §6).
 
@@ -207,6 +235,12 @@ qa:local` contra la base local (Supabase en Docker; nunca la real); inicia sesi�
 `EMAIL_TEST`/`PASSWORD_TEST`, `ADMIN_EMAIL_TEST`/`ADMIN_PASSWORD_TEST` y
 `<ROL>_EMAIL_TEST`/`<ROL>_PASSWORD_TEST` de `.env.test.local` sin ver los valores. Si Docker
 no está abierto, lo dirá como acción de César: no lo arranques tú.
+
+**Sin base local posible** (la máquina no tiene Docker, o el proyecto aún no tiene
+`supabase/config.toml` ni migraciones): la ola no se queda bloqueada. Lánzalo igual, con
+"sin base local: `qa:local -- --offline`" en el prompt; prueba como invitado con las
+variables de la base apuntando a ninguna parte. En el cierre (§9), "QA: solo invitado —
+<motivo>", y la QA con sesión de esa ola pasa a "Bloquea" hasta que haya base local.
 
 Con el informe:
 - Guárdalo en `context/plans/qa-ola-0N-N.md` y `wt free` del slot de QA.

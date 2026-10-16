@@ -23,8 +23,12 @@ Si el proyecto tiene entorno ejecutable, corre axe antes de leer nada a mano —
 y encuentra lo mecánico.
 
 ```bash
-bun add -d @axe-core/playwright   # si no está
+bun add -d @axe-core/playwright   # si no está (los proyectos del kit lo traen desde la 3.7.0)
 ```
+
+En un slot del pool (worker de `orchestrate`) no se añaden dependencias: si falta, inyecta
+`axe-core` en la página como último recurso, dilo en el PR y anótalo en `KIT_FEEDBACK.md`
+(`/kit-update` lo instala).
 
 ```ts
 // scripts/a11y-check.ts
@@ -151,6 +155,10 @@ Aplica a todo lo que hayas tocado.
 - [ ] Cero trampas de foco: de todo se sale con `Tab` o `Escape`.
 - [ ] Modales/drawers: el foco entra al abrir, queda atrapado dentro mientras está abierto,
       `Escape` cierra, y al cerrar el foco **vuelve al elemento que lo abrió**.
+- [ ] Foco movido por código al cambiar de vista o de paso: la condición se compara con el
+      **estado que se muestra** (`paso !== pasoAnterior`), no con un `useRef` de "ya montado".
+      Con StrictMode en desarrollo el efecto corre dos veces, el ref ya vale `true` en la
+      segunda y el foco salta al `h1` al montar, sin error visible.
 - [ ] Hay un "skip to content" si el nav tiene más de ~5 enlaces.
 
 ### Nombre accesible

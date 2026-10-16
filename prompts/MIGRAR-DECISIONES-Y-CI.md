@@ -80,6 +80,10 @@ Y del proyecto: CLAUDE.md, context/GIT_STATE.md, .gitignore y `git log --oneline
      que sobra va al cuerpo. Debajo, el cuerpo sin cambios, sin la línea `**Estado:**`.
    - Una fila del índice sin sección de detalle: archivo con la cabecera y
      `**Decisión:** <el resumen de la fila>` como cuerpo.
+   - Una sección que agrupa varias (`## D037 / D038 / D039 — <título>`): un archivo por
+     cada ID del índice, cada uno con su cabecera; el cuerpo compartido va en el primero y
+     los demás llevan `**Agrupa:** ver D037` como cuerpo. Sin eso, el cruce índice ↔
+     detalle da falsos huecos.
    - Copia <kit>\context-templates\decisions\README.md sobre context/decisions/README.md.
    - Comprueba que no se pierde nada:
      `ls context/decisions/D*.md | wc -l` = número de IDs distintos del índice viejo, y

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Publica las capturas de un PR en la rama `pr-shots` del repo y imprime el markdown
-# para pegar en la sección "Capturas" del cuerpo del PR (`gh pr edit --body-file`).
+# Publica las capturas de un PR en la rama `pr-shots` del repo, imprime el markdown para
+# pegar en la sección "Capturas" del cuerpo del PR (`gh pr edit --body-file`) y lo deja
+# también en <carpeta>/README.md.
 #
 # Uso:  bash scripts/publish-pr-shots.sh [carpeta] [subcarpeta-destino]
 #       carpeta             por defecto .pr-shots
@@ -53,11 +54,16 @@ else
 fi
 git push -q origin "$COMMIT:refs/heads/$BRANCH"
 
-echo "<!-- Capturas en $BRANCH@${COMMIT:0:7} -->"
-for f in "${files[@]}"; do
-  name="$(basename "$f" .png)"
-  echo "**$name**"
-  echo ""
-  echo "![$name](https://github.com/$REPO/blob/$COMMIT/$DEST/$(basename "$f")?raw=true)"
-  echo ""
-done
+# El markdown también va a $SRC/README.md: con muchas capturas, un `tail` sobre la salida lo
+# cortaba y el PR quedaba con la mitad.
+{
+  echo "<!-- Capturas en $BRANCH@${COMMIT:0:7} -->"
+  for f in "${files[@]}"; do
+    name="$(basename "$f" .png)"
+    echo "**$name**"
+    echo ""
+    echo "![$name](https://github.com/$REPO/blob/$COMMIT/$DEST/$(basename "$f")?raw=true)"
+    echo ""
+  done
+} | tee "$SRC/README.md"
+echo "→ markdown en $SRC/README.md" >&2

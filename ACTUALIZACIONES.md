@@ -18,13 +18,95 @@ nueva a la más vieja (la primera que se cumple gana):
 
 | Si el proyecto… | Está en |
 |---|---|
-| tiene `context/decisions/D0NN-*.md` y no `context/DECISIONS_INDEX.md`, y (si lleva versión) `ci.yml` con `workflow_dispatch` | **3.2.0** |
-| tiene `.changeset/` y `.github/workflows/release.yml` (o `CLAUDE.md` habla del pool `..\<repo>-wt`) | **3.1.0** |
-| tiene `context/CURRENT_PHASE.md` con el tope de 60 líneas y `context/PHASE_LOG/` | **3.0.0** |
+| tiene `context/decisions/D0NN-*.md` (un archivo por decisión) y no `context/DECISIONS_INDEX.md` | **3.2.0** |
+| `CLAUDE.md` habla del pool de worktrees (`..\<repo>-wt`, `wt take`) | **3.1.0** |
+| tiene `context/PHASE_LOG/` y `context/CURRENT_PHASE.md` | **3.0.0** |
 | no tiene `context/PHASE_LOG/` | **2.x o anterior**: no hay camino automático. `nuevo-proyecto.ps1 -Existente` añade lo que falte sin pisar nada y se sigue desde 3.0.0 |
 
-Si las señales se contradicen (p. ej. proyecto creado con `-SinVersion`, sin Changesets), el
-agente lo dice y pregunta antes de elegir.
+Las señales no dependen de Changesets a propósito: un proyecto **sin versión** (creado con
+`-SinVersion`, o su `CLAUDE.md` lo dice) no tiene `.changeset/` ni `release.yml` y no por eso
+es más viejo. En ese proyecto, los pasos de Changesets de cualquier versión se saltan: no
+son una migración pendiente. Si las señales se contradicen, el agente las enseña y pregunta
+antes de elegir.
+
+---
+
+## 3.7.0 — 2026-10-16 · Feedback de inversiones-js, Melao, Maranatha y World Flags
+
+**Qué cambió** (cada punto, con el incidente que lo motivó, en la pieza que lo cambia)
+
+- **Brief de la tanda y `feature-worker`**: reglas de entorno que los workers
+  redescubrían. Archivos con Write/Edit, no por shell (heredoc, `node -e` con backticks y
+  Python en Windows rompieron archivos 6 veces). Suite completa sola, en segundo plano y a
+  archivo (Bun se colgaba o PGlite agotaba la memoria con varios workers). Servidor: puerto
+  libre o nada, parar por PID con el árbol, nunca `<framework> stop`; `.next/dev` ante el
+  500 de Turbopack. Scripts de Playwright en `.qa/` del slot (desde el scratchpad no
+  encuentran el paquete). Esperas en segundo plano (`sleep` está bloqueado). Commit por
+  etapa y `git status` al retomar tras un 429. `test:related` con respaldo a `bun test`.
+- **`orchestrate`**: mapea y reserva números contra `origin/main` (se reservó una D que ya
+  existía y se pidió una migración ya aplicada); compara los valores pedidos con la
+  decisión implementada, mira si hay entorno de test de DOM y abre la imagen antes de
+  proponer su alt. Rango opcional de códigos de error propios. Sin base local, la ola
+  cierra con QA de invitado (`--offline`) en vez de quedarse bloqueada. La plantilla de
+  prompt sugiere medir antes/después en `main` y en la rama para los arreglos.
+- **`wt.ps1`**: `take` y `free` paran lo que siga escuchando en el puerto del slot
+  (servidores huérfanos que hacían saltar al siguiente de puerto); `.qa/` queda ignorado en
+  todos los slots (`.git/info/exclude`).
+- **`qa-local.ts`**: `--offline` (sin base: variables a una dirección muerta, solo
+  invitado); aborta si el puerto está ocupado (también solo en IPv6); en Windows mata el
+  árbol del servidor; todo error termina el proceso con mensaje. `MAPEO` cubre `PUBLIC_*` y
+  `VITE_*`. Roles por lista en una variable (`ROL_POR_ENV`, p. ej. `ADMIN_EMAILS`) y ejemplo
+  de acceso por suscripción en `asignarRol`.
+- **`publish-pr-shots.sh`** deja el markdown también en `.pr-shots/README.md` (un `tail`
+  lo cortaba). `git-flow`: reescribir `.pr-shots.json` en cada unidad (se publicaron
+  capturas ajenas), el campo es `base`, `shots:publish` en segundo plano.
+- **`nuevo-proyecto.ps1`**: `@axe-core/playwright` como devDependency (un worker no puede
+  añadirla y acababa cargando axe de un CDN); `.claude/worktrees/` fuera de git y de Biome
+  (el worktree de Claude Desktop traía otro `biome.json` y rompía el lint).
+- **`kit-update`**: revisión de piezas aunque la versión esté al día (un proyecto en 3.5.0
+  no tenía `test:related` ni `shots`); las añade con `nuevo-proyecto.ps1 -Existente`.
+- **Sin versión** es un camino oficial: línea en `CLAUDE.md`, `git-flow` sin changeset, y la
+  tabla de deducción ya no usa Changesets como señal.
+- **Correos**: proveedor de envío por defecto (Brevo por SMTP) en una decisión y pregunta
+  en el arranque; sin SMTP propio Supabase solo entrega al equipo. Firebase Auth: comprobar
+  antes de diseñar si la consola deja editar las plantillas; si no, envío propio con el
+  Admin SDK.
+- **Diseño**: barra de scroll (tokens `scrollbar`, ≥ 3:1) junto a `::selection` en brief,
+  handoff, adenda, `COLORS.md`, fase 02 y `design-qa`. Logo provisional que se cambia por
+  el real sin rehacer icono ni OG (`BRAND-ASSETS.md` y adenda).
+- **Skills**: `frontend-build` (un módulo `'use client'` solo exporta componentes), `a11y`
+  (foco por estado, no por `useRef` de montaje, por StrictMode), `seo` (headings contados
+  sobre el DOM por nombre accesible, no con grep). `DEPLOY.md`: adoptar un proyecto de
+  Vercel ya creado. Migración 3.2.0: secciones de decisiones agrupadas.
+- **Al publicar una versión**: cada paso dice qué párrafo de `CLAUDE.md` sustituye, y qué
+  hacer si falta el archivo que edita.
+
+**Pasos para un proyecto en 3.6.0**
+
+1. Piezas globales: `powershell -ExecutionPolicy Bypass -File <kit>\instalar-kit.ps1 -Pull`
+   y sesión nueva (cambian `orchestrate` y su `wt.ps1`, `git-flow`, `a11y`, `seo`,
+   `frontend-build`, `backend-build`, `project-kickoff`, `kit-update`, y los agentes
+   `feature-worker`, `wave-qa` y `design-qa`). Si actualiza `kit-update`, ya está hecho.
+2. **Revisión de piezas** de `kit-update` (axe como devDependency, `.claude/worktrees/` en
+   `.gitignore` y `biome.json`, scripts del kit): lo que falte, con
+   `nuevo-proyecto.ps1 -Ruta . -Existente`.
+3. `scripts/publish-pr-shots.sh` ← `<kit>\reference\qa-scripts\publish-pr-shots.sh` (no
+   tiene partes propias del proyecto).
+4. `scripts/qa-local.ts`: tiene partes propias (lo añadido a `MAPEO`, `asignarRol`). Copia
+   el del kit y vuelve a poner encima esas partes del proyecto (`git diff` del archivo para
+   verlas). Si el rol se decide por una lista en una variable, pásalo a `ROL_POR_ENV`.
+   Verifica: `bun run qa:local -- --port 4399 --offline` arranca y el sitio carga.
+5. `CLAUDE.md`: solo si el proyecto es **sin versión**, su línea "Versión" pasa a la
+   alternativa "sin versión" de `<kit>\CLAUDE.md.template` (sustituye, no suma).
+6. `context/COLORS.md`: filas `scrollbar.thumb / scrollbar.track` en claro y oscuro. Si el
+   archivo no existe, créalo solo con esas filas y `selection`. Si el layout base ya está
+   hecho y el diseño no trae la barra: el bloque "Barra de scroll" de la adenda a César y la
+   unidad (tokens + CSS) a `context/plans/pendientes.md`; no se implementa en este PR.
+7. **Diagnóstico** (sin cambiar nada): si la app manda correos y no hay decisión del
+   proveedor de envío (`grep -rli "smtp\|brevo\|resend" context/decisions/`), pregunta cuál
+   es y regístrala. Con Firebase Auth, acción de César: comprobar si la consola deja editar
+   las plantillas. Si el sitio está en Vercel sin `.vercel/project.json`, acción:
+   `reference/DEPLOY.md` § 2b.
 
 ---
 
@@ -254,4 +336,11 @@ Lectura por niveles, `CURRENT_PHASE.md` con tope y `PHASE_LOG/`, modo `pr`, `orc
    los proyectos; **major** si rompe el flujo y la migración no es automática).
 2. Añade la entrada **arriba** de esta lista: qué cambió y **los pasos para un proyecto en la
    versión anterior**, autocontenidos (el agente que migra solo lee esto y lo que se cite).
-3. Si la versión nueva añade una señal detectable, añádela a la tabla de deducción.
+3. Si la versión nueva añade una señal detectable, añádela a la tabla de deducción (que no
+   dependa de Changesets: hay proyectos sin versión).
+4. **`CLAUDE.md` del proyecto no crece sin tope.** Un paso que le añade texto dice qué
+   párrafo viejo sustituye; si es nuevo de verdad, que sea una línea que cite el detalle en
+   el kit. Dos proyectos tuvieron que recortar a mano sus reglas propias tras sumar
+   versiones (8,8 KB y 8,1 KB).
+5. Si un paso edita un archivo de `context/` que un proyecto puede no tener (arrancó corto),
+   dice qué hacer si falta (lo normal: crearlo solo con las secciones del paso).

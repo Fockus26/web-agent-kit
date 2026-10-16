@@ -69,6 +69,10 @@ marca esa parte del código como "escrita sin verificar contra docs actuales".
 - **Server Components por defecto.** `'use client'` solo cuando de verdad hace falta
   (estado, efectos, listeners, APIs de navegador), y **lo más abajo posible en el árbol**:
   un `'use client'` en el layout arrastra todo el subárbol al bundle del cliente.
+- **Un módulo `'use client'` solo exporta componentes.** Una constante (`export const
+  RUTAS = …`) importada desde él en un Server Component no llega como valor sino como
+  referencia de cliente: `href` sale `undefined` y la página da 500. Los tests con
+  `renderToStaticMarkup` no lo ven. Lo compartido entre servidor y cliente va en `lib/`.
 - **TypeScript estricto.** Cero `any`. Props tipadas explícitamente. `unknown` + validación
   antes que `any` + esperanza.
 - **Un solo sistema de estilos**, el que diga `PROJECT_CONTEXT.md`. Con shadcn/ui o Hero UI
@@ -108,7 +112,7 @@ Sigue el orden que trae el handoff. Si no lo trae, este:
 
 ```
 1. Tokens          → el sistema de tema de la librería elegida, light/dark
-2. Layout base     → tipografía, contenedor, grid, reset, ::selection, favicon
+2. Layout base     → tipografía, contenedor, grid, reset, ::selection, scrollbar, favicon
 3. Primitivos      → los componentes de ui/ que todo lo demás usa
 4. Componentes     → los compuestos del handoff
 5. Secciones       → en el orden vertical de cada página

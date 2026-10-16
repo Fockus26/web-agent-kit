@@ -25,6 +25,7 @@ devolverle a Claude Design **ahora**, no en la fase 5.
 - [ ] Duraciones y curvas de animación
 - [ ] Escala de z-index
 - [ ] Color de selección de texto (fondo y texto, claro y oscuro) con su ratio
+- [ ] Barra de scroll (thumb y track, claro y oscuro), thumb ≥ 3:1 contra el track
 
 ### 2. Componentes
 Por cada componente:

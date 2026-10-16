@@ -29,6 +29,9 @@ opciones que quedan a su criterio, dilo explícitamente.}}
 ### Cómo verificar
 - {{qué medir, en qué anchos/temas, qué estados, con qué datos}}
 - {{tests nuevos que se esperan}}
+- {{Si es un arreglo medible: el mismo guion de medición en `main` (antes) y en tu rama
+  (después), con los dos resultados en el PR. Así queda probado que el fallo existía y que
+  ya no.}}
 
 ### Cierre
 Changeset: {{patch | minor | major | ninguno}} — {{texto en lenguaje de usuario}}.

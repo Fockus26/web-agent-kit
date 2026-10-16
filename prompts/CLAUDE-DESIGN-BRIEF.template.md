@@ -70,6 +70,7 @@ Claude Design proponga, escribe "PROPÓN" y da la dirección.]
 | success / warning / error | {{...}} | {{...}} | |
 | border / divider | {{#______}} | {{#______}} | |
 | selection (fondo / texto) | {{#______ / #______}} | {{#______ / #______}} | {{texto seleccionado; ratio anotado; distinto del foco y de los enlaces}} |
+| scrollbar (thumb / track) | {{#______ / #______}} | {{#______ / #______}} | {{barra de scroll; thumb ≥ 3:1 contra el track; discreta, del sistema de color}} |
 
 **Dark mode:** {{sí — obligatorio / no / opcional}}
 
