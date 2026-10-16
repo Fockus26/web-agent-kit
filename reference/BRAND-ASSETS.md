@@ -1,75 +1,79 @@
-# Assets de marca — favicon, touch icon, Open Graph e icono
+# Brand assets — favicon, touch icon, Open Graph and icon
 
-Lo que se ve fuera del sitio: la pestaña del navegador, el icono al guardar en la pantalla
-de inicio, la tarjeta al compartir en WhatsApp o LinkedIn. Se decide en el arranque
-(`project-kickoff`, Bloque C) y se implementa en el init de `seo` (fase 02).
+What is seen outside the site: the browser tab, the icon when saved to the home screen, the
+card when shared on WhatsApp or LinkedIn. Decided at kickoff (`project-kickoff`, Block C)
+and implemented in the `seo` init (phase 02).
 
 ---
 
-## Primero se pregunta: ¿qué tiene ya el cliente?
+## First you ask: what does the client already have?
 
-Nunca se asume. En la entrevista, una pregunta por pieza, con estas respuestas posibles:
-**lo tiene (y lo manda)** · **hay que crearlo** · **no aplica**.
+Never assume. In the interview, one question per piece, with these possible answers:
+**has it (and sends it)** · **has to be created** · **does not apply**.
 
-| Pieza | Para qué | Si el cliente la tiene, pídele | Si hay que crearla |
+| Piece | For | If the client has it, ask for | If it has to be created |
 |---|---|---|---|
-| **Logo** | Cabecera, pie, OG | SVG (vector), versión clara y oscura, y la versión horizontal / apilada si existen | Fuera del alcance del kit salvo que César lo acuerde: es trabajo de marca. Si se acuerda, se pide a Claude Design como pieza aparte |
-| **Icono / isotipo** | Base de favicon, touch icon y manifest | SVG cuadrado, legible a 16 px. Si solo hay logo horizontal, **falta el icono** | Claude Design lo deriva del logo (inicial, monograma o símbolo) — brief §3 |
-| **Favicon** | Pestaña | `.ico` o SVG si ya existe | Se genera desde el icono |
-| **Apple touch icon** | Pantalla de inicio en iOS | PNG 180×180 | Se genera desde el icono |
-| **Imagen Open Graph** | Tarjeta al compartir | PNG/JPG 1200×630 | Plantilla diseñada por Claude Design (brief §7) e implementada con `ImageResponse` |
-| **Color de tema** | Barra del navegador móvil, manifest | Hex | Sale de la paleta |
+| **Logo** | Header, footer, OG | SVG (vector), light and dark versions, and the horizontal / stacked versions if they exist | Out of the kit's scope unless César agrees: it is brand work. If agreed, it is asked of Claude Design as a separate piece |
+| **Icon / isotype** | Base for favicon, touch icon and manifest | Square SVG, legible at 16 px. If there is only a horizontal logo, **the icon is missing** | Claude Design derives it from the logo (initial, monogram or symbol) — brief §3 |
+| **Favicon** | Tab | `.ico` or SVG if it exists | Generated from the icon |
+| **Apple touch icon** | iOS home screen | PNG 180×180 | Generated from the icon |
+| **Open Graph image** | Card when shared | PNG/JPG 1200×630 | Template designed by Claude Design (brief §7) and implemented with `ImageResponse` |
+| **Theme color** | Mobile browser bar, manifest | Hex | Comes from the palette |
 
-Lo que falte va a `CONTENT_CHECKLIST.md` con su fila. Lo que hay que crear, va al brief.
+What is missing goes to `CONTENT_CHECKLIST.md` with its row. What has to be created goes to
+the brief.
 
-> El caso que más se escapa: el cliente tiene logo pero **no icono**. Un logo horizontal
-> reducido a 16 px es una mancha. Pregunta explícitamente por el icono.
+> The case that slips most: the client has a logo but **no icon**. A horizontal logo shrunk
+> to 16 px is a smudge. Ask explicitly about the icon.
 
-### El cliente tiene logo pero todavía no lo ha entregado
+### The client has a logo but has not delivered it yet
 
-No se espera ni se inventa una marca. Se monta un **logo provisional** que se cambia por el
-real sin rehacer nada (pasó en un proyecto: el logo llegó con el sitio ya en marcha):
+You neither wait nor invent a brand. You set up a **provisional logo** that gets swapped
+for the real one without redoing anything (it happened in a project: the logo arrived with
+the site already under way):
 
-- Un solo archivo fuente provisional (`public/brand/logo.svg`, `icon.svg`): un monograma o
-  el nombre en la tipografía del sitio, con los colores de los tokens. Marcado como
-  provisional en el código y con su fila en `CONTENT_CHECKLIST.md`.
-- Todo lo demás **se deriva** de ese archivo, como con el real: favicon, touch icon,
-  manifest y la OG (`ImageResponse` lee el SVG). Nada copia el provisional a mano.
-- Cuando llega el real: se sustituye el archivo fuente, se regeneran los derivados y la
-  fila del checklist se cierra. Si el real no encaja en el hueco (proporción, versión
-  oscura), es una decisión nueva, no un retoque en cada sitio.
+- A single provisional source file (`public/brand/logo.svg`, `icon.svg`): a monogram or the
+  name in the site's typeface, with the token colors. Flagged as provisional in the code and
+  with its row in `CONTENT_CHECKLIST.md`.
+- Everything else **is derived** from that file, as with the real one: favicon, touch icon,
+  manifest and the OG (`ImageResponse` reads the SVG). Nothing copies the provisional one by
+  hand.
+- When the real one arrives: the source file is replaced, the derivatives regenerated and
+  the checklist row closed. If the real one does not fit the slot (proportion, dark
+  version), it is a new decision, not a touch-up everywhere.
 
 ---
 
-## Qué se implementa (Next.js App Router, convenciones de archivo)
+## What gets implemented (Next.js App Router, file conventions)
 
-| Archivo en `app/` | Tamaño | Notas |
+| File in `app/` | Size | Notes |
 |---|---|---|
-| `favicon.ico` | 16, 32 y 48 px dentro del `.ico` | Solo en la raíz de `app/`. Para navegadores viejos y lectores de feeds |
-| `icon.svg` | vector | El favicon moderno. Puede adaptarse al tema con `@media (prefers-color-scheme: dark)` dentro del SVG |
-| `icon.png` | 512×512 | Respaldo raster |
-| `apple-icon.png` | 180×180 | **Fondo opaco** (iOS pinta de negro la transparencia) y ~10 % de margen |
-| `manifest.ts` | — | `name`, `short_name`, `theme_color`, `background_color`, iconos 192 y 512, y uno `purpose: 'maskable'` con el símbolo dentro del 80 % central |
-| `opengraph-image.tsx` (o `.png`) | 1200×630 | Por defecto del sitio; las páginas importantes pueden tener la suya. `alt` con `opengraph-image.alt.txt` o `export const alt` |
-| `twitter-image` | 1200×630 | Solo si difiere de la OG; si no, la OG basta |
+| `favicon.ico` | 16, 32 and 48 px inside the `.ico` | Only at the root of `app/`. For old browsers and feed readers |
+| `icon.svg` | vector | The modern favicon. Can adapt to the theme with `@media (prefers-color-scheme: dark)` inside the SVG |
+| `icon.png` | 512×512 | Raster fallback |
+| `apple-icon.png` | 180×180 | **Opaque background** (iOS paints transparency black) and ~10% margin |
+| `manifest.ts` | — | `name`, `short_name`, `theme_color`, `background_color`, icons 192 and 512, and one `purpose: 'maskable'` with the symbol within the central 80% |
+| `opengraph-image.tsx` (or `.png`) | 1200×630 | Site default; important pages may have their own. `alt` with `opengraph-image.alt.txt` or `export const alt` |
+| `twitter-image` | 1200×630 | Only if it differs from the OG; otherwise the OG is enough |
 
-Reglas:
+Rules:
 
-- **Un icono fuente, el resto se deriva.** Del SVG del icono salen el `.ico`, los PNG y el
-  maskable. Si cambia la marca, se regenera todo desde ahí.
-- La OG lleva texto legible en miniatura (título ≥ 60 px en el lienzo de 1200), el logo, y
-  respeta un margen de seguridad: WhatsApp y LinkedIn recortan distinto.
-- La OG generada con `ImageResponse` usa las fuentes del sitio (cárgalas como
-  `ArrayBuffer`) y los colores de los tokens, no hex sueltos.
-- Sin `metadataBase` (ver skill `seo`) las URLs de OG salen relativas y la tarjeta no carga.
+- **One source icon, the rest is derived.** The `.ico`, the PNGs and the maskable come from
+  the icon's SVG. If the brand changes, everything is regenerated from there.
+- The OG carries text legible as a thumbnail (title ≥ 60 px on the 1200 canvas), the logo,
+  and respects a safety margin: WhatsApp and LinkedIn crop differently.
+- The OG generated with `ImageResponse` uses the site's fonts (load them as `ArrayBuffer`)
+  and the token colors, not loose hex values.
+- Without `metadataBase` (see the `seo` skill) the OG URLs come out relative and the card
+  does not load.
 
-## Verificación
+## Verification
 
-- [ ] Pestaña con el favicon en claro y en oscuro.
-- [ ] `apple-icon.png` sin transparencia; "Añadir a pantalla de inicio" en iOS se ve bien
-      (o dilo en "no verificado" del PR si no hay dispositivo).
-- [ ] Manifest válido (Lighthouse › PWA/installability si aplica).
-- [ ] Tarjeta OG comprobada con el depurador de compartir de la plataforma (Facebook
-      Sharing Debugger, LinkedIn Post Inspector) **sobre la URL desplegada**, no localhost.
-- [ ] Lo provisional (icono derivado sin aprobar, OG sin copy final) con su fila en
+- [ ] Tab with the favicon in light and dark.
+- [ ] `apple-icon.png` without transparency; "Add to Home Screen" on iOS looks right (or say
+      so under "not verified" in the PR if there is no device).
+- [ ] Valid manifest (Lighthouse › PWA/installability if it applies).
+- [ ] OG card checked with the platform's share debugger (Facebook Sharing Debugger,
+      LinkedIn Post Inspector) **on the deployed URL**, not localhost.
+- [ ] What is provisional (derived icon not approved, OG without final copy) with its row in
       `CONTENT_CHECKLIST.md`.

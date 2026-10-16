@@ -1,12 +1,12 @@
-# Components Inventory — {{NOMBRE_DEL_PROYECTO}}
+# Components Inventory — {{PROJECT_NAME}}
 
-> Qué componentes ya existen, dónde viven, y qué los usa. Revisa esta tabla antes de crear un
-> componente nuevo — puede que ya exista uno que resuelva lo mismo.
+> Which components already exist, where they live, and what uses them. Check this table
+> before creating a new component — one may already solve the same thing.
 
-| Componente | Ruta | Usado en | Fase que lo cerró | Notas |
+| Component | Path | Used in | Phase that closed it | Notes |
 |---|---|---|---|---|
-| {{Button}} | {{components/ui/Button.tsx}} | {{Hero, Navbar, ...}} | {{Fase 04}} | {{variantes: primary/secondary/ghost}} |
+| {{Button}} | {{components/ui/Button.tsx}} | {{Hero, Navbar, ...}} | {{Phase 04}} | {{variants: primary/secondary/ghost}} |
 | {{Card}} | {{components/ui/Card.tsx}} | | | |
 
-<!-- Una fila por componente reutilizable. No listar componentes de una sola sección que no
-     se reutilizan — esos van en SECTION_INVENTORY.md como parte de esa sección. -->
+<!-- One row per reusable component. Do not list single-section components that are not
+     reused — those go in SECTION_INVENTORY.md as part of that section. -->

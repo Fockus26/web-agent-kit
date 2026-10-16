@@ -1,171 +1,184 @@
 ---
 name: kit-update
-description: Pone al día un proyecto con la última versión del web-agent-kit. Úsala cuando César pida "actualiza el kit", "¿está al día el kit?", "/kit-update", o cuando un proyecto lleve una versión del kit anterior a la de main. Compara la versión del proyecto (.kit-version), la de las skills instaladas y la de origin/main del kit (clon local + git fetch); si todo coincide dice que está al día y termina, si las skills están viejas las reinstala y pide sesión nueva, y si el proyecto va atrás calcula el camino en ACTUALIZACIONES.md y lo aplica en una rama y un PR, un commit por versión.
+description: Brings a project up to date with the latest web-agent-kit version. Use it when César asks "update the kit", "is the kit up to date?" ("actualiza el kit", "¿está al día el kit?"), "/kit-update", or when a project carries a kit version older than main's. Compares the project's version (.kit-version), the installed skills' version and the kit's origin/main (local clone + git fetch); if they match it says so and checks for missing pieces, if the skills are old it reinstalls them and asks for a new session, and if the project is behind it computes the path in UPDATES.md and applies it on a branch and a PR, one commit per version.
 ---
 
-# Actualizar el kit en un proyecto
+# Update the kit in a project
 
-Se corre en una sesión abierta **en la carpeta del proyecto**. Lee el kit desde su clon
-local, siempre como está en `origin/main` (lo publicado), nunca desde una rama a medias.
-No toca `main` del proyecto: todo va en una rama y un PR.
+Runs in a session opened **in the project's folder**. It reads the kit from its local
+clone, always as it is on `origin/main` (what is published), never from a half-done branch.
+It does not touch the project's `main`: everything goes on a branch and a PR.
 
-## 0. Dónde está el kit
+**Language:** everything you tell César, the commits and the PR are in Spanish. Projects
+created before kit 3.8.0 keep their `context/` in Spanish (same files, Spanish headings,
+plan names such as `pendientes.md`): migration steps written for English headings apply to
+their Spanish equivalents; do not translate or rename the project's files.
 
-`~/.claude/web-agent-kit.json` lo escribe `instalar-kit` al instalar:
+## 0. Where the kit is
+
+`~/.claude/web-agent-kit.json` is written by `install-kit` when installing:
 
 ```json
-{ "ruta": "C:\\...\\web-agent-kit", "version": "3.6.0", "instalado": "2026-10-16" }
+{ "path": "C:\\...\\web-agent-kit", "version": "3.8.0", "installed": "2026-10-16" }
 ```
 
-- `ruta` = el clon del kit (lo llamo `<clon>`). `version` = la de las skills instaladas.
-- Si el archivo no existe (instalación anterior a la 3.6.0 o a mano): busca el clon en
-  `~/Desktop/agents/web-agent-kit` y, si no está, pregúntale la ruta a César. Las skills
-  instaladas cuentan como versión desconocida (= viejas).
-- Si `<clon>` no es un repo git con remoto `origin`: para y dilo. Sin clon no hay cómo
-  comparar (en otra máquina: `git clone https://github.com/Fockus26/web-agent-kit.git` e
-  `instalar-kit`).
+- `path` = the kit's clone (I call it `<clone>`). `version` = the installed skills'.
+  Installations before 3.8.0 wrote `ruta` / `instalado`: read them the same way.
+- If the file does not exist (installed before 3.6.0 or by hand): look for the clone in
+  `~/Desktop/agents/web-agent-kit` and, if it is not there, ask César for the path. The
+  installed skills count as an unknown (= old) version.
+- If `<clone>` is not a git repo with an `origin` remote: stop and say so. Without a clone
+  there is nothing to compare against (on another machine: `git clone
+  https://github.com/Fockus26/web-agent-kit.git` and `install-kit`).
 
-## 1. Las tres versiones
+## 1. The three versions
 
 ```bash
-git -C "<clon>" fetch origin --quiet
-git -C "<clon>" show origin/main:VERSION          # publicada (destino)
-git -C "<clon>" status --porcelain --branch       # rama actual y cambios sin commitear
+git -C "<clone>" fetch origin --quiet
+git -C "<clone>" show origin/main:VERSION          # published (target)
+git -C "<clone>" status --porcelain --branch       # current branch and uncommitted changes
 ```
 
-| Versión | De dónde |
+| Version | From |
 |---|---|
-| **Publicada** | `origin/main:VERSION` del clon |
-| **Skills instaladas** | `version` de `~/.claude/web-agent-kit.json` |
-| **Proyecto** | `.kit-version` del proyecto. Si no existe, dedúcela con la tabla "Cómo saber la versión de un proyecto sin `.kit-version`" de `ACTUALIZACIONES.md` y enseña las señales; si se contradicen, pregunta |
+| **Published** | the clone's `origin/main:VERSION` |
+| **Installed skills** | `version` in `~/.claude/web-agent-kit.json` |
+| **Project** | the project's `.kit-version`. If it does not exist, deduce it with the table "How to tell a project's version without `.kit-version`" in `UPDATES.md` and show the signals; if they contradict each other, ask |
 
-Enséñalas en una línea: `proyecto 3.4.0 · skills 3.5.0 · publicada 3.6.0`.
+Show them in one line: `proyecto 3.4.0 · skills 3.5.0 · publicada 3.8.0`.
 
-## 2. Qué toca hacer
+## 2. What to do
 
-**a) Proyecto = publicada:** "El proyecto está al día con el kit <versión>." Si además las
-skills instaladas son más viejas, di que conviene reinstalarlas (paso b). Haz la
-"Revisión de piezas" (abajo), solo leyendo: si todo está, termina; si falta algo, dilo en
-una tabla y pregunta si se añade (rama `chore/kit-piezas`, paso 3 para `<kit>` y el cierre
-del paso 9).
+**a) Project = published:** "El proyecto está al día con el kit <versión>." If the installed
+skills are also older, say it is worth reinstalling them (step b). Run the "Piece check"
+(below), read-only: if everything is there, finish; if something is missing, show it in a
+table and ask whether to add it (branch `chore/kit-pieces`, step 3 for `<kit>` and the
+closing of step 9).
 
-**b) Skills instaladas < publicada:** las skills nuevas solo se cargan al abrir sesión, y
-las migraciones las usan. Antes de migrar nada:
+**b) Installed skills < published:** new skills only load when a session opens, and the
+migrations use them. Before migrating anything:
 
-- Si el clon está en `main` sin cambios (`## main...origin/main` y nada más en el
-  `status`): instálalas desde ahí, que hace antes el `git pull --ff-only`:
-  `powershell -ExecutionPolicy Bypass -File "<clon>\instalar-kit.ps1" -Pull`
-  (macOS/Linux: `bash "<clon>/instalar-kit.sh" --pull`).
-- Si el clon está en otra rama o con cambios (César está editando el kit): no lo toques.
-  Dile que vuelva a `main` en el kit o que corra el instalador cuando termine.
+- If the clone is on `main` with no changes (`## main...origin/main` and nothing else in
+  the `status`): install from there, which does the `git pull --ff-only` first:
+  `powershell -ExecutionPolicy Bypass -File "<clone>\install-kit.ps1" -Pull`
+  (macOS/Linux: `bash "<clone>/install-kit.sh" --pull`).
+- If the clone is on another branch or has changes (César is editing the kit): do not touch
+  it. Tell him to go back to `main` in the kit or to run the installer when he is done.
 
-Después para: "Abre una sesión nueva en este proyecto y escribe `/kit-update` otra vez."
-No sigas con las skills viejas cargadas.
+Then stop: "Abre una sesión nueva en este proyecto y escribe `/kit-update` otra vez." Do
+not go on with the old skills loaded.
 
-**c) Proyecto > publicada:** algo raro (se actualizó desde una rama del kit sin mergear).
-Dilo y pregunta; no toques nada.
+**c) Project > published:** something is off (it was updated from an unmerged kit branch).
+Say so and ask; touch nothing.
 
-**d) Proyecto < publicada y skills al día:** sigue con el paso 3.
+**d) Project < published and skills up to date:** go on with step 3.
 
-## 3. Copia de lectura del kit
+## 3. Read copy of the kit
 
-Los pasos de migración leen y copian archivos de `<kit>`. `<kit>` es:
+The migration steps read and copy files from `<kit>`. `<kit>` is:
 
-- `<clon>`, si está en `main` sin cambios y al día con `origin/main` (el paso 2b ya hizo el
-  pull);
-- si no, una copia de `origin/main` en el scratchpad, sin tocar el clon:
-  `mkdir -p "<scratchpad>/kit" && git -C "<clon>" archive origin/main | tar -x -C "<scratchpad>/kit"`.
+- `<clone>`, if it is on `main` with no changes and up to date with `origin/main` (step 2b
+  already did the pull);
+- otherwise, a copy of `origin/main` in the scratchpad, without touching the clone:
+  `mkdir -p "<scratchpad>/kit" && git -C "<clone>" archive origin/main | tar -x -C "<scratchpad>/kit"`.
 
-Del kit solo se lee y se copia: no hagas commits, pulls ni cambios en él.
+From the kit you only read and copy: no commits, pulls or changes in it.
 
-## 4. Camino
+## 4. Path
 
-Todas las entradas de `<kit>/ACTUALIZACIONES.md` posteriores a la versión del proyecto, de
-la más vieja a la más nueva. Enséñalo como lista (versión · qué cambia en una línea) antes
-de tocar nada.
+Every entry of `<kit>/UPDATES.md` after the project's version, from oldest to newest. Show
+it as a list (version · what changes in one line) before touching anything.
 
-## 5. Contexto del proyecto
+## 5. The project's context
 
-Lee `CLAUDE.md`, `context/GIT_STATE.md`, `.gitignore`, `package.json` y
-`git log --oneline -10`. Y las memorias del proyecto
-(`~/.claude/projects/<este proyecto>/memory/`), por si alguna describe un flujo que el
-camino cambia.
+Read `CLAUDE.md`, `context/GIT_STATE.md`, `.gitignore`, `package.json` and
+`git log --oneline -10`. And the project's memories
+(`~/.claude/projects/<this project>/memory/`), in case one describes a flow the path changes.
 
-## 6. Diagnóstico de todo el camino, sin cambiar nada
+## 6. Diagnosis of the whole path, changing nothing
 
-Para cada versión, lo que pide su paso de diagnóstico: una tabla por versión. Junta en
-**una sola tanda** de preguntas (AskUserQuestion) todo lo que las versiones piden
-preguntar; no preguntes versión a versión.
+For each version, what its diagnosis step asks for: one table per version. Gather into **a
+single round** of questions (AskUserQuestion) everything the versions ask to ask; do not
+ask version by version.
 
-Si un paso edita un archivo que el proyecto no tiene (p. ej. `context/COLORS.md` en un
-proyecto que arrancó corto), créalo solo con las secciones que pide ese paso y dilo en el
-diagnóstico.
+If a step edits a file the project does not have (e.g. `context/COLORS.md` in a project
+that started short), create it with only the sections that step asks for and say so in the
+diagnosis.
 
-Si el proyecto es **sin versión** (su `CLAUDE.md` lo dice, o no tiene `.changeset/` y César
-lo confirma), los pasos de Changesets de cualquier versión se saltan: no son una migración
-pendiente, y no se pregunta otra vez.
+If the project is **without versioning** (its `CLAUDE.md` says so, or it has no
+`.changeset/` and César confirms), the Changesets steps of any version are skipped: they are
+not a pending migration, and it is not asked again.
 
-Añade al diagnóstico la **revisión de piezas** (§ abajo).
+Add the **piece check** (below) to the diagnosis.
 
-## Revisión de piezas
+## Piece check
 
-Un proyecto puede estar en la versión correcta y aun así no tener piezas que las skills dan
-por hechas (pasó: un proyecto en la 3.5.0 sin `test:related` ni `shots`, porque arrancó
-antes de que `nuevo-proyecto.ps1` los pusiera; los workers improvisaron cuatro veces). Sin
-cambiar nada, comprueba:
+A project can be on the right version and still lack pieces the skills take for granted (it
+happened: a project on 3.5.0 without `test:related` or `shots`, because it started before
+`new-project.ps1` added them; the workers improvised four times). Changing nothing, check:
 
-| Pieza | Cómo |
+| Piece | How |
 |---|---|
-| Scripts de `package.json`: `test`, `test:related`, `shots`, `shots:publish`, `qa:local` y sus archivos en `scripts/` | `package.json` y `ls scripts/` |
-| devDependencies: `@types/bun`, `@playwright/test`, `@axe-core/playwright` (y `@changesets/cli` si lleva versión) | `package.json` |
-| `.gitignore` con `.pr-shots`, `.env*.local` (o `.env*`) y `.claude/worktrees/` | `git check-ignore -q <ruta>` |
-| `biome.json` (si lo hay) sin `.claude/worktrees` | `files.includes` / `files.ignore` |
+| `package.json` scripts: `test`, `test:related`, `shots`, `shots:publish`, `qa:local`, `context:backup`, `context:restore`, and their files in `scripts/` | `package.json` and `ls scripts/` |
+| devDependencies: `@types/bun`, `@playwright/test`, `@axe-core/playwright` (and `@changesets/cli` if versioned) | `package.json` |
+| `.gitignore` with `.pr-shots`, `.env*.local` (or `.env*`) and `.claude/worktrees/` | `git check-ignore -q <path>` |
+| **`.gitignore` does NOT ignore** `supabase/` (except `.temp/`, `.branches/`) or the fixed documents of `context/` (`PROJECT_CONTEXT`, `DESIGN_RULES`, `COLORS`, `DESIGN_TOKENS`, `TYPOGRAPHY`, `decisions/`) | `git check-ignore -v supabase/migrations context/PROJECT_CONTEXT.md context/decisions` |
+| `biome.json` (if any) excludes `.claude/worktrees` | `files.includes` / `files.ignore` |
 | `CLAUDE.md` ≤ 8 KB | `wc -c CLAUDE.md` |
+| Backup of the local `context/` on the remote | `git ls-remote --heads origin context-state` |
 
-Lo que falte se añade con el propio script del kit, que solo añade lo que no existe y no
-pisa nada: `pwsh -File "<kit>/nuevo-proyecto.ps1" -Ruta . -Existente` (más `-SinVersion` si
-el proyecto es sin versión). Va en el mismo PR, en su propio commit
-(`chore(kit): piezas que faltaban`). Si el stack no es Next.js (Astro, Vite), dilo antes:
-los scripts pueden necesitar ajuste, y es una pregunta de la tanda única.
+What is missing is added with the kit's own script, which only adds what does not exist and
+overwrites nothing: `pwsh -File "<kit>/new-project.ps1" -Path . -Existing` (plus
+`-NoVersion` if the project is without versioning). It goes in the same PR, in its own
+commit (`chore(kit): piezas que faltaban`). If the stack is not Next.js (Astro, Vite), say
+so first: the scripts may need adjusting, and it is a question for the single round.
 
-## 7. Rama
+If `supabase/` or the fixed documents of `context/` are gitignored, it is a question for the
+single round, not something you change silently: César may have done it on purpose. The
+recommendation, with its reason: they go in git (without them, losing the folder loses the
+schema and the decisions; the pool and `wave-qa` do not see the migrations); if the reason
+was privacy, the repo is made private. With his yes: remove them from `.gitignore`, `git
+add` them (check first that there are no secrets in them) and commit them in this PR. And
+if there is no `context-state` yet, the first `bun run context:backup` (private repo) after
+the merge, as a manual action in the PR.
 
-Según `context/GIT_STATE.md`: modo `pr` → `chore/kit-<publicada>` desde `origin/main`
-actualizado; modo `local` → desde la base.
+## 7. Branch
 
-## 8. Aplicar cada versión, en orden
+Per `context/GIT_STATE.md`: `pr` mode → `chore/kit-<published>` from an updated
+`origin/main`; `local` mode → from the base.
 
-Sigue sus "Pasos" en `<kit>/ACTUALIZACIONES.md` (y los prompts que citen, solo los pasos
-indicados). El paso "piezas globales / instalar-kit" ya está hecho (paso 2). Al terminar
-cada versión:
+## 8. Apply each version, in order
 
-- escribe su número en `.kit-version` (una línea, sin nada más);
-- commit solo de los archivos de esa versión:
+Follow its "Steps" in `<kit>/UPDATES.md` (and the prompts they cite, only the steps
+indicated). The "global pieces / install-kit" step is already done (step 2). When each
+version is done:
+
+- write its number in `.kit-version` (one line, nothing else);
+- commit only that version's files:
   `chore(kit): actualiza a <versión> — <qué cambia en pocas palabras>`.
 
-Si una versión falla a mitad, para ahí: lo hecho queda en commits y `.kit-version` dice
-hasta dónde llegó.
+If a version fails halfway, stop there: what was done stays in commits and `.kit-version`
+says how far it got.
 
-`CLAUDE.md` del proyecto no pasa de 8 KB (`wc -c CLAUDE.md`). Si un paso lo hace pasar,
-sustituye el párrafo viejo que el paso reemplaza en vez de sumar, y si aun así no cabe,
-pregunta qué parte propia del proyecto se mueve a `context/`.
+The project's `CLAUDE.md` stays at 8 KB or less (`wc -c CLAUDE.md`). If a step pushes it
+over, replace the old paragraph that the step supersedes instead of adding, and if it still
+does not fit, ask which project-specific part moves to `context/`.
 
-## 9. Verificación y cierre
+## 9. Verification and closing
 
-- Typecheck, lint, tests y build en verde.
-- Cierre según `git-flow`: push y PR con la plantilla, título
-  `chore(kit): actualiza de <origen> a <destino>`. Sin changeset (es tooling). En el cuerpo:
-  el camino, un resumen por versión, y en "Acciones manuales" lo que cada versión pida.
-  En modo `local`: pausa de aprobación y merge como siempre.
-- Si una versión dejó trabajo de diseño o implementación pendiente (p. ej. pantallas de
-  estado de la 3.3.0), no lo hagas aquí: va a `context/plans/pendientes.md`, y dale a César
-  el texto para Claude Design si lo hay.
+- Typecheck, lint, tests and build green.
+- Close per `git-flow`: push and PR with the template, title
+  `chore(kit): actualiza de <origen> a <destino>`. No changeset (it is tooling). In the
+  body: the path, a summary per version, and in "Acciones manuales" what each version asks.
+  In `local` mode: approval pause and merge as always.
+- If a version left design or implementation work pending (e.g. 3.3.0's status screens), do
+  not do it here: it goes to `context/plans/backlog.md` (`pendientes.md` in older projects),
+  and give César the text for Claude Design if there is one.
 
-## Informe final
+## Final report
 
-URL del PR, camino aplicado, qué cambió (una línea por archivo), memorias tocadas,
-preguntas abiertas, pendientes creados y lo que no se pudo verificar.
+In Spanish: PR URL, path applied, what changed (one line per file), memories touched, open
+questions, backlog items created and what could not be verified.
 
-Y anota en `context/KIT_FEEDBACK.md` cualquier paso de la migración que fuera confuso o
-estuviera mal (tipo Hueco o Fricción, pieza "ACTUALIZACIONES.md <versión>"). Se envía al
-kit con `/kit-feedback`.
+And log in `context/KIT_FEEDBACK.md` any migration step that was confusing or wrong (type
+Gap or Friction, piece "UPDATES.md <version>"). It reaches the kit with `/kit-feedback`.

@@ -1,32 +1,34 @@
 ---
 name: seo
-description: SEO técnico del kit. Úsala en tres momentos - al inicializar el repo de un proyecto (metadata base, robots, sitemap, favicons), al cerrar una sección que trae contenido real, y al cerrar una página completa. Cubre metadata por página, Open Graph, canonical, JSON-LD schema.org, sitemap/robots y los patrones de imagen y fuente que afectan Core Web Vitals.
+description: The kit's technical SEO. Use it at three moments - when initializing a project's repo (base metadata, robots, sitemap, favicons), when closing a section that brings real content, and when closing a whole page. Covers per-page metadata, Open Graph, canonical, schema.org JSON-LD, sitemap/robots and the image and font patterns that affect Core Web Vitals.
 ---
 
-# SEO técnico
+# Technical SEO
 
-Solo la parte de SEO que es **implementación de código**. Estrategia de keywords,
-investigación de competencia y planificación de contenido están fuera de alcance: eso es
-trabajo de marketing y no lo decides tú.
+Only the part of SEO that is **code implementation**. Keyword strategy, competitor research
+and content planning are out of scope: that is marketing work and not yours to decide.
+
+**Language:** the report you give César (Output) is in Spanish; metadata and copy are in the
+site's language.
 
 ---
 
-## Cuándo se activa
+## When it activates
 
-| Disparador | Qué se hace |
+| Trigger | What gets done |
 |---|---|
-| **Init del repo** | Bloque 1 completo: metadata base, robots, sitemap, favicons, fuentes |
-| **Cierre de sección con contenido real** | Headings, imágenes, enlaces internos, JSON-LD si la sección lo amerita (FAQ, reseñas, breadcrumb) |
-| **Cierre de página** | Metadata específica de la página + JSON-LD de su tipo + entrada en el sitemap |
+| **Repo init** | Full Block 1: base metadata, robots, sitemap, favicons, fonts |
+| **Closing a section with real content** | Headings, images, internal links, JSON-LD if the section calls for it (FAQ, reviews, breadcrumb) |
+| **Closing a page** | The page's own metadata + JSON-LD of its type + sitemap entry |
 
-Corre **después** de `a11y` y **antes** de la revisión de César, dentro de la misma unidad de
-trabajo. Nunca después del commit.
+It runs **after** `a11y` and **before** César's review, inside the same unit of work.
+Never after the commit.
 
 ---
 
-## Bloque 1 — Init del repo (una vez por proyecto)
+## Block 1 — Repo init (once per project)
 
-### Metadata base — `app/layout.tsx`
+### Base metadata — `app/layout.tsx`
 
 ```tsx
 import type { Metadata } from 'next'
@@ -34,14 +36,14 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL!),
   title: {
-    default: '{{Nombre}} — {{propuesta de valor en ≤60 caracteres}}',
-    template: '%s | {{Nombre}}',
+    default: '{{Name}} — {{value proposition in ≤60 characters}}',
+    template: '%s | {{Name}}',
   },
-  description: '{{PENDIENTE — ver CONTENT_CHECKLIST.md}}',
+  description: '{{PENDING — see CONTENT_CHECKLIST.md}}',
   openGraph: {
     type: 'website',
     locale: '{{es_VE}}',
-    siteName: '{{Nombre}}',
+    siteName: '{{Name}}',
     url: '/',
   },
   twitter: { card: 'summary_large_image' },
@@ -50,8 +52,8 @@ export const metadata: Metadata = {
 }
 ```
 
-`NEXT_PUBLIC_SITE_URL` va a `.env.example` desde el día uno. Sin `metadataBase` todas las
-URLs de OG y canonical salen relativas y **no funcionan al compartir**.
+`NEXT_PUBLIC_SITE_URL` goes into `.env.example` from day one. Without `metadataBase` every
+OG and canonical URL comes out relative and **does not work when shared**.
 
 ### `app/robots.ts`
 
@@ -74,103 +76,104 @@ import type { MetadataRoute } from 'next'
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = process.env.NEXT_PUBLIC_SITE_URL!
   return [
-    { url: base,            lastModified: new Date(), changeFrequency: 'weekly',  priority: 1 },
+    { url: base,              lastModified: new Date(), changeFrequency: 'weekly',  priority: 1 },
     { url: `${base}/precios`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
-    // rutas dinámicas: mapearlas desde la fuente de datos, no a mano
+    // dynamic routes: map them from the data source, not by hand
   ]
 }
 ```
 
-Si hay rutas dinámicas (productos, artículos), el sitemap **se genera desde los datos**. Un
-sitemap escrito a mano queda desactualizado la primera semana.
+If there are dynamic routes (products, articles), the sitemap **is generated from the
+data**. A hand-written sitemap is out of date within the first week.
 
-### Assets de marca: favicon, touch icon, manifest y OG
+### Brand assets: favicon, touch icon, manifest and OG
 
-Antes de crear nada, mira `PROJECT_CONTEXT.md` › Assets de marca: el arranque dejó escrito,
-pieza por pieza, si **lo tiene el cliente**, si **hay que crearlo** (y si Claude Design ya lo
-entregó) o si **no aplica**. Si esa sección no existe, pregúntaselo a César — no asumas que
-hay que generarlo ni que el cliente lo tiene. Tamaños, archivos y reglas:
-`reference/BRAND-ASSETS.md` del kit.
+Before creating anything, check `PROJECT_CONTEXT.md` › Brand assets: the kickoff wrote down,
+piece by piece, whether **the client has it**, whether it **has to be created** (and whether
+Claude Design already delivered it) or whether it **does not apply**. If that section does
+not exist, ask César — do not assume it has to be generated or that the client has it.
+Sizes, files and rules: the kit's `reference/BRAND-ASSETS.md`.
 
 - `app/favicon.ico`, `app/icon.svg` (+ `icon.png` 512), `app/apple-icon.png` (180×180,
-  fondo opaco), `app/manifest.ts` (192, 512 y maskable). Todo derivado de **un** icono fuente.
-- `app/opengraph-image.tsx` (1200×630) con la plantilla de Claude Design, o la del cliente.
-  Una página sin OG compartida en WhatsApp o LinkedIn se ve rota, y eso pesa más que casi
-  cualquier otro detalle de esta lista.
-- Lo que aún no llegó (icono del cliente, OG sin aprobar): placeholder generado con
-  `ImageResponse` desde los tokens y el nombre del sitio — **marcado como provisional** — y
-  su fila en `CONTENT_CHECKLIST.md`.
+  opaque background), `app/manifest.ts` (192, 512 and maskable). All derived from **one**
+  source icon.
+- `app/opengraph-image.tsx` (1200×630) with Claude Design's template, or the client's. A page
+  without OG shared on WhatsApp or LinkedIn looks broken, and that weighs more than almost
+  any other detail on this list.
+- What has not arrived yet (the client's icon, an unapproved OG): a placeholder generated
+  with `ImageResponse` from the tokens and the site name — **flagged as provisional** — and
+  its row in `CONTENT_CHECKLIST.md`.
 
-### Páginas de estado
+### Status pages
 
-404, 500 y mantenimiento no se indexan ni van al sitemap: la 404 ya sale con `noindex` y
-estado 404; mantenimiento responde 503 con `Retry-After` (ver
-`reference/STATUS-SCREENS.md`). La galería `/estados` de desarrollo, fuera del sitemap y
-bloqueada en producción.
+404, 500 and maintenance are not indexed and do not go in the sitemap: the 404 already
+ships with `noindex` and status 404; maintenance answers 503 with `Retry-After` (see
+`reference/STATUS-SCREENS.md`). The development `/estados` gallery, out of the sitemap and
+blocked in production.
 
-### Fuentes
+### Fonts
 
-`next/font` siempre — se autohospeda y elimina la petición a Google. `display: 'swap'`
-obligatorio. Si la fuente es de un CDN externo que no se puede autohospedar, entonces
-`<link rel="preconnect">` en el `<head>`.
-
----
-
-## Bloque 2 — Cierre de sección con contenido
-
-- [ ] Un solo `<h1>` en la página; la sección usa `<h2>`/`<h3>` sin saltar niveles.
-- [ ] Los headings describen el contenido real, no son decorativos. Un `<h2>` que dice
-      "Nosotros" vale menos que uno que dice "Diseño y desarrollo web para PyMEs".
-- [ ] Imágenes con `next/image`, `width`/`height` o `fill` + `sizes` explícitos (evita CLS).
-- [ ] La imagen principal del *above the fold* con `priority`; todo lo demás lazy por defecto.
-- [ ] `alt` descriptivo en imágenes informativas. Coordina con `a11y`: es el mismo atributo,
-      no lo escribas dos veces distinto. Abre la imagen antes de escribirlo (también el de
-      la OG): un alt escrito sin verla no la describe.
-
-**Cómo contar headings** (aquí y en una auditoría): sobre el DOM renderizado, por rol y
-nombre accesible (Playwright `getByRole('heading', { level: 1 })`, o
-`document.querySelectorAll('h1')` con su `textContent`), nunca con `grep` sobre el código.
-Un grep contó 0 `<h1>` donde había uno vacío (el del skeleton, con `aria-hidden`), y el
-arreglo partió de esa premisa falsa. El hallazgo correcto era "un h1 sin nombre accesible".
-- [ ] Enlaces internos con `next/link` y texto de ancla con significado. Nunca "click aquí".
-- [ ] Enlaces externos: `rel="noopener noreferrer"`, y `rel="nofollow"` si es patrocinado.
-- [ ] JSON-LD si la sección lo amerita: `FAQPage` en un FAQ, `BreadcrumbList` en breadcrumbs,
-      `AggregateRating` solo si las reseñas son reales y visibles en la página.
+`next/font` always — it self-hosts and removes the request to Google. `display: 'swap'`
+mandatory. If the font is on an external CDN that cannot be self-hosted, then
+`<link rel="preconnect">` in the `<head>`.
 
 ---
 
-## Bloque 3 — Cierre de página
+## Block 2 — Closing a section with content
 
-### Metadata específica
+- [ ] A single `<h1>` on the page; the section uses `<h2>`/`<h3>` without skipping levels.
+- [ ] Headings describe the real content, they are not decorative. An `<h2>` that says
+      "Nosotros" is worth less than one that says "Diseño y desarrollo web para PyMEs".
+- [ ] Images with `next/image`, explicit `width`/`height` or `fill` + `sizes` (avoids CLS).
+- [ ] The main *above the fold* image with `priority`; everything else lazy by default.
+- [ ] Descriptive `alt` on informative images. Coordinate with `a11y`: it is the same
+      attribute, do not write it twice differently. Open the image before writing it (the
+      OG one too): an alt written without seeing it does not describe it.
+- [ ] Internal links with `next/link` and meaningful anchor text. Never "click aquí".
+- [ ] External links: `rel="noopener noreferrer"`, and `rel="nofollow"` if sponsored.
+- [ ] JSON-LD if the section calls for it: `FAQPage` on an FAQ, `BreadcrumbList` on
+      breadcrumbs, `AggregateRating` only if the reviews are real and visible on the page.
+
+**How to count headings** (here and in an audit): on the rendered DOM, by role and
+accessible name (Playwright `getByRole('heading', { level: 1 })`, or
+`document.querySelectorAll('h1')` with its `textContent`), never with `grep` on the code. A
+grep counted 0 `<h1>` where there was an empty one (the skeleton's, with `aria-hidden`), and
+the fix started from that false premise. The right finding was "an h1 with no accessible name".
+
+---
+
+## Block 3 — Closing a page
+
+### Page-specific metadata
 
 ```tsx
 export const metadata: Metadata = {
-  title: '{{≤60 caracteres, sin repetir el nombre de marca — lo pone el template}}',
-  description: '{{150-160 caracteres, describe la página, incluye un verbo de acción}}',
-  alternates: { canonical: '/ruta-de-esta-pagina' },
+  title: '{{≤60 characters, without repeating the brand name — the template adds it}}',
+  description: '{{150-160 characters, describes the page, includes an action verb}}',
+  alternates: { canonical: '/this-page-route' },
   openGraph: {
-    title: '{{puede diferir del title — aquí optimizas para el click social}}',
+    title: '{{may differ from the title — here you optimize for the social click}}',
     description: '{{...}}',
-    url: '/ruta-de-esta-pagina',
-    images: [{ url: '/og/esta-pagina.png', width: 1200, height: 630, alt: '{{...}}' }],
+    url: '/this-page-route',
+    images: [{ url: '/og/this-page.png', width: 1200, height: 630, alt: '{{...}}' }],
   },
 }
 ```
 
-Para rutas dinámicas, `generateMetadata()` con los datos reales de la entidad — y
-`notFound()` si no existe, para que no se indexe una página vacía.
+For dynamic routes, `generateMetadata()` with the entity's real data — and `notFound()` if it
+does not exist, so an empty page is not indexed.
 
-### JSON-LD por tipo de página
+### JSON-LD per page type
 
-| Página | Schema |
+| Page | Schema |
 |---|---|
-| Home / corporativo | `Organization` + `WebSite` (con `SearchAction` si hay buscador) |
-| Producto | `Product` + `Offer` (precio, moneda, disponibilidad) |
-| Artículo / blog | `Article` o `BlogPosting` (autor, fechas, imagen) |
-| Servicio | `Service` |
-| Negocio local | `LocalBusiness` (dirección, horarios, teléfono, geo) |
+| Home / corporate | `Organization` + `WebSite` (with `SearchAction` if there is search) |
+| Product | `Product` + `Offer` (price, currency, availability) |
+| Article / blog | `Article` or `BlogPosting` (author, dates, image) |
+| Service | `Service` |
+| Local business | `LocalBusiness` (address, hours, phone, geo) |
 | FAQ | `FAQPage` |
-| Cualquiera con migas | `BreadcrumbList` |
+| Anything with breadcrumbs | `BreadcrumbList` |
 
 ```tsx
 <script
@@ -179,73 +182,76 @@ Para rutas dinámicas, `generateMetadata()` con los datos reales de la entidad �
 />
 ```
 
-Reglas duras del JSON-LD:
-- Solo marca **lo que está visible en la página**. Marcar un precio o una reseña que el
-  usuario no ve es una violación de las políticas de Google y puede costar una penalización
-  manual — no un ranking peor, una penalización.
-- Precios y disponibilidad salen de la fuente de datos real, nunca hardcodeados.
-- Valida el resultado en el Rich Results Test antes de darlo por cerrado.
+Hard JSON-LD rules:
+- Only mark up **what is visible on the page**. Marking up a price or a review the user does
+  not see breaks Google's policies and can cost a manual penalty — not a worse ranking, a
+  penalty.
+- Prices and availability come from the real data source, never hardcoded.
+- Validate the result in the Rich Results Test before calling it done.
 
-### Checklist de cierre
+### Closing checklist
 
-- [ ] `title` único en todo el sitio, ≤ 60 caracteres.
-- [ ] `description` única, 150-160 caracteres.
-- [ ] `canonical` correcta (y apuntando a sí misma salvo que sea una variante deliberada).
-- [ ] OG image específica, o la default heredada a propósito.
-- [ ] JSON-LD del tipo correcto, validado.
-- [ ] Página agregada a `sitemap.ts`.
-- [ ] Si es una página que **no** debe indexarse (gracias, cuenta, checkout):
-      `robots: { index: false, follow: false }`. Es la que más se olvida.
-
----
-
-## Core Web Vitals — solo el subconjunto que toca SEO
-
-No haces optimización general de performance. Sí cuidas:
-
-- **CLS** — dimensiones explícitas en toda imagen/iframe/embed; `font-display: swap`;
-  reservar altura de banners y anuncios antes de que carguen.
-- **LCP** — el elemento LCP (casi siempre la imagen del hero) con `priority`; sin lazy load
-  above the fold; sin fuentes bloqueantes.
-- **INP** — no lo persigues aquí, pero si ves un handler obviamente pesado en un botón
-  visible, dilo.
-
-Todo lo demás (bundle size, code splitting, caché) es de otro alcance.
-
-### Verificación con Lighthouse
-
-Al cerrar una página, corre Lighthouse sobre el build de producción (`bun run build && bun
-run start`, no `dev`). El script está en la skill `a11y` (`scripts/lighthouse.ts`) —
-imprime score por categoría y las auditorías que fallan con su descripción.
-
-Para SEO mira estas y arréglalas: `document-title`, `meta-description`, `http-status-code`,
-`link-text` (anclas tipo "click aquí"), `crawlable-anchors`, `is-crawlable` (que una página
-pública no esté `noindex` sin querer), `canonical`, `structured-data` (valida el JSON-LD),
-`hreflang` si hay i18n. Meta: **SEO = 100** en toda ruta pública. Una página `noindex` a
-propósito (checkout, cuenta, panel) baja el score de SEO y eso es esperado — no lo cuentes.
-
-De la categoría **Performance**, las que tocan SEO/CWV: `largest-contentful-paint-element`,
-`prioritize-lcp-image` / `lcp-lazy-loaded` (la imagen del hero necesita `priority`),
-`unsized-images`, `layout-shifts` (CLS), `render-blocking-resources` (fuentes/CSS). El
-resto de Performance no es tu alcance.
+- [ ] `title` unique across the site, ≤ 60 characters.
+- [ ] `description` unique, 150-160 characters.
+- [ ] Correct `canonical` (pointing to itself unless it is a deliberate variant).
+- [ ] Specific OG image, or the inherited default on purpose.
+- [ ] JSON-LD of the right type, validated.
+- [ ] Page added to `sitemap.ts`.
+- [ ] If it is a page that must **not** be indexed (thank-you, account, checkout):
+      `robots: { index: false, follow: false }`. It is the one most often forgotten.
 
 ---
 
-## Nunca inventes copy
+## Core Web Vitals — only the subset that touches SEO
 
-Títulos, descripciones, `alt`, texto de FAQ, precios, dirección, horarios y teléfono son
-**contenido real del cliente**. Si no lo tienes:
+You do not do general performance optimization. You do take care of:
 
-1. Pon un placeholder explícito: `{{PENDIENTE: descripción de la página de precios}}`.
-2. Agrega la fila en `context/CONTENT_CHECKLIST.md`.
-3. Dilo en la salida.
+- **CLS** — explicit dimensions on every image/iframe/embed; `font-display: swap`; reserve
+  the height of banners and ads before they load.
+- **LCP** — the LCP element (almost always the hero image) with `priority`; no lazy load
+  above the fold; no blocking fonts.
+- **INP** — not chased here, but if you see an obviously heavy handler on a visible button,
+  say so.
 
-Metadata inventada que parece final es peor que un placeholder visible: se publica, se
-indexa, y nadie nota que Google está mostrando una frase que se inventó un agente.
+Everything else (bundle size, code splitting, caching) is a different scope.
+
+### Verification with Lighthouse
+
+When closing a page, run Lighthouse on the production build (`bun run build && bun run
+start`, not `dev`). The script is in the `a11y` skill (`.qa/lighthouse.ts`) — it prints the
+score per category and the failing audits with their description.
+
+For SEO look at these and fix them: `document-title`, `meta-description`,
+`http-status-code`, `link-text` ("click aquí"-style anchors), `crawlable-anchors`,
+`is-crawlable` (a public page that is `noindex` by accident), `canonical`, `structured-data`
+(validates the JSON-LD), `hreflang` if there is i18n. Target: **SEO = 100** on every public
+route. A page that is `noindex` on purpose (checkout, account, panel) lowers the SEO score
+and that is expected — do not count it.
+
+From the **Performance** category, the ones that touch SEO/CWV:
+`largest-contentful-paint-element`, `prioritize-lcp-image` / `lcp-lazy-loaded` (the hero
+image needs `priority`), `unsized-images`, `layout-shifts` (CLS),
+`render-blocking-resources` (fonts/CSS). The rest of Performance is not your scope.
 
 ---
 
-## Salida
+## Never invent copy
+
+Titles, descriptions, `alt`, FAQ text, prices, address, hours and phone are **the client's
+real content**. If you do not have it:
+
+1. Put an explicit placeholder: `{{PENDING: pricing page description}}`.
+2. Add the row to `context/CONTENT_CHECKLIST.md`.
+3. Say so in the output.
+
+Invented metadata that looks final is worse than a visible placeholder: it gets published,
+indexed, and nobody notices Google is showing a sentence an agent made up.
+
+---
+
+## Output
+
+In Spanish:
 
 ```
 ## SEO — <página/sección> (<init | sección | página>)
@@ -263,6 +269,6 @@ indexa, y nadie nota que Google está mostrando una frase que se inventó un age
 - <ej. validar el JSON-LD en Rich Results Test, o subir la OG image real>
 ```
 
-**Severidades:** *Crítico* = bloquea indexación o rompe el compartir (sin title/description,
-sin OG image, robots bloqueando todo). *Alto* = impacto medible en CTR o rich results (sin
-canonical, sin JSON-LD en producto/artículo). *Medio* = mejora recomendada. *Bajo* = menor.
+**Severities:** *Critical* = blocks indexing or breaks sharing (no title/description, no OG
+image, robots blocking everything). *High* = measurable impact on CTR or rich results (no
+canonical, no JSON-LD on product/article). *Medium* = recommended improvement. *Low* = minor.

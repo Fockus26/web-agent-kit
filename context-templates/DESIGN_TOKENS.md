@@ -1,13 +1,13 @@
-# Design Tokens — {{NOMBRE_DEL_PROYECTO}}
+# Design Tokens — {{PROJECT_NAME}}
 
-> Fuente única de verdad para valores reutilizables que no son ni color ni tipografía. Todo
-> componente debe consumir estos tokens en vez de valores sueltos en el código.
+> The single source of truth for reusable values that are neither color nor typography.
+> Every component must consume these tokens instead of loose values in the code.
 
-## Espaciado
+## Spacing
 
-Unidad base: {{8px}}
+Base unit: {{8px}}
 
-| Token | Valor |
+| Token | Value |
 |---|---|
 | spacing.xs | {{4px}} |
 | spacing.sm | {{8px}} |
@@ -16,29 +16,29 @@ Unidad base: {{8px}}
 | spacing.xl | {{32px}} |
 | spacing.2xl | {{48px}} |
 
-## Radios de borde
+## Border radii
 
-| Token | Valor | Uso |
+| Token | Value | Use |
 |---|---|---|
 | radius.sm | {{4px}} | {{inputs, chips}} |
-| radius.md | {{8px}} | {{cards, botones}} |
-| radius.lg | {{16px}} | {{modales, secciones destacadas}} |
+| radius.md | {{8px}} | {{cards, buttons}} |
+| radius.lg | {{16px}} | {{modals, featured sections}} |
 
-## Sombras
+## Shadows
 
-| Token | Valor | Uso |
+| Token | Value | Use |
 |---|---|---|
-| shadow.sm | {{valor css}} | {{hover de card}} |
-| shadow.md | {{valor css}} | {{dropdown, popover}} |
-| shadow.lg | {{valor css}} | {{modal}} |
+| shadow.sm | {{css value}} | {{card hover}} |
+| shadow.md | {{css value}} | {{dropdown, popover}} |
+| shadow.lg | {{css value}} | {{modal}} |
 
 ## Breakpoints
 
-Ver `DESIGN_RULES.md` — deben coincidir exactamente, este archivo no los redefine.
+See `DESIGN_RULES.md` — they must match exactly; this file does not redefine them.
 
-## Transiciones / animación
+## Transitions / animation
 
-| Token | Valor |
+| Token | Value |
 |---|---|
 | duration.fast | {{150ms}} |
 | duration.normal | {{250ms}} |

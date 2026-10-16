@@ -1,54 +1,55 @@
 #Requires -Version 7
 <#
 .SYNOPSIS
-  Pool de worktrees reciclables para las tandas de `orchestrate`: N carpetas fijas por
-  proyecto que nunca se borran. Cada unidad toma una libre, crea su rama ahí y al cerrar la
-  libera. `node_modules` se queda en el slot: `bun install` pasa a ser incremental y no hay
-  que esperar a que Windows borre miles de archivos por cada unidad.
+  Pool of recyclable worktrees for `orchestrate` batches: N fixed folders per project that
+  are never deleted. Each unit takes a free one, creates its branch there and frees it when
+  done. `node_modules` stays in the slot: `bun install` becomes incremental and there is no
+  waiting for Windows to delete thousands of files for every unit.
 
 .DESCRIPTION
-  Se ejecuta desde la carpeta principal del proyecto (desde un slot también sirve: la
-  principal se deduce de `git worktree list`).
+  Run from the project's main folder (from a slot works too: the main folder is deduced
+  from `git worktree list`).
 
-    wt init    [-Count 4]              crea ..\<repo>-wt\wt1..wtN, instala y copia los .env*
-    wt take    <tipo/rama> [-Slot wtN] toma un slot libre y crea (o retoma) la rama ahí
-    wt free    <wtN>                   lo deja libre (detached) y borra la rama si ya está mergeada
-    wt status                          tabla: slot, rama o "libre", sucio, puerto
-    wt destroy <wtN> [-Force]          borra el slot de verdad (solo si está libre)
+    wt init    [-Count 4]                creates ..\<repo>-wt\wt1..wtN, installs and copies the .env*
+    wt take    <type/branch> [-Slot wtN] takes a free slot and creates (or resumes) the branch there
+    wt free    <wtN>                     frees it (detached) and deletes the branch if already merged
+    wt status                            table: slot, branch or "free", dirty, port
+    wt destroy <wtN> [-Force]            really deletes the slot (only if free)
 
-  Slot libre = HEAD detached y `git status --porcelain` vacío.
+  Free slot = detached HEAD and empty `git status --porcelain`.
 
-  Puerto fijo por slot: 4300 + N (wt1 → 4301, wt2 → 4302…). El servidor de desarrollo de
-  ese slot va siempre en su puerto: `bun run dev -- --port <puerto>`. `take` y `free` paran
-  lo que siga escuchando en ese puerto (servidores huérfanos de la unidad anterior).
+  Fixed port per slot: 4300 + N (wt1 → 4301, wt2 → 4302…). That slot's dev server always
+  goes on its port: `bun run dev -- --port <port>`. `take` and `free` stop whatever is still
+  listening on that port (orphaned servers from the previous unit).
 
-  `.qa/` (scripts de medición y logs de cada slot) queda ignorado por git en todos los
-  slots: `init` y `take` lo añaden a `.git/info/exclude`.
+  `.qa/` (each slot's measuring scripts and logs) is ignored by git in every slot: `init`
+  and `take` add it to `.git/info/exclude`.
 
-  Los `.env*` (menos `.env.example`) se copian desde la carpeta principal solo si git los
-  ignora en el slot: nunca se commitean.
+  The `.env*` files (except `.env.example`) are copied from the main folder only if git
+  ignores them in the slot: they are never committed.
 
-  Nada destructivo: sin `reset --hard`, sin `push --force`, sin borrar ramas sin mergear
-  (`git branch -d`, nunca `-D`). `free` exige árbol limpio; `destroy` exige slot libre y
-  confirmación. Los `take` se corren uno tras otro, no en paralelo (elegirían el mismo slot).
+  Nothing destructive: no `reset --hard`, no `push --force`, no deleting unmerged branches
+  (`git branch -d`, never `-D`). `free` requires a clean tree; `destroy` requires a free slot
+  and confirmation. `take`s run one after another, not in parallel (they would pick the
+  same slot).
 
 .PARAMETER Base
-  Punto de partida de las ramas nuevas y de los slots libres. Por defecto `origin/main`; en
-  un repo sin remoto, una rama local (`-Base main`).
+  Starting point of new branches and free slots. Default `origin/main`; in a repo without a
+  remote, a local branch (`-Base main`).
 
 .EXAMPLE
   pwsh -NoProfile -File "$env:USERPROFILE\.claude\skills\orchestrate\scripts\wt.ps1" init -Count 4
 
 .EXAMPLE
   pwsh -NoProfile -File "$env:USERPROFILE\.claude\skills\orchestrate\scripts\wt.ps1" take feat/ranking-top20
-  # imprime slot=wt2, rama=…, ruta=…, puerto=4302
+  # prints slot=wt2, branch=…, path=…, port=4302
 #>
 [CmdletBinding()]
 param(
   [Parameter(Mandatory, Position = 0)]
   [ValidateSet('init', 'take', 'free', 'status', 'destroy')]
-  [string] $Comando,
-  [Parameter(Position = 1)] [string] $Nombre,
+  [string] $Command,
+  [Parameter(Position = 1)] [string] $Name,
   [ValidateRange(1, 50)] [int] $Count = 4,
   [string] $Slot,
   [string] $Base = 'origin/main',
@@ -56,30 +57,30 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$PSNativeCommandUseErrorActionPreference = $false   # los códigos de salida se miran a mano
-$PuertoBase = 4300
+$PSNativeCommandUseErrorActionPreference = $false   # exit codes are checked by hand
+$BasePort = 4300
 
-# git que falla en voz alta. (No se llama `git`: la función se llamaría a sí misma.)
+# git that fails loudly. (Not called `git`: the function would call itself.)
 function GitOk {
-  $salida = & git @args
-  if ($LASTEXITCODE -ne 0) { throw "git $($args -join ' ') falló (código $LASTEXITCODE)" }
-  $salida
+  $out = & git @args
+  if ($LASTEXITCODE -ne 0) { throw "git $($args -join ' ') failed (code $LASTEXITCODE)" }
+  $out
 }
 
-$primera = (GitOk worktree list --porcelain | Select-Object -First 1) -replace '^worktree ', ''
-$principal = [IO.Path]::GetFullPath($primera)
-$pool = Join-Path (Split-Path $principal -Parent) "$(Split-Path $principal -Leaf)-wt"
+$first = (GitOk worktree list --porcelain | Select-Object -First 1) -replace '^worktree ', ''
+$main = [IO.Path]::GetFullPath($first)
+$pool = Join-Path (Split-Path $main -Parent) "$(Split-Path $main -Leaf)-wt"
 
-function NumeroSlot([string] $s) {
-  if ($s -notmatch '^wt(\d+)$') { throw "Slot inválido: '$s' (se espera wtN, p. ej. wt2)" }
+function SlotNumber([string] $s) {
+  if ($s -notmatch '^wt(\d+)$') { throw "Invalid slot: '$s' (expected wtN, e.g. wt2)" }
   [int] $Matches[1]
 }
 
-function RutaSlot([string] $s) {
-  NumeroSlot $s | Out-Null
-  $ruta = Join-Path $pool $s
-  if (-not (Test-Path $ruta)) { throw "No existe el slot $s en $pool (ver wt status)" }
-  $ruta
+function SlotPath([string] $s) {
+  SlotNumber $s | Out-Null
+  $path = Join-Path $pool $s
+  if (-not (Test-Path $path)) { throw "Slot $s does not exist in $pool (see wt status)" }
+  $path
 }
 
 function Slots {
@@ -88,75 +89,76 @@ function Slots {
     Sort-Object { [int] $_.Name.Substring(2) }
 }
 
-function Rama([string] $ruta) { git -C $ruta branch --show-current }   # '' si está detached
-function Sucio([string] $ruta) { @(GitOk -C $ruta status --porcelain) }
-function EstaLibre([string] $ruta) { -not (Rama $ruta) -and -not (Sucio $ruta) }
+function Branch([string] $path) { git -C $path branch --show-current }   # '' if detached
+function Dirty([string] $path) { @(GitOk -C $path status --porcelain) }
+function IsFree([string] $path) { -not (Branch $path) -and -not (Dirty $path) }
 
-# `git fetch` solo si la base es una rama remota (origin/main); con una base local, nada.
-function Actualizar {
+# `git fetch` only if the base is a remote branch (origin/main); with a local base, nothing.
+function Refresh {
   if ($Base -match '^([^/]+)/' -and (git remote) -contains $Matches[1]) {
     GitOk fetch $Matches[1] --quiet
   }
 }
 
-# Huella de las dependencias: la del lockfile (o del package.json si no hay lockfile).
-function HuellaDeps([string] $ruta) {
-  $archivo = 'bun.lock', 'bun.lockb', 'package.json' |
-    ForEach-Object { Join-Path $ruta $_ } | Where-Object { Test-Path $_ } | Select-Object -First 1
-  if ($archivo) { (Get-FileHash $archivo -Algorithm SHA256).Hash }
+# Fingerprint of the dependencies: the lockfile's (or package.json's if there is no lockfile).
+function DepsFingerprint([string] $path) {
+  $file = 'bun.lock', 'bun.lockb', 'package.json' |
+    ForEach-Object { Join-Path $path $_ } | Where-Object { Test-Path $_ } | Select-Object -First 1
+  if ($file) { (Get-FileHash $file -Algorithm SHA256).Hash }
 }
 
-# La huella de lo instalado vive dentro de node_modules: si alguien lo borra, se reinstala.
-function Instalar([string] $ruta, [switch] $SiCambio) {
-  if (-not (Test-Path (Join-Path $ruta 'package.json'))) { return }
-  $marca = Join-Path $ruta 'node_modules/.wt-huella'
-  $huella = HuellaDeps $ruta
-  if ($SiCambio -and (Test-Path $marca) -and (Get-Content $marca -Raw).Trim() -eq $huella) {
-    Write-Host '  = dependencias sin cambios: no se instala'
+# The installed fingerprint lives inside node_modules: if someone deletes it, it reinstalls.
+# (The marker keeps its pre-3.8.0 name, .wt-huella, so existing slots do not reinstall.)
+function Install([string] $path, [switch] $IfChanged) {
+  if (-not (Test-Path (Join-Path $path 'package.json'))) { return }
+  $marker = Join-Path $path 'node_modules/.wt-huella'
+  $fingerprint = DepsFingerprint $path
+  if ($IfChanged -and (Test-Path $marker) -and (Get-Content $marker -Raw).Trim() -eq $fingerprint) {
+    Write-Host '  = dependencies unchanged: not installing'
     return
   }
-  Write-Host "  … bun install en $(Split-Path $ruta -Leaf)"
-  Push-Location $ruta
+  Write-Host "  … bun install in $(Split-Path $path -Leaf)"
+  Push-Location $path
   try {
     bun install | Out-Host
-    if ($LASTEXITCODE -ne 0) { throw "bun install falló en $ruta" }
+    if ($LASTEXITCODE -ne 0) { throw "bun install failed in $path" }
   } finally { Pop-Location }
-  if (Test-Path (Join-Path $ruta 'node_modules')) { Set-Content $marca $huella -NoNewline }
+  if (Test-Path (Join-Path $path 'node_modules')) { Set-Content $marker $fingerprint -NoNewline }
 }
 
-function CopiarEnv([string] $ruta) {
-  Get-ChildItem $principal -Filter '.env*' -File -Force | Where-Object Name -NE '.env.example' |
+function CopyEnv([string] $path) {
+  Get-ChildItem $main -Filter '.env*' -File -Force | Where-Object Name -NE '.env.example' |
     ForEach-Object {
-      git -C $ruta check-ignore -q -- $_.Name
+      git -C $path check-ignore -q -- $_.Name
       if ($LASTEXITCODE -ne 0) {
-        Write-Warning "$($_.Name) no está en .gitignore: no se copia (se commitearía)"
+        Write-Warning "$($_.Name) is not in .gitignore: not copied (it would get committed)"
         return
       }
-      Copy-Item $_.FullName (Join-Path $ruta $_.Name) -Force
+      Copy-Item $_.FullName (Join-Path $path $_.Name) -Force
       Write-Host "  + $($_.Name)"
     }
 }
 
-# El puerto es del slot: lo que escuche ahí al tomarlo o liberarlo es un servidor que dejó
-# la unidad anterior (un kill que solo mató la shell, una sesión cortada). Si se queda, el
-# siguiente servidor salta a otro puerto sin avisar y cae en el de otro slot.
-function PararServidores([string] $s) {
-  $puerto = $PuertoBase + (NumeroSlot $s)
+# The port belongs to the slot: whatever listens there when taking or freeing it is a server
+# the previous unit left (a kill that only killed the shell, a cut-off session). If it stays,
+# the next server jumps to another port without warning and lands on another slot's.
+function StopServers([string] $s) {
+  $port = $BasePort + (SlotNumber $s)
   $pids = if ($IsWindows) {
-    Get-NetTCPConnection -LocalPort $puerto -State Listen -ErrorAction SilentlyContinue |
+    Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue |
       Select-Object -ExpandProperty OwningProcess -Unique
   } elseif (Get-Command lsof -ErrorAction SilentlyContinue) {
-    lsof -ti "tcp:$puerto" -sTCP:LISTEN
+    lsof -ti "tcp:$port" -sTCP:LISTEN
   }
   foreach ($p in $pids | Where-Object { $_ -gt 0 }) {
-    Write-Host "  - servidor huérfano en el puerto $puerto (PID $p): se para"
+    Write-Host "  - orphaned server on port $port (PID $p): stopping it"
     if ($IsWindows) { taskkill /PID $p /T /F | Out-Null } else { kill $p }
   }
 }
 
-# `.qa/` del slot (scripts de medición, logs de la suite) no se commitea nunca. Va al exclude
-# común del repo, que vale para todos los worktrees sin tocar el .gitignore del proyecto.
-function ExcluirQa {
+# The slot's `.qa/` (measuring scripts, suite logs) is never committed. It goes to the repo's
+# shared exclude, which applies to every worktree without touching the project's .gitignore.
+function ExcludeQa {
   $exclude = Join-Path (Join-Path (GitOk rev-parse --path-format=absolute --git-common-dir) 'info') 'exclude'
   New-Item -ItemType Directory -Force (Split-Path $exclude) | Out-Null
   if (-not (Test-Path $exclude) -or -not (Select-String -LiteralPath $exclude -Pattern '^/?\.qa/$' -Quiet)) {
@@ -164,141 +166,141 @@ function ExcluirQa {
   }
 }
 
-function MostrarEstado {
-  $filas = foreach ($d in Slots) {
-    $rama = Rama $d.FullName
-    $sucio = [bool] (Sucio $d.FullName)
+function ShowStatus {
+  $rows = foreach ($d in Slots) {
+    $branch = Branch $d.FullName
+    $dirty = [bool] (Dirty $d.FullName)
     [pscustomobject] @{
       Slot   = $d.Name
-      Rama   = if ($rama) { $rama } elseif ($sucio) { '(detached con cambios)' } else { 'libre' }
-      Sucio  = if ($sucio) { 'sí' } else { 'no' }
-      Puerto = $PuertoBase + (NumeroSlot $d.Name)
+      Branch = if ($branch) { $branch } elseif ($dirty) { '(detached with changes)' } else { 'free' }
+      Dirty  = if ($dirty) { 'yes' } else { 'no' }
+      Port   = $BasePort + (SlotNumber $d.Name)
     }
   }
-  if (-not $filas) { Write-Host "No hay slots en $pool. Crea el pool con: wt init"; return }
-  $filas | Format-Table -AutoSize | Out-Host
+  if (-not $rows) { Write-Host "No slots in $pool. Create the pool with: wt init"; return }
+  $rows | Format-Table -AutoSize | Out-Host
 }
 
-switch ($Comando) {
+switch ($Command) {
   'init' {
-    Actualizar
-    ExcluirQa
+    Refresh
+    ExcludeQa
     New-Item -ItemType Directory -Force $pool | Out-Null
     foreach ($n in 1..$Count) {
-      $ruta = Join-Path $pool "wt$n"
-      if (Test-Path $ruta) { Write-Host "= wt$n ya existe, se salta"; continue }
-      Write-Host "+ wt$n → $ruta"
-      GitOk worktree add --detach --quiet $ruta $Base
-      Instalar $ruta
-      CopiarEnv $ruta
+      $path = Join-Path $pool "wt$n"
+      if (Test-Path $path) { Write-Host "= wt$n already exists, skipped"; continue }
+      Write-Host "+ wt$n → $path"
+      GitOk worktree add --detach --quiet $path $Base
+      Install $path
+      CopyEnv $path
     }
-    MostrarEstado
+    ShowStatus
   }
 
   'take' {
-    if (-not $Nombre) { throw 'Falta la rama: wt take <tipo/rama> [-Slot wtN]' }
-    GitOk check-ref-format --branch $Nombre | Out-Null
+    if (-not $Name) { throw 'Missing branch: wt take <type/branch> [-Slot wtN]' }
+    GitOk check-ref-format --branch $Name | Out-Null
     foreach ($d in Slots) {
-      if ((Rama $d.FullName) -eq $Nombre) { throw "La rama $Nombre ya está en $($d.Name) ($($d.FullName))" }
+      if ((Branch $d.FullName) -eq $Name) { throw "Branch $Name is already in $($d.Name) ($($d.FullName))" }
     }
     if ($Slot) {
-      $ruta = RutaSlot $Slot
-      if (-not (EstaLibre $ruta)) { throw "El slot $Slot no está libre (ver wt status)" }
+      $path = SlotPath $Slot
+      if (-not (IsFree $path)) { throw "Slot $Slot is not free (see wt status)" }
     } else {
-      $libre = Slots | Where-Object { EstaLibre $_.FullName } | Select-Object -First 1
-      if (-not $libre) {
-        throw "No hay slots libres en $pool. Espera a que se libere uno (wt free <wtN>) o amplía el pool (wt init -Count <N mayor>)."
+      $free = Slots | Where-Object { IsFree $_.FullName } | Select-Object -First 1
+      if (-not $free) {
+        throw "No free slots in $pool. Wait for one to be freed (wt free <wtN>) or grow the pool (wt init -Count <bigger N>)."
       }
-      $Slot = $libre.Name
-      $ruta = $libre.FullName
+      $Slot = $free.Name
+      $path = $free.FullName
     }
 
-    Actualizar
-    ExcluirQa
-    PararServidores $Slot
-    $remota = if ($Base -match '^([^/]+)/') { "$($Matches[1])/$Nombre" }
-    git show-ref --verify --quiet "refs/heads/$Nombre"
-    $existeLocal = $LASTEXITCODE -eq 0
-    $existeRemota = $false
-    if ($remota) { git show-ref --verify --quiet "refs/remotes/$remota"; $existeRemota = $LASTEXITCODE -eq 0 }
+    Refresh
+    ExcludeQa
+    StopServers $Slot
+    $remote = if ($Base -match '^([^/]+)/') { "$($Matches[1])/$Name" }
+    git show-ref --verify --quiet "refs/heads/$Name"
+    $existsLocal = $LASTEXITCODE -eq 0
+    $existsRemote = $false
+    if ($remote) { git show-ref --verify --quiet "refs/remotes/$remote"; $existsRemote = $LASTEXITCODE -eq 0 }
 
-    if ($existeLocal) {
-      Write-Host "  = retomo la rama local $Nombre"
-      GitOk -C $ruta switch --quiet $Nombre
-    } elseif ($existeRemota) {
-      Write-Host "  = retomo $remota (cambios pedidos en un PR abierto)"
-      GitOk -C $ruta switch --quiet -c $Nombre --track $remota
+    if ($existsLocal) {
+      Write-Host "  = resuming local branch $Name"
+      GitOk -C $path switch --quiet $Name
+    } elseif ($existsRemote) {
+      Write-Host "  = resuming $remote (changes requested on an open PR)"
+      GitOk -C $path switch --quiet -c $Name --track $remote
     } else {
-      GitOk -C $ruta switch --quiet -c $Nombre --no-track $Base
+      GitOk -C $path switch --quiet -c $Name --no-track $Base
     }
-    Instalar $ruta -SiCambio
-    CopiarEnv $ruta
+    Install $path -IfChanged
+    CopyEnv $path
 
     "slot=$Slot"
-    "rama=$Nombre"
-    "ruta=$ruta"
-    "puerto=$($PuertoBase + (NumeroSlot $Slot))"
+    "branch=$Name"
+    "path=$path"
+    "port=$($BasePort + (SlotNumber $Slot))"
   }
 
   'free' {
-    $s = if ($Nombre) { $Nombre } else { $Slot }
-    if (-not $s) { throw 'Falta el slot: wt free <wtN>' }
-    $ruta = RutaSlot $s
-    PararServidores $s
-    $sucio = Sucio $ruta
-    if ($sucio) {
-      throw "El slot $s tiene cambios sin commitear; no se libera. Commitea y empuja, o descártalos a mano:`n$($sucio -join "`n")"
+    $s = if ($Name) { $Name } else { $Slot }
+    if (-not $s) { throw 'Missing slot: wt free <wtN>' }
+    $path = SlotPath $s
+    StopServers $s
+    $dirty = Dirty $path
+    if ($dirty) {
+      throw "Slot $s has uncommitted changes; not freed. Commit and push, or discard them by hand:`n$($dirty -join "`n")"
     }
-    $rama = Rama $ruta
-    if ($rama) {
-      git -C $ruta rev-parse --verify --quiet '@{upstream}' | Out-Null
+    $branch = Branch $path
+    if ($branch) {
+      git -C $path rev-parse --verify --quiet '@{upstream}' | Out-Null
       if ($LASTEXITCODE -eq 0) {
-        $sinEmpujar = [int] (GitOk -C $ruta rev-list --count '@{upstream}..HEAD')
-        if ($sinEmpujar) { Write-Warning "$rama tiene $sinEmpujar commit(s) sin empujar: la rama local se conserva" }
+        $unpushed = [int] (GitOk -C $path rev-list --count '@{upstream}..HEAD')
+        if ($unpushed) { Write-Warning "$branch has $unpushed unpushed commit(s): the local branch is kept" }
       }
     }
-    Actualizar
-    GitOk -C $ruta switch --quiet --detach $Base
-    if (-not $rama) { Write-Host "$s ya estaba libre; queda en $Base"; return }
+    Refresh
+    GitOk -C $path switch --quiet --detach $Base
+    if (-not $branch) { Write-Host "$s was already free; it stays on $Base"; return }
 
-    # Mergeada = está en la base (merge normal) o su PR figura como mergeado (squash).
-    git merge-base --is-ancestor $rama $Base
-    $mergeada = $LASTEXITCODE -eq 0
-    if (-not $mergeada -and (Get-Command gh -ErrorAction SilentlyContinue)) {
-      $mergeada = (gh pr view $rama --json state --jq .state 2>$null) -eq 'MERGED'
+    # Merged = it is in the base (normal merge) or its PR shows as merged (squash).
+    git merge-base --is-ancestor $branch $Base
+    $merged = $LASTEXITCODE -eq 0
+    if (-not $merged -and (Get-Command gh -ErrorAction SilentlyContinue)) {
+      $merged = (gh pr view $branch --json state --jq .state 2>$null) -eq 'MERGED'
     }
-    if (-not $mergeada) {
-      Write-Host "$s libre. Rama $rama conservada: todavía no está mergeada."
+    if (-not $merged) {
+      Write-Host "$s free. Branch $branch kept: not merged yet."
     } else {
-      git -C $ruta branch -d $rama 2>&1 | Out-Host   # en el slot: su HEAD ya es la base
+      git -C $path branch -d $branch 2>&1 | Out-Host   # in the slot: its HEAD is already the base
       if ($LASTEXITCODE -eq 0) {
-        Write-Host "$s libre. Rama $rama borrada (ya estaba mergeada)."
+        Write-Host "$s free. Branch $branch deleted (already merged)."
       } else {
-        # Squash + rama remota ya podada: git no puede probar que no se pierde nada.
-        Write-Host "$s libre. Rama $rama conservada: su PR está mergeado pero git no lo ve (squash). Si sobra, bórrala tú con: git branch -D $rama"
+        # Squash + remote branch already pruned: git cannot prove nothing is lost.
+        Write-Host "$s free. Branch $branch kept: its PR is merged but git does not see it (squash). If it is not needed, delete it yourself with: git branch -D $branch"
       }
     }
   }
 
-  'status' { MostrarEstado }
+  'status' { ShowStatus }
 
   'destroy' {
-    if (-not $Nombre) { throw 'Falta el slot: wt destroy <wtN> [-Force]' }
-    $ruta = RutaSlot $Nombre
-    if (-not (EstaLibre $ruta)) { throw "El slot $Nombre no está libre: libéralo antes con wt free $Nombre" }
+    if (-not $Name) { throw 'Missing slot: wt destroy <wtN> [-Force]' }
+    $path = SlotPath $Name
+    if (-not (IsFree $path)) { throw "Slot $Name is not free: free it first with wt free $Name" }
     if (-not $Force) {
-      try { $r = Read-Host "¿Borrar $Nombre ($ruta) con su node_modules? [s/N]" }
-      catch { throw 'Sin consola para confirmar: repite con -Force si de verdad quieres borrarlo.' }
-      if ($r -notmatch '^(s|si|sí|y|yes)$') { Write-Host 'Cancelado.'; return }
+      try { $r = Read-Host "Delete $Name ($path) with its node_modules? [y/N]" }
+      catch { throw 'No console to confirm: repeat with -Force if you really want to delete it.' }
+      if ($r -notmatch '^(y|yes|s|si|sí)$') { Write-Host 'Cancelled.'; return }
     }
-    # rmdir de cmd borra node_modules muchísimo más rápido que Remove-Item.
-    foreach ($pesada in 'node_modules', '.next') {
-      $p = Join-Path $ruta $pesada
+    # cmd's rmdir deletes node_modules much faster than Remove-Item.
+    foreach ($heavy in 'node_modules', '.next') {
+      $p = Join-Path $path $heavy
       if (Test-Path $p) {
         if ($IsWindows) { cmd /c "rmdir /s /q `"$p`"" } else { Remove-Item $p -Recurse -Force }
       }
     }
-    GitOk worktree remove $ruta
-    Write-Host "- $Nombre eliminado"
+    GitOk worktree remove $path
+    Write-Host "- $Name removed"
   }
 }

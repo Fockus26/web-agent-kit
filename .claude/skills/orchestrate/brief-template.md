@@ -1,98 +1,103 @@
-# Orquestación del {{FECHA}} — brief común para los workers
+# Orchestration of {{DATE}} — shared brief for the workers
 
-> {{Fase 0N, ola N de M — plan: `context/plans/fase-0N-<nombre>.md` | Tanda suelta}}
+> {{Phase 0N, wave N of M — plan: `context/plans/phase-0N-<name>.md` | Standalone batch}}
 
-> Lo lee **cada worker** antes de empezar. Su prompt trae solo lo específico de su unidad.
-> Carpeta principal del repo: `{{RUTA_ABSOLUTA}}` (ahí viven los archivos locales/gitignored:
-> `context/CURRENT_PHASE.md`, `context/CONTENT_CHECKLIST.md`, `context/PHASE_LOG/`,
+> **Every worker** reads this before starting. Its prompt carries only what is specific to
+> its unit. Main folder of the repo: `{{ABSOLUTE_PATH}}` (the local/gitignored files live
+> there: `context/CURRENT_PHASE.md`, `context/CONTENT_CHECKLIST.md`, `context/PHASE_LOG/`,
 > `context/plans/`, `.env`).
 
-## Unidades y orden
+## Units and order
 
-| # | Rama | Qué | Ola | Slot / puerto |
+| # | Branch | What | Wave | Slot / port |
 |---|---|---|---|---|
 | W1 | `{{feat/...}}` | {{...}} | 1 | {{wt1 / 4301}} |
 
-Slot y puerto los da `wt take` al lanzar; el mensaje con el que se lanza cada worker los repite.
+Slot and port are assigned by `wt take` at launch; the message that launches each worker
+repeats them.
 
-La ola 2 sale de `main` **después** de que se mergeen {{W…}} (tocan {{qué archivos}}).
+Wave 2 starts from `main` **after** {{W…}} are merged (they touch {{which files}}).
 
-## Números reservados
+## Reserved numbers
 
-| Unidad | IDs de decisión | Filas de `CONTENT_CHECKLIST` |
+| Unit | Decision IDs | `CONTENT_CHECKLIST` rows |
 |---|---|---|
 | W1 | {{D0NN–D0NN}} | {{NN–NN}} |
 
-No uses números fuera de tu rango.
+Do not use numbers outside your range.
 
-## Decisiones de César para esta tanda
+## César's decisions for this batch
 
-- {{ej. "cada worker puede levantar su servidor en su puerto"}}
-- {{ej. "W1 puede aplicar columnas nuevas vía MCP; nada de borrar"}}
+- {{e.g. "each worker may start its server on its port"}}
+- {{e.g. "W1 may apply new columns through the MCP; nothing destructive"}}
 
-## Reglas de la tanda (además de `CLAUDE.md`)
+## Batch rules (on top of `CLAUDE.md`)
 
-1. **Lee solo** `CLAUDE.md` y lo que tu prompt cite (rutas, líneas, decisiones). No leas
-   `context/` entero; lo demás, con `grep`.
-2. **Slot y rama:** trabajas SOLO en la ruta de tu slot del pool (`..\<repo>-wt\wtN`), que
-   ya viene con tu rama creada, `node_modules` instalado y los `.env*` copiados. No crees
-   ni borres worktrees, no corras `wt` y no cambies de rama.
-3. **Archivos locales compartidos:** no edites `CURRENT_PHASE.md` ni `CONTENT_CHECKLIST.md`.
-   Escribe `context/PHASE_LOG/<tu-rama-con-guiones>.md` en la carpeta principal; si no
-   tienes permiso de escritura ahí, entrégalo completo en tu informe final.
-4. **Decisiones:** un archivo por decisión, `context/decisions/D0NN-<tema>.md`, con los IDs
-   de tu rango y la cabecera de una línea (formato en `context/decisions/README.md`). Va en
-   git. No hay índice que editar.
-5. **Changeset:** el salto que dice tu prompt (patch/minor/major, o ninguno). Si lleva, un
-   `.changeset/<desc-kebab>.md` escrito a mano (formato en `git-flow` §2.1) con el texto en
-   lenguaje de usuario. No toques `version` ni `CHANGELOG.md`: los escribe el PR de versión.
-6. **Servidor:** {{autorizado: `bun run dev -- --port <el puerto de tu slot>` en segundo
-   plano, en tu slot (ya está instalado y con `.env*`). | no autorizado: verificación por
-   código, márcalo.}} Si el puerto está ocupado, no arranques en otro: el framework salta
-   al siguiente libre sin avisar y cae en el de otro worker; dilo en el informe. Apágalo al
-   terminar matando **tu** proceso y sus hijos (Windows: `taskkill /PID <pid> /T /F`; un
-   `kill` normal mata solo la shell y deja el servidor huérfano ocupando el puerto), nunca
-   con un `<framework> stop`, que para el servidor del proyecto y puede ser el de otro slot.
-   Si da "Node.js subprocess crashed … deadline has elapsed" (Turbopack con varios
-   servidores a la vez): apágalo, borra `.next/dev` y relánzalo; el 500 queda en caché y
-   reiniciar no basta.
-7. **Navegador:** crea tu propia pestaña y pasa su `tabId` en cada llamada. Verifica
-   midiendo el DOM (no con capturas vistas). Scripts con Playwright: con `node`, y guardados
-   en `.qa/` dentro de tu slot (ignorado por git): desde el scratchpad no encuentran el
-   paquete. Redirecciones (invitado → login): con `curl -sI`, al instante; Playwright puede
-   tardar minutos compilando la ruta.
-8. **Datos reales:** el `.env` apunta a {{producción}}. No inicies sesión, no crees cuentas
-   ni escribas datos; verifica como invitado o interceptando respuestas en la página (solo
-   para depurar). La prueba con sesión y datos la hace `wave-qa` cuando la ola esté
-   mergeada: en tu PR, "Cómo probarlo" dice qué flujo y con qué rol, para que la pueda hacer.
-9. **Tests:** `bun run test:related` mientras trabajas (si el proyecto no lo tiene:
-   `bun test <archivo>` de lo que tocaste). Antes del PR, la suite completa **sola**: ni a la
-   vez que el build ni con la salida por tubería (con varios workers, Bun se cuelga en
-   Windows o PGlite agota la memoria): `mkdir -p .qa && bun run test > .qa/test.log 2>&1` en
-   segundo plano, y lee el resumen del final.
-10. **Archivos:** se crean y cambian con Write/Edit. Nada de heredoc para archivos largos
-    (Git Bash corta los que llevan comillas y backticks), `node -e` con backticks, ni
-    Python en modo texto (en Windows convierte a CRLF y Biome marca el archivo entero). Si
-    tocaste un archivo por shell (`sed`, `biome --write`), léelo antes de editarlo.
-11. **Esperas y búsquedas:** `sleep` está bloqueado; lo que tarde más de 2 min (suite,
-    build, typecheck) va en segundo plano y esperas su aviso. `grep` siempre con rutas
-    acotadas (`app/`, `lib/`, `components/`): en la raíz recorre `node_modules` y `.next`.
-12. **Commit al cerrar cada etapa** (backend, UI, docs), no solo al final: un corte de API
-    (403/429) a mitad de la unidad no se lleva el trabajo. Al retomar: `git status` y sigue;
-    no releas lo que ya escribiste.
-13. **Verificación mínima antes del PR:** typecheck, lint (sin errores nuevos en lo tuyo),
-    tests, build; si tocaste UI, skill `a11y` (axe claro y oscuro, 320 px, teclado).
-14. **Capturas:** si cambió algo visible, reescribe `.pr-shots.json` con tus estados (el que
-    hay es de la unidad anterior del slot; la URL va en el campo `base`), `bun run shots`,
-    y `bun run shots:publish` en segundo plano (tarda minutos en Windows). El markdown queda
-    en `.pr-shots/README.md`: pégalo en el PR. No abras las imágenes.
-15. **Sin poder preguntar:** ante un dato que falte, lo conservador + "Decisión tomada /
-    alternativa" en el PR. No te bloquees.
-16. **Copy nuevo = provisional:** marcado en el código + tu fila reservada del checklist.
-17. **Cierre:** commits Conventional (solo tus archivos), push de tu rama, `gh pr create`
-    con la plantilla. Deja el slot limpio: todo commiteado y empujado (`git status` vacío),
-    o el orquestador no podrá liberarlo. **Nunca** `gh pr merge`, push a `main`, force-push
-    ni amend de lo empujado. Base de datos: solo lo aditivo autorizado; nada destructivo.
-18. **Informe final** (lo lee el orquestador, sé breve): URL del PR, slot, changeset, verificado /
-    no verificado, decisiones abiertas, acciones manuales, bugs vistos de paso, y tu
-    PHASE_LOG si no pudiste escribirlo.
+1. **Read only** `CLAUDE.md` and what your prompt cites (paths, lines, decisions). Do not
+   read the whole `context/`; the rest, with `grep`.
+2. **Slot and branch:** you work ONLY in your pool slot's path (`..\<repo>-wt\wtN`), which
+   already has your branch created, `node_modules` installed and the `.env*` files copied.
+   Do not create or delete worktrees, do not run `wt` and do not switch branches.
+3. **Shared local files:** do not edit `CURRENT_PHASE.md` or `CONTENT_CHECKLIST.md`. Write
+   `context/PHASE_LOG/<your-branch-with-dashes>.md` in the main folder; if you have no write
+   permission there, deliver it whole in your final report.
+4. **Decisions:** one file per decision, `context/decisions/D0NN-<topic>.md`, with the IDs
+   of your range and the one-line header (format in `context/decisions/README.md`). It goes
+   in git. There is no index to edit.
+5. **Changeset:** the bump your prompt says (patch/minor/major, or none). If there is one, a
+   `.changeset/<desc-kebab>.md` written by hand (format in `git-flow` §2.1) with user-facing
+   text in Spanish. Do not touch `version` or `CHANGELOG.md`: the version PR writes them.
+6. **Server:** {{authorized: `bun run dev -- --port <your slot's port>` in the background,
+   in your slot (already installed, with `.env*`). | not authorized: verify through code,
+   and flag it.}} If the port is taken, do not start on another one: the framework jumps to
+   the next free port without warning and lands on another worker's; say so in the report.
+   Shut it down when done by killing **your** process and its children (Windows:
+   `taskkill /PID <pid> /T /F`; a plain `kill` only kills the shell and leaves the server
+   orphaned on the port), never with a `<framework> stop`, which stops the project's server
+   and may be another slot's.
+   If it says "Node.js subprocess crashed … deadline has elapsed" (Turbopack with several
+   servers at once): shut it down, delete `.next/dev` and restart it; the 500 stays cached
+   and a restart is not enough.
+7. **Browser:** create your own tab and pass its `tabId` on every call. Verify by measuring
+   the DOM (not by looking at screenshots). Playwright scripts: with `node`, and saved in
+   `.qa/` inside your slot (ignored by git): from the scratchpad they cannot find the
+   package. Redirects (guest → login): with `curl -sI`, instantly; Playwright can spend
+   minutes compiling the route.
+8. **Real data:** `.env` points to {{production}}. Do not log in, create accounts or write
+   data; verify as a guest or by intercepting responses in the page (for debugging only).
+   Logged-in testing with data is done by `wave-qa` once the wave is merged: in your PR,
+   "How to test" says which flow and which role, so it can do it.
+9. **Tests:** `bun run test:related` while you work (if the project does not have it:
+   `bun test <file>` for what you touched). Before the PR, the full suite **alone**: not at
+   the same time as the build and not with its output through a pipe (with several workers,
+   Bun hangs on Windows or PGlite runs out of memory): `mkdir -p .qa && bun run test >
+   .qa/test.log 2>&1` in the background, then read the summary at the end.
+10. **Files:** created and changed with Write/Edit. No heredoc for long files (Git Bash
+    breaks the ones with quotes and backticks), no `node -e` with backticks, no Python in
+    text mode (on Windows it converts to CRLF and Biome flags the whole file). If you
+    touched a file through the shell (`sed`, `biome --write`), read it before editing it.
+11. **Waiting and searching:** `sleep` is blocked; anything that takes more than 2 min
+    (suite, build, typecheck) runs in the background and you wait for its notice. `grep`
+    always with scoped paths (`app/`, `lib/`, `components/`): at the root it walks
+    `node_modules` and `.next`.
+12. **Commit when each stage closes** (backend, UI, docs), not only at the end: an API cut
+    (403/429) mid-unit does not take the work with it. When resuming: `git status` and
+    carry on; do not reread what you already wrote.
+13. **Minimum verification before the PR:** typecheck, lint (no new errors in your code),
+    tests, build; if you touched UI, the `a11y` skill (axe light and dark, 320 px, keyboard).
+14. **Screenshots:** if something visible changed, rewrite `.pr-shots.json` with your states
+    (the one there belongs to the slot's previous unit; the URL goes in the `base` field),
+    `bun run shots`, and `bun run shots:publish` in the background (it takes minutes on
+    Windows). The markdown is left in `.pr-shots/README.md`: paste it into the PR. Do not
+    open the images.
+15. **Unable to ask:** when data is missing, the conservative option + "Decision taken /
+    alternative" in the PR. Do not block.
+16. **New copy = provisional:** flagged in the code + your reserved checklist row.
+17. **Closing:** Conventional commits (only your files) with the description in Spanish,
+    push of your branch, `gh pr create` with the template (PR in Spanish). Leave the slot
+    clean: everything committed and pushed (empty `git status`), or the orchestrator cannot
+    free it. **Never** `gh pr merge`, push to `main`, force-push or amend what was pushed.
+    Database: only the authorized additive changes; nothing destructive.
+18. **Final report** (the orchestrator reads it, be brief): PR URL, slot, changeset,
+    verified / not verified, open decisions, manual actions, bugs seen in passing, and your
+    PHASE_LOG if you could not write it.

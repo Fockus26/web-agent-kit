@@ -1,13 +1,15 @@
 # feedback/
 
-Informes de feedback de los proyectos, uno por archivo: `<AAAA-MM-DD>-<proyecto>.md`.
+Feedback reports from the projects, one per file: `<YYYY-MM-DD>-<project>.md` (written in
+Spanish, like everything César reads).
 
-Llegan como PRs con la etiqueta `kit-feedback`, que abre la skill `kit-feedback` desde una
-sesión del proyecto. Se procesan en una sesión abierta en el kit ("revisa el feedback"; ver
-`CLAUDE.md`): triaje consolidado entre proyectos, César elige, se implementa en su propio
-PR, y cada PR de feedback recibe un comentario con qué entró y qué no antes de mergearse.
+They arrive as PRs with the `kit-feedback` label, opened by the `kit-feedback` skill from a
+project session. They are processed in a session opened in the kit ("revisa el feedback";
+see `CLAUDE.md`): consolidated triage across projects, César chooses, it is implemented in
+its own PR, and each feedback PR gets a comment with what went in and what did not before
+being merged.
 
-Mergeados quedan aquí como histórico: cuando un punto vuelve a llegar, se busca con `grep`
-qué se decidió la vez anterior.
+Once merged they stay here as history: when a point arrives again, `grep` for what was
+decided the previous time.
 
-Esta carpeta no se copia a ningún proyecto ni la instala `instalar-kit`.
+This folder is not copied to any project and `install-kit` does not install it.

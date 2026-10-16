@@ -1,22 +1,22 @@
 # Changesets
 
-Cada PR que cambia algo que **nota quien usa el sitio** agrega aquí un archivo
-`<descripcion-kebab-case>.md` (nombre único, p. ej. `repetir-combinacion.md`):
+Every PR that changes something **the person using the site notices** adds a file here,
+`<kebab-case-description>.md` (unique name, e.g. `repetir-combinacion.md`):
 
 ```md
 ---
-"<name de package.json>": minor
+"<name from package.json>": minor
 ---
 
 Ahora puedes repetir una combinación desde el historial.
 ```
 
-- **patch**: arreglo. **minor**: función nueva. **major**: rompe datos guardados o quita algo.
-- El texto va en lenguaje de usuario: qué puede hacer ahora o qué dejó de fallar, no qué
-  archivo cambió.
-- Docs, tests, CI y refactors: sin changeset.
-- Nadie toca `version` ni `CHANGELOG.md` a mano. La Action `release.yml` mantiene abierto un
-  PR "chore(release): versión" que junta los changesets, sube la versión y escribe el
-  CHANGELOG. Se publica una versión cuando se mergea ese PR.
+- **patch**: a fix. **minor**: a new feature. **major**: breaks stored data or removes something.
+- The text is user-facing, in the site's language: what they can do now or what stopped
+  failing, not which file changed.
+- Docs, tests, CI and refactors: no changeset.
+- Nobody touches `version` or `CHANGELOG.md` by hand. The `release.yml` Action keeps a
+  "chore(release): versión" PR open that gathers the changesets, bumps the version and writes
+  the CHANGELOG. A version is published when that PR is merged.
 
-`bunx changeset` hace lo mismo con preguntas; los agentes escriben el archivo a mano.
+`bunx changeset` does the same with questions; agents write the file by hand.

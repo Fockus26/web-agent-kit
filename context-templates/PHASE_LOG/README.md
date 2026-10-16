@@ -1,54 +1,55 @@
 # PHASE_LOG/
 
-La narrativa de lo cerrado. **Un archivo por unidad** (por rama) y, al cerrar una fase
-completa, uno de resumen de la fase. Se consulta con `grep` o cuando `CURRENT_PHASE.md`
-enlaza a uno; no se lee por defecto.
+The narrative of what is closed. **One file per unit** (per branch) and, when a whole phase
+closes, a phase summary. Consulted with `grep` or when `CURRENT_PHASE.md` links to one; not
+read by default.
 
-## Por qué
+## Why
 
-`CURRENT_PHASE.md` se lee en cada sesión y tiene que caber en una pantalla. Todo lo que
-explica *cómo* se cerró algo (qué se verificó, qué no, hallazgos vistos de paso) crece sin
-límite si vive ahí — en el primer proyecto real llegó a 38 KB. Aquí no molesta: nadie lo
-paga salvo quien lo busca.
+`CURRENT_PHASE.md` is read in every session and has to fit on one screen. Everything that
+explains *how* something was closed (what was verified, what was not, findings seen in
+passing) grows without limit if it lives there — in the first real project it reached
+38 KB. Here it bothers nobody: only whoever looks for it pays for it.
 
-## Nombre
+## Name
 
-- Unidad: `PHASE_LOG/<rama-con-guiones>.md` (p. ej. `feat-ranking-top20.md`).
-- Fase completa: `PHASE_LOG/0N-<fase>.md`, con enlaces a los de sus unidades.
+- Unit: `PHASE_LOG/<branch-with-dashes>.md` (e.g. `feat-ranking-top20.md`).
+- Whole phase: `PHASE_LOG/0N-<phase>.md`, linking to its units' files.
 
-## Formato (unidad)
+## Format (unit)
 
 ```markdown
-# <rama> — <qué> (PR #N · changeset patch/minor/major o ninguno)
+# <branch> — <what> (PR #N · changeset patch/minor/major or none)
 
-## Estado
-<abierta / en revisión / mergeada el AAAA-MM-DD>
+## Status
+<open / in review / merged on YYYY-MM-DD>
 
-## Qué se hizo
+## What was done
 - <2-5 bullets>
 
-## Verificado (y cómo)
-- <qué, en qué anchos/temas, con qué herramienta>
+## Verified (and how)
+- <what, at which widths/themes, with which tool>
 
-## No verificado
-- <qué y por qué: sin cuenta de prueba, sin dispositivo real…>
+## Not verified
+- <what and why: no test account, no real device…>
 
-## Decisiones
-- D0NN — <1 línea> (detalle en decisions/D0NN-<tema>.md)
+## Decisions
+- D0NN — <1 line> (detail in decisions/D0NN-<topic>.md)
 
-## Contenido provisional
-- Fila #NN de CONTENT_CHECKLIST — <qué texto>
+## Provisional content
+- CONTENT_CHECKLIST row #NN — <which text>
 
-## Acciones de César
-- <SQL a correr, dashboard a configurar, orden de despliegue>
+## Actions for César
+- <SQL to run, dashboard to configure, deploy order>
 
-## Visto de paso (no tocado)
-- <bugs ajenos a la unidad, para otra rama>
+## Seen in passing (not touched)
+- <bugs outside the unit, for another branch>
 ```
 
-## Reglas
+## Rules
 
-- Lo escribe quien cierra la unidad, antes del PR / del merge local.
-- Si la unidad la hizo un worker en un worktree sin acceso de escritura a la carpeta
-  principal, lo entrega en su informe y el orquestador lo copia aquí.
-- `CURRENT_PHASE.md` solo guarda la fila de la unidad con el enlace a este archivo.
+- Written by whoever closes the unit, before the PR / the local merge.
+- If a worker did the unit in a worktree without write access to the main folder, it
+  delivers it in its report and the orchestrator copies it here.
+- `CURRENT_PHASE.md` only keeps the unit's row with the link to this file.
+- It is local: `bun run context:backup` keeps it on the `context-state` branch.

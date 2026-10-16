@@ -1,11 +1,11 @@
-# Section Inventory — {{NOMBRE_DEL_PROYECTO}}
+# Section Inventory — {{PROJECT_NAME}}
 
-> Secciones de página (bloques de una sola página, no reutilizados entre páginas distintas —
-> si se reutilizan, probablemente pertenecen a `COMPONENTS_INVENTORY.md`).
+> Page sections (blocks of a single page, not reused across different pages — if they are
+> reused, they probably belong in `COMPONENTS_INVENTORY.md`).
 
-| Sección | Ruta | Página(s) | Fase que la cerró | Estado | Notas |
+| Section | Path | Page(s) | Phase that closed it | Status | Notes |
 |---|---|---|---|---|---|
-| {{Hero}} | {{components/sections/Hero.tsx}} | {{Home}} | {{Fase 05}} | {{Cerrada}} | |
-| {{History}} | {{components/sections/History.tsx}} | {{Home}} | {{Fase 06}} | {{Cerrada}} | {{resumen, no la página completa}} |
+| {{Hero}} | {{components/sections/Hero.tsx}} | {{Home}} | {{Phase 05}} | {{Closed}} | |
+| {{History}} | {{components/sections/History.tsx}} | {{Home}} | {{Phase 06}} | {{Closed}} | {{summary, not the full page}} |
 
-<!-- Una fila por sección. "Estado" = Cerrada / En progreso / Pendiente de contenido real. -->
+<!-- One row per section. "Status" = Closed / In progress / Pending real content. -->

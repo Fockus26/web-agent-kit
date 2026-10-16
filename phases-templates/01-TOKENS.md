@@ -1,41 +1,40 @@
-# Fase 01 — Tokens
+# Phase 01 — Tokens
 
-## Objetivo
+## Goal
 
-Llevar al código el sistema de valores del handoff, de modo que a partir de aquí ningún
-componente necesite un valor suelto.
+Bring the handoff's value system into the code, so that from here on no component needs a
+loose value.
 
-## Alcance
+## Scope
 
-- Colores light y dark en el sistema de tema de la librería elegida (`tailwind.config` /
-  `@theme` con Tailwind; `createTheme()` con MUI).
-- Escala tipográfica: tamaño, interlineado, peso y tracking por rol.
-- Escala de espaciado, radios, sombras, duraciones y curvas, z-index.
-- Mecanismo de cambio de tema (si hay dark mode) y respeto de `prefers-color-scheme`.
-- Fuentes cargadas con `next/font`, `display: 'swap'`.
+- Light and dark colors in the chosen library's theme system (`tailwind.config` / `@theme`
+  with Tailwind; `createTheme()` with MUI).
+- Type scale: size, line height, weight and tracking per role.
+- Spacing scale, radii, shadows, durations and curves, z-index.
+- Theme switching mechanism (if there is dark mode) and respect for `prefers-color-scheme`.
+- Fonts loaded with `next/font`, `display: 'swap'`.
 
-## Entradas
+## Inputs
 
 `design/HANDOFF.md` §1 · `context/COLORS.md` · `TYPOGRAPHY.md` · `DESIGN_TOKENS.md`
 
-## Unidades de trabajo
+## Units of work
 
-1. Colores + tema light/dark
-2. Tipografía + carga de fuentes
-3. Espaciado, radios, sombras, movimiento, z-index
+1. Colors + light/dark theme (including `selection` and `scrollbar`)
+2. Typography + font loading
+3. Spacing, radii, shadows, motion, z-index
 
-## Criterio de cierre
+## Closing criteria
 
-- [ ] Todo token del handoff existe en el theme, con el mismo nombre semántico.
-- [ ] Los ratios de contraste declarados en el handoff se verifican en el theme real.
-- [ ] Dark mode conmuta correctamente y sin flash al cargar.
-- [ ] Existe una página o ruta de referencia que muestra todos los tokens juntos, para poder
-      revisarlos de un vistazo. Vale la pena: es donde se detectan las inconsistencias antes
-      de que se propaguen.
-- [ ] `COLORS.md`, `TYPOGRAPHY.md` y `DESIGN_TOKENS.md` reflejan lo implementado.
+- [ ] Every handoff token exists in the theme, with the same semantic name.
+- [ ] The contrast ratios declared in the handoff are verified in the real theme.
+- [ ] Dark mode switches correctly and without a flash on load.
+- [ ] There is a reference page or route showing all the tokens together, to review them at
+      a glance. Worth it: it is where inconsistencies get caught before they spread.
+- [ ] `COLORS.md`, `TYPOGRAPHY.md` and `DESIGN_TOKENS.md` reflect what was implemented.
 
-## Ambigüedad frecuente
+## Frequent ambiguity
 
-Un token del handoff que no llega a AA. **Gana la regla de accesibilidad.** Propón el ajuste
-(normalmente un tono más oscuro para texto, dejando el original para superficies), escálalo, y
-regístralo como decisión.
+A handoff token that does not reach AA. **The accessibility rule wins.** Propose the
+adjustment (usually a darker shade for text, keeping the original for surfaces), escalate
+it, and record it as a decision.

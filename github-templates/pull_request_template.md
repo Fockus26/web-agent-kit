@@ -37,4 +37,4 @@
 - [ ] UI: WCAG 2.1 AA (teclado, foco visible, 4.5:1, ningún estado solo por color, sin scroll horizontal a 320 px)
 - [ ] Sin valores mágicos: solo tokens
 - [ ] Copy nuevo marcado como provisional si no es final
-- [ ] `context/` actualizado (decisión + fila en el índice)
+- [ ] `context/` actualizado (un `decisions/D0NN-*.md` por decisión) y respaldado (`bun run context:backup`)

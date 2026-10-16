@@ -1,49 +1,49 @@
-# Fase 06 — Estados
+# Phase 06 — States
 
-## Objetivo
+## Goal
 
-Lo que pasa cuando las cosas no salen como en el mockup. Es la fase que más se salta y la que
-más se nota que falta.
+What happens when things do not go as in the mockup. It is the most skipped phase and the
+one whose absence shows the most.
 
-## Alcance
+## Scope
 
-- **Pantallas de estado** (guía completa: `reference/STATUS-SCREENS.md` del kit):
-  - 404 — con sesión e invitado **solo si hay autenticación**; si no, una sola.
-  - 500 con código (`error.digest`) y sin código.
-  - Sin conexión, elegida en el mismo `error.tsx` **según la red** (`navigator.onLine`).
-  - Mantenimiento con hora (en la zona del visitante) y sin hora, por variable de entorno,
-    con 503 + `Retry-After`.
-  - `global-error.tsx` con su propio html/body.
-  - Galería `/estados?screen=…` en desarrollo (bloqueada en producción) para revisarlas y
-    capturarlas.
-- **Vacío:** lista sin resultados, búsqueda sin coincidencias, carrito vacío, sin datos aún.
-  Cada uno con su explicación y su acción de salida.
-- **Carga:** skeletons por sección (no un spinner global), con `loading.tsx` de Next.
-- **Error dentro de una pantalla:** fallo de envío de formulario, fallo de red al guardar.
-- **Formularios:** validación en vivo, error por campo, error general, envío en curso, éxito.
-- Anuncio de cambios de estado a lectores de pantalla (`aria-live`, `role="alert"`).
+- **Status screens** (full guide: the kit's `reference/STATUS-SCREENS.md`):
+  - 404 — logged-in and guest **only if there is authentication**; otherwise, a single one.
+  - 500 with a code (`error.digest`) and without.
+  - Offline, chosen in the same `error.tsx` **based on the network** (`navigator.onLine`).
+  - Maintenance with a time (in the visitor's zone) and without, through an environment
+    variable, with 503 + `Retry-After`.
+  - `global-error.tsx` with its own html/body.
+  - `/estados?screen=…` gallery in development (blocked in production) to review and
+    capture them.
+- **Empty:** list with no results, search with no matches, empty cart, no data yet. Each
+  with its explanation and its way out.
+- **Loading:** skeletons per section (not one global spinner), with Next's `loading.tsx`.
+- **Error inside a screen:** form submission failure, network failure on save.
+- **Forms:** live validation, per-field error, general error, submitting, success.
+- Announcing state changes to screen readers (`aria-live`, `role="alert"`).
 
-Unidades típicas: `feat/pantallas-404`, `feat/pantallas-error-offline`,
-`feat/mantenimiento`, y una por familia de vacíos/carga.
+Typical units: `feat/screens-404`, `feat/screens-error-offline`, `feat/maintenance`, and one
+per family of empty/loading states.
 
-## Entradas
+## Inputs
 
-`design/HANDOFF.md` §5b y §7 (estados diseñados) · fases 01-05 cerradas
+`design/HANDOFF.md` §5b and §7 (designed states) · phases 01-05 closed
 
-## Criterio de cierre
+## Closing criteria
 
-- [ ] Toda lista tiene estado vacío diseñado, no una pantalla en blanco.
-- [ ] Toda carga tiene skeleton o indicador; nada salta de vacío a lleno.
-- [ ] Todo error dice **qué pasó y qué hacer**, no solo un código.
-- [ ] Los cambios de estado se anuncian de forma no visual.
-- [ ] 404, 500, sin conexión y mantenimiento usan el diseño del sitio, no la página por
-      defecto del framework, y responden con su estado HTTP (404 / 500 / 503).
-- [ ] Criterio de cierre de `reference/STATUS-SCREENS.md` cumplido.
-- [ ] Puerta `a11y` en verde.
+- [ ] Every list has a designed empty state, not a blank screen.
+- [ ] Every load has a skeleton or an indicator; nothing jumps from empty to full.
+- [ ] Every error says **what happened and what to do**, not just a code.
+- [ ] State changes are announced non-visually.
+- [ ] 404, 500, offline and maintenance use the site's design, not the framework's default
+      page, and answer with their HTTP status (404 / 500 / 503).
+- [ ] Closing criteria of `reference/STATUS-SCREENS.md` met.
+- [ ] `a11y` gate green.
 
-## Nota
+## Note
 
-Si el handoff no diseñó estos estados, no los inventes en silencio: son decisiones visuales.
-Pídelos a Claude Design con `prompts/CLAUDE-DESIGN-ADENDA.template.md` del kit; si César
-prefiere no esperar, presenta 3 opciones para el patrón general y aplícalo consistentemente
-una vez elegido.
+If the handoff did not design these states, do not invent them silently: they are visual
+decisions. Ask Claude Design for them with the kit's
+`prompts/CLAUDE-DESIGN-ADDENDUM.template.md`; if César prefers not to wait, present 3
+options for the general pattern and apply it consistently once chosen.

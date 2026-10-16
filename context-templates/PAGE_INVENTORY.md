@@ -1,11 +1,11 @@
-# Page Inventory — {{NOMBRE_DEL_PROYECTO}}
+# Page Inventory — {{PROJECT_NAME}}
 
-> Todas las páginas del sitio, su ruta, y qué secciones/componentes usa cada una.
+> Every page of the site, its route, and which sections/components each one uses.
 
-| Página | Ruta | Secciones que usa | Estado | Notas |
+| Page | Route | Sections it uses | Status | Notes |
 |---|---|---|---|---|
-| {{Home}} | {{/}} | {{Hero, History, Areas, Agenda, Footer}} | {{Cerrada}} | |
-| {{Proyectos}} | {{/proyectos}} | | {{Pendiente}} | |
+| {{Home}} | {{/}} | {{Hero, History, Areas, Agenda, Footer}} | {{Closed}} | |
+| {{Projects}} | {{/proyectos}} | | {{Pending}} | |
 
-<!-- Una fila por página real del sitio (no por sección). Marca "Pendiente" las que están
-     en el alcance del proyecto pero todavía no se implementaron. -->
+<!-- One row per real page of the site (not per section). Mark "Pending" the ones that are in
+     the project's scope but not implemented yet. -->

@@ -1,167 +1,174 @@
 # Web Agent Kit
 
-Sistema de agentes para producir sitios web de punta a punta: de una idea a medio formar
-hasta un sitio implementado, accesible, optimizado y auditado.
+An agent system for producing websites end to end: from a half-formed idea to a site that is
+implemented, accessible, optimized and audited.
 
-Está armado alrededor de una premisa concreta: **el desarrollador es fuerte en frontend y
-flojo en diseño.** Por eso el diseño se delega a Claude Design con un brief riguroso, y todo
-lo demás se apoya en puertas de calidad que no dependen de tener buen ojo.
+It is built around a concrete premise: **the developer is strong at frontend and weak at
+design.** That is why design is delegated to Claude Design with a rigorous brief, and
+everything else relies on quality gates that do not depend on having a good eye.
 
-> **¿Cómo lo uso?** Ver [GUIA.md](./GUIA.md): instalación, crear un proyecto y el flujo
-> completo con un ejemplo.
+> **How do I use it?** See [GUIDE.md](./GUIDE.md): installation, creating a project and the
+> full flow with an example.
+
+**Language:** the kit is written in English; its agents talk to César in Spanish (questions,
+reports, PRs, commits). Projects created before 3.8.0 keep their `context/` in Spanish and
+keep working.
 
 ---
 
-## El flujo
+## The flow
 
 ```
-      César llega con una idea
+      César arrives with an idea
                 │
                 ▼
     ┌───────────────────────┐
-    │  1. project-kickoff   │  entrevista → modo plan → context/ + brief
-    │      (orquestador)    │
+    │  1. project-kickoff   │  interview → plan mode → context/ + brief
+    │     (orchestrator)    │
     └───────────┬───────────┘
-                │  entrega un brief autocontenido
+                │  delivers a self-contained brief
                 ▼
     ┌───────────────────────┐
-    │   2. CLAUDE DESIGN    │  ← César pega el brief a mano (herramienta aparte)
+    │   2. CLAUDE DESIGN    │  ← César pastes the brief by hand (separate tool)
     │                       │
     └───────────┬───────────┘
-                │  devuelve el diseño + HANDOFF.md
+                │  returns the design + HANDOFF.md
                 ▼
     ┌───────────────────────┐        ┌──────────────────────┐
     │  3. frontend-build    │◄──────►│  4. backend-build    │
-    │  tokens → componentes │        │  auth · datos · pagos │
-    │  → secciones → páginas│        └──────────┬───────────┘
+    │  tokens → components  │        │  auth · data · pay   │
+    │  → sections → pages   │        └──────────┬───────────┘
     └───────────┬───────────┘                   │
                 │                               │
                 ▼                               ▼
     ┌───────────────────────┐        ┌──────────────────────┐
     │   5. design-qa        │        │  6. functional-qa    │
-    │   pantallas · CVD ·   │        │  romper flujos ·     │
-    │   zoom · coherencia   │        │  seguridad · límites │
+    │   screens · CVD ·     │        │  break flows ·       │
+    │   zoom · consistency  │        │  security · limits   │
     └───────────────────────┘        └──────────────────────┘
 
-  En cada cierre de unidad, siempre:   [a11y] → [seo si aplica] → [git-flow]
+  At every unit's close, always:   [a11y] → [seo if it applies] → [git-flow]
 
-  ¿Llega una lista de varias cosas a la vez?  → [orchestrate] reparte en unidades,
-  las ordena en olas y lanza un feature-worker por unidad, cada uno en un slot del pool de
-  worktrees (reciclable: no reinstala node_modules) y con su PR.
+  A list of several things at once?  → [orchestrate] splits it into units, orders them in
+  waves and launches a feature-worker per unit, each in a worktree pool slot (recyclable:
+  no node_modules reinstall) and with its PR.
 ```
 
 ---
 
 ## Roster
 
-### Skills — corren en la sesión principal
+### Skills — run in the main session
 
-Se activan solas cuando aplica, o las invocas con `/nombre`. Son las que **pueden hablar
-contigo**: hacer preguntas, presentar 3 opciones, esperar tu aprobación.
+They activate on their own when they apply, or you invoke them with `/name`. They are the
+ones that **can talk to you**: ask questions, present 3 options, wait for your approval.
 
-| Skill | Qué hace | Cuándo se activa |
+| Skill | What it does | When it activates |
 |---|---|---|
-| **`project-kickoff`** | Entrevista, modo plan, genera `context/` y el brief para Claude Design | Proyecto nuevo |
-| **`frontend-build`** | Handoff → código, una unidad a la vez | Cada unidad de UI |
-| **`backend-build`** | Auth, sesiones, datos, pagos, formularios | Cada unidad de funcionalidad |
-| **`git-flow`** | Ramas, commits, verificación, capturas, poda de `context/`; cierre por PR (modo `pr`) o con pausa + merge local (modo `local`) | Al abrir y cerrar cada unidad |
-| **`orchestrate`** | Mapea una lista de pedidos (o una fase) al código, agrupa, ordena en olas, reserva números, pregunta lo que bloquea y lanza un `feature-worker` por unidad; con la ola mergeada lanza `wave-qa`, la cierra diciendo fase, ola y lo que sigue, y abre la siguiente en otra sesión | Cuando llegan varias cosas a la vez · al hacer una fase en olas |
-| **`a11y`** | Puerta WCAG 2.1 AA | Siempre que se toque UI, antes de la revisión |
-| **`seo`** | Metadata, JSON-LD, sitemap, Core Web Vitals | Init del repo · sección con contenido · página |
-| **`kit-update`** | Compara la versión del proyecto con la publicada del kit; si va atrás, aplica el camino de `ACTUALIZACIONES.md` en un PR | `/kit-update` cuando sale una versión del kit |
-| **`kit-feedback`** | Envía `context/KIT_FEEDBACK.md` al repo del kit como un PR | `/kit-feedback` cuando quieras · al cerrar la fase 09 |
+| **`project-kickoff`** | Interview, plan mode, generates `context/` and the brief for Claude Design | New project |
+| **`frontend-build`** | Handoff → code, one unit at a time | Each UI unit |
+| **`backend-build`** | Auth, sessions, data, payments, forms | Each functionality unit |
+| **`git-flow`** | Branches, commits, verification, screenshots, pruning and backing up `context/`; closing through a PR (`pr` mode) or with a pause + local merge (`local` mode) | When opening and closing each unit |
+| **`orchestrate`** | Maps a list of requests (or a phase) to the code, groups, orders into waves, reserves numbers, asks what blocks and launches a `feature-worker` per unit; with the wave merged it launches `wave-qa`, closes it stating phase, wave and what is next, and opens the next one in another session | When several things arrive at once · when doing a phase in waves |
+| **`a11y`** | WCAG 2.1 AA gate | Whenever UI is touched, before review |
+| **`seo`** | Metadata, JSON-LD, sitemap, Core Web Vitals | Repo init · section with content · page |
+| **`kit-update`** | Compares the project's version with the kit's published one; checks for missing pieces; if behind, applies the path in `UPDATES.md` in a PR | `/kit-update` when a kit version comes out |
+| **`kit-feedback`** | Sends `context/KIT_FEEDBACK.md` to the kit's repo as a PR | `/kit-feedback` whenever you want · when closing phase 09 |
 
-### Agentes — corren aislados y devuelven un reporte
+### Agents — run isolated and return a report
 
-Los de QA auditan sin interrumpir y no modifican código. `feature-worker` sí implementa: una
-unidad completa, en su slot del pool de worktrees, hasta el PR.
+The QA ones audit without interrupting and do not modify code. `feature-worker` does
+implement: a whole unit, in its worktree pool slot, up to the PR.
 
-| Agente | Qué hace | Cuándo lo lanzas |
+| Agent | What it does | When you launch it |
 |---|---|---|
-| **`feature-worker`** | Implementa una unidad de punta a punta (rama, código, tests, verificación, capturas, PR) con el prompt que le prepara `orchestrate`. Opus, esfuerzo medio | Lo lanza `orchestrate` |
-| **`wave-qa`** | Con la ola ya mergeada, levanta el servidor sobre `main` y recorre sus flujos como usuario real, contra una base local (Supabase en Docker, `bun run qa:local`) y con las cuentas de prueba de `.env.test.local` por rol (`EMAIL_TEST`, `ADMIN_EMAIL_TEST`, `<ROL>_EMAIL_TEST`…) | Lo lanza `orchestrate` al cerrar cada ola |
-| **`design-qa`** | 320px a 3840px, daltonismo, zoom 400%, movimiento reducido, alto contraste, foco, coherencia de tokens. Con Playwright + axe. | Al cerrar una página o toda la integración |
-| **`functional-qa`** | Intenta romper el flujo: entradas límite, dobles clics, red caída, sesión expirada, precios manipulados, webhooks duplicados | Al cerrar un flujo completo |
+| **`feature-worker`** | Implements a unit end to end (branch, code, tests, verification, screenshots, PR) with the prompt `orchestrate` prepares. Opus, medium effort | `orchestrate` launches it |
+| **`wave-qa`** | With the wave merged, starts the server on `main` and walks its flows as a real user, against a local database (Supabase in Docker, `bun run qa:local`; `--offline` without Docker) and with the per-role test accounts of `.env.test.local` (`EMAIL_TEST`, `ADMIN_EMAIL_TEST`, `<ROLE>_EMAIL_TEST`…) | `orchestrate` launches it when closing each wave |
+| **`design-qa`** | 320px to 3840px, color blindness, 400% zoom, reduced motion, high contrast, focus, token consistency. With Playwright + axe. | When closing a page or the whole integration |
+| **`functional-qa`** | Tries to break the flow: edge-case inputs, double clicks, dropped network, expired session, tampered prices, duplicated webhooks | When closing a full flow |
 
-### Por qué unos son skills y otros agentes
+### Why some are skills and others agents
 
-No es arbitrario: **un subagente no puede hacerte preguntas mientras corre.** Se lanza, hace
-su trabajo aislado, y devuelve un resultado.
+It is not arbitrary: **a subagent cannot ask you questions while it runs.** It is launched,
+does its work in isolation, and returns a result.
 
-Todo lo que necesita tu aprobación —el orquestador, el frontend, el backend— tiene que vivir
-en la sesión principal, y por eso son skills. Lo que audita y reporta sin necesitar
-decisiones tuyas a mitad de camino gana con el aislamiento: no contamina el contexto de la
-sesión de desarrollo y puede correr en paralelo. Por eso los QA son agentes.
+Everything that needs your approval — the orchestrator, the frontend, the backend — has to
+live in the main session, and that is why they are skills. What audits and reports without
+needing your decisions halfway gains from isolation: it does not pollute the development
+session's context and can run in parallel. That is why the QAs are agents.
 
-`orchestrate` es skill porque tiene que preguntarte (una vez, al principio) lo que bloquea.
-`feature-worker` es agente porque ejecuta un prompt ya decidido: lo que falte lo resuelve de
-forma conservadora y te lo deja explicado en el PR, que es donde apruebas.
+`orchestrate` is a skill because it has to ask you (once, at the start) what blocks.
+`feature-worker` is an agent because it runs an already-decided prompt: what is missing it
+resolves conservatively and explains in the PR, which is where you approve.
 
 ---
 
-## Instalación
+## Installation
 
-### Skills y agentes (una vez, para todos tus proyectos)
+### Skills and agents (once, for all your projects)
 
 **Windows (PowerShell):**
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\Desktop\agents\web-agent-kit\instalar-kit.ps1"
+powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\Desktop\agents\web-agent-kit\install-kit.ps1"
 ```
 
 **macOS / Linux:**
 
 ```bash
-bash ~/Desktop/agents/web-agent-kit/instalar-kit.sh
+bash ~/Desktop/agents/web-agent-kit/install-kit.sh
 ```
 
-Copia cada skill y cada agente del kit a `~/.claude/`, reemplazando la versión instalada (sin
-dejar archivos viejos) y sin tocar lo que no es del kit. Para actualizar, el mismo comando
-con `-Pull` (`--pull` en bash): hace antes `git pull` en el kit.
+It copies each skill and agent of the kit to `~/.claude/`, replacing the installed version
+(without leaving old files) and without touching what is not the kit's. To update, the same
+command with `-Pull` (`--pull` in bash): it runs `git pull` in the kit first.
 
-Verifica con `/skills` y `/agents`. Deberías ver las nueve skills y los cuatro agentes.
+Check with `/skills` and `/agents`. You should see the nine skills and the four agents.
 
-> **Los agentes se cargan al abrir la sesión.** Si instalas o editas uno con una sesión
-> abierta, esa sesión no lo ve ("Agent type not found"): abre una sesión nueva.
+> **Agents load when the session opens.** If you install or edit one with a session open,
+> that session does not see it ("Agent type not found"): open a new session.
 
-> Si prefieres tenerlos por proyecto en vez de globales, copia la carpeta `.claude/` completa
-> a la raíz del proyecto. Lo global es más cómodo cuando todos tus proyectos siguen este
-> mismo flujo; lo local, cuando quieres versionarlos junto al repo del cliente.
+> If you prefer them per project instead of global, copy the whole `.claude/` folder to the
+> project root. Global is more convenient when all your projects follow this same flow;
+> local, when you want to version them with the client's repo.
 
 ### Context7
 
-El MCP de Context7 tiene que estar conectado: los agentes de frontend y backend lo consultan
-antes de usar la API de cualquier librería. Si no está, lo dirán y marcarán ese código como
-escrito sin verificar contra documentación actual.
+The Context7 MCP has to be connected: the frontend and backend agents check it before using
+any library's API. If it is not, they will say so and flag that code as written without
+checking current documentation.
 
 ---
 
-## Arrancar un proyecto nuevo
+## Starting a new project
 
-Un solo comando (PowerShell 7, `pwsh`) crea la app y deja todo el kit copiado:
+A single command (PowerShell 7, `pwsh`) creates the app and leaves the whole kit copied:
 
 ```powershell
-& "$env:USERPROFILE\Desktop\agents\web-agent-kit\nuevo-proyecto.ps1" -Ruta C:\ruta\mi-proyecto
+& "$env:USERPROFILE\Desktop\agents\web-agent-kit\new-project.ps1" -Path C:\path\my-project
 ```
 
-- Crea la app con `bunx create-next-app@latest <nombre> --ts --tailwind --app --biome
-  --react-compiler --import-alias "@/*" --use-bun` (Biome, no ESLint; React Compiler activo).
-- Copia `context/`, `phases/`, `CLAUDE.md` (conservando el `@AGENTS.md` de Next.js 16),
-  `scripts/`, `.github/`, `.changeset/` y crea `tests/unit/` y `design/`.
-- Añade los scripts de `package.json` (`test`, `test:related`, `shots`, `shots:publish`),
-  `@types/bun`, `@playwright/test` y `@changesets/cli`, y `.pr-shots` al `.gitignore`.
-- Versión y CHANGELOG con Changesets: cada PR trae su `.changeset/*.md` y una Action mantiene
-  el PR de versión, así los PRs en paralelo no chocan. `-SinVersion` lo omite.
-- No pisa nada que ya exista y **no commitea**.
+- Creates the app with `bunx create-next-app@latest <name> --ts --tailwind --app --biome
+  --react-compiler --import-alias "@/*" --use-bun` (Biome, not ESLint; React Compiler on).
+- Copies `context/`, `phases/`, `CLAUDE.md` (keeping Next.js 16's `@AGENTS.md`), `scripts/`,
+  `.github/`, `.changeset/` and creates `tests/unit/` and `design/`.
+- Adds the `package.json` scripts (`test`, `test:related`, `shots`, `shots:publish`,
+  `qa:local`, `context:backup`, `context:restore`), `@types/bun`, `@playwright/test`,
+  `@axe-core/playwright` and `@changesets/cli`, and the `.gitignore` entries: `.pr-shots`,
+  `.qa/`, `.claude/worktrees/` and the local files of `context/` (the fixed documents stay in git).
+- Version and CHANGELOG with Changesets: each PR brings its `.changeset/*.md` and an Action
+  keeps the version PR, so parallel PRs do not collide. `-NoVersion` skips it.
+- It overwrites nothing that exists and **does not commit**.
 
-¿Proyecto ya creado con otras opciones? `-Existente` añade solo lo del kit (ver GUIA.md).
-¿Windows PowerShell 5.1 bloquea el script? `powershell -ExecutionPolicy Bypass -File <kit>\nuevo-proyecto.ps1 -Ruta ...`
-(solo para esa ejecución; no cambia la configuración del sistema).
+Project already created with other options? `-Existing` adds only the kit's pieces (see
+GUIDE.md). Windows PowerShell 5.1 blocks the script?
+`powershell -ExecutionPolicy Bypass -File <kit>\new-project.ps1 -Path ...` (only for that run;
+it does not change the system configuration).
 
-Después, en Claude:
+Then, in Claude (in Spanish, as always):
 
-**1. Arranque.** Cuéntale el proyecto en tus palabras — lo que tengas claro y lo que no.
-No hace falta que esté ordenado.
+**1. Kickoff.** Tell it about the project in your own words — what you are clear about and
+what you are not. It does not need to be tidy.
 
 ```
 /project-kickoff
@@ -171,230 +178,248 @@ Quiero una landing para una clínica dental en Valencia. Sé que quiero el azul 
 El resto no lo tengo claro.
 ```
 
-Te va a preguntar lo que solo tú sabes (negocio, contenido, alcance) y a **proponer** lo
-visual con criterio. Entra en modo plan, y cuando apruebes el plan escribe todo `context/` y
-te entrega el brief de diseño en un bloque listo para copiar.
+It will ask what only you know (business, content, scope) and **propose** the visual side
+with judgment. It enters plan mode, and when you approve the plan it writes all of
+`context/` and gives you the design brief in a block ready to copy.
 
-**2. Diseño.** Pega ese brief en Claude Design. Vuelve con dos cosas: el diseño y un
-`HANDOFF.md`. Guarda el handoff en `design/HANDOFF.md`.
+**2. Design.** Paste that brief into Claude Design. Come back with two things: the design
+and a `HANDOFF.md`. Save the handoff in `design/HANDOFF.md`.
 
-**3. Verificación del handoff.** Vuelve a Claude y dile que lo revise. Si falta algo —un
-estado, una medida, el comportamiento en mobile— te da la pregunta exacta para devolvérsela a
-Claude Design. **Este paso parece opcional y no lo es**: un dato que falta aquí cuesta minutos
-de preguntar y horas de reimplementar en la fase 5.
+**3. Handoff check.** Go back to Claude and ask it to review it. If something is missing — a
+state, a measurement, the mobile behavior — it gives you the exact question to send back to
+Claude Design. **This step looks optional and is not**: a value missing here costs minutes
+to ask and hours to reimplement in phase 5.
 
-**4. Implementación.** Fase por fase, unidad por unidad:
+**4. Implementation.** Phase by phase, unit by unit:
 
 ```
 /frontend-build   fase 01, tokens
 ```
 
-Cada unidad termina con una pausa donde tú revisas. Apruebas, y ahí sí se commitea.
+Each unit ends with a review on your side (the PR, or a pause in `local` mode).
 
-**5. Funcionalidad.** `/backend-build` cuando toque auth, datos o pagos.
+**5. Functionality.** `/backend-build` when auth, data or payments come up.
 
-**6. QA.** Lanza `design-qa` y `functional-qa`. Pueden correr en paralelo.
-
----
-
-## El flujo de git
-
-Dos modos, fijados en `context/GIT_STATE.md`:
-
-**Modo `pr`** (recomendado en cuanto el repo está en GitHub con `main` protegida):
-
-```
-git switch -c <tipo>/<desc> origin/main → implementar → test:related → [a11y] → [seo]
-   → build + typecheck + lint + test → capturas → podar context/
-   → commit(s) + push de la rama → gh pr create → César revisa y mergea (squash)
-```
-
-En su rama el agente commitea y empuja sin pedir permiso: la aprobación es la revisión del
-PR. **Nunca** push a `main`, nunca `gh pr merge`. Si César pide cambios: commits nuevos en
-la misma rama.
-
-**Modo `local`** (sin remoto): pausa de aprobación → commit → `merge --no-ff` a la base →
-push solo si la base no es `main`. Ramas madre para bloques grandes.
-
-En los dos: **nada destructivo** (ni `reset --hard`, ni `push --force`, ni borrar ramas, ni
-reescribir historia).
+**6. QA.** Launch `design-qa` and `functional-qa`. They can run in parallel.
 
 ---
 
-## Las fases
+## The git flow
 
-| # | Fase | Quién |
+Two modes, set in `context/GIT_STATE.md`:
+
+**`pr` mode** (recommended as soon as the repo is on GitHub with protected `main`):
+
+```
+git switch -c <type>/<desc> origin/main → implement → test:related → [a11y] → [seo]
+   → build + typecheck + lint + test → screenshots → prune and back up context/
+   → commit(s) + push of the branch → gh pr create → César reviews and merges (squash)
+```
+
+On its branch the agent commits and pushes without asking: the approval is the PR review.
+**Never** push to `main`, never `gh pr merge`. If César asks for changes: new commits on the
+same branch.
+
+**`local` mode** (no remote): approval pause → commit → `merge --no-ff` into the base → push
+only if the base is not `main`. Parent branches for big blocks.
+
+In both: **nothing destructive** (no `reset --hard`, no `push --force`, no deleting branches,
+no rewriting history).
+
+**What goes in git:** the code, `supabase/` (migrations, seed, templates) and the fixed
+documents of `context/` (`PROJECT_CONTEXT`, `DESIGN_RULES`, `COLORS`, `DESIGN_TOKENS`,
+`TYPOGRAPHY`, `decisions/`). **What is local:** the working state of `context/`
+(`CURRENT_PHASE`, `CONTENT_CHECKLIST`, `PHASE_LOG/`, `plans/`…), backed up to the orphan
+branch `context-state` (`bun run context:backup` / `context:restore`) so that losing the
+folder does not lose where the project stood.
+
+---
+
+## The phases
+
+| # | Phase | Who |
 |---|---|---|
 | 01 | Tokens | `frontend-build` |
-| 02 | Layout base | `frontend-build` |
-| 03 | Componentes | `frontend-build` |
-| 04 | Secciones | `frontend-build` |
-| 05 | Páginas | `frontend-build` |
-| 06 | Estados (vacío, carga, error) | `frontend-build` |
+| 02 | Base layout | `frontend-build` |
+| 03 | Components | `frontend-build` |
+| 04 | Sections | `frontend-build` |
+| 05 | Pages | `frontend-build` |
+| 06 | States (empty, loading, error) | `frontend-build` |
 | 07 | Backend | `backend-build` |
-| 08 | Responsive y pulido | `frontend-build` |
-| 09 | QA final | `design-qa` + `functional-qa` |
+| 08 | Responsive and polish | `frontend-build` |
+| 09 | Final QA | `design-qa` + `functional-qa` |
 
-**Tracks:** Landing (01·02·03·04·06·08·09) · Sitio (01–06·08·09) · Producto (01–09).
-El orquestador elige uno y lo justifica.
+**Tracks:** Landing (01·02·03·04·06·08·09) · Site (01–06·08·09) · Product (01–09). The
+orchestrator picks one and justifies it.
 
 ---
 
-## Estructura del kit
+## Kit structure
 
 ```
 web-agent-kit/
-├── README.md                      este archivo
-├── VERSION                        versión actual del kit (cada proyecto guarda la suya en .kit-version)
-├── ACTUALIZACIONES.md             qué cambió en cada versión y los pasos para migrar un proyecto
-├── CLAUDE.md                      cómo se mantiene el kit (procesar informes de feedback, versionar)
-├── feedback/                      informes de los proyectos (PRs `kit-feedback`); no va a ningún proyecto
-├── CLAUDE.md.template             va a la raíz de cada proyecto (≤ 8 KB: mapa, no manual)
-├── instalar-kit.ps1 / .sh         instala o reinstala skills y agentes en ~/.claude/ (-Pull: git pull antes)
-│                                    y deja ~/.claude/web-agent-kit.json (ruta + versión) para kit-update
+├── README.md                      this file
+├── VERSION                        the kit's current version (each project keeps its own in .kit-version)
+├── UPDATES.md                     what changed in each version and the steps to migrate a project
+├── CLAUDE.md                      how the kit is maintained (processing feedback, versioning)
+├── feedback/                      the projects' reports (kit-feedback PRs); goes to no project
+├── CLAUDE.md.template             goes to each project's root (≤ 8 KB: a map, not a manual)
+├── install-kit.ps1 / .sh          installs or reinstalls skills and agents in ~/.claude/ (-Pull: git pull first)
+│                                    and leaves ~/.claude/web-agent-kit.json (path + version) for kit-update
+├── new-project.ps1                creates the app and copies the kit (-Existing: adds what is missing)
+├── instalar-kit.* / nuevo-proyecto.ps1   pre-3.8.0 names, forward to the ones above
 ├── .claude/
-│   ├── skills/                    las 9 skills → ~/.claude/skills/
-│   │   └── orchestrate/           + brief-, unit-prompt- y fase-plan-template.md y
-│   │                                scripts/wt.ps1 (pool de worktrees reciclables)
+│   ├── skills/                    the 9 skills → ~/.claude/skills/
+│   │   └── orchestrate/           + brief-, unit-prompt- and phase-plan-template.md and
+│   │                                scripts/wt.ps1 (recyclable worktree pool)
 │   └── agents/                    design-qa, functional-qa, feature-worker, wave-qa → ~/.claude/agents/
 ├── prompts/
-│   ├── CLAUDE-DESIGN-BRIEF.template.md   lo que se le pega a Claude Design
-│   ├── DESIGN-HANDOFF.template.md        lo que debe volver, y su verificación
-│   ├── CLAUDE-DESIGN-ADENDA.template.md  piezas que faltan en un diseño ya hecho (estados, icono, OG, correos…)
-│   ├── ACTUALIZAR-KIT.md                 aviso: desde la 3.6.0 lo hace la skill kit-update
-│   ├── ACTUALIZAR-PROYECTO.md            paso 3.0 → 3.1 (lo cita ACTUALIZACIONES.md)
-│   └── MIGRAR-DECISIONES-Y-CI.md         paso 3.1 → 3.2 (lo cita ACTUALIZACIONES.md)
-├── context-templates/             → se copia como context/ en cada proyecto
-├── phases-templates/              → se copia como phases/
-├── sections-template/             brief de contenido, uno por sección
-├── github-templates/              → se copia como .github/ (plantilla de PR, CI y release.yml)
-├── changeset-templates/           → se copia como .changeset/ (versión y CHANGELOG sin conflictos)
+│   ├── CLAUDE-DESIGN-BRIEF.template.md      what gets pasted into Claude Design
+│   ├── DESIGN-HANDOFF.template.md           what must come back, and its check
+│   ├── CLAUDE-DESIGN-ADDENDUM.template.md   pieces missing from an existing design (states, icon, OG, emails…)
+│   ├── ACTUALIZAR-KIT.md                    notice: since 3.6.0 the kit-update skill does it
+│   ├── MIGRATE-3.1-WORKTREES-CHANGESETS.md  step 3.0 → 3.1 (cited by UPDATES.md)
+│   └── MIGRATE-3.2-DECISIONS-CI.md          step 3.1 → 3.2 (cited by UPDATES.md)
+├── context-templates/             → copied as context/ in each project
+├── phases-templates/              → copied as phases/
+├── sections-template/             content brief, one per section
+├── github-templates/              → copied as .github/ (PR template, CI and release.yml)
+├── changeset-templates/           → copied as .changeset/ (version and CHANGELOG without conflicts)
 └── reference/
-    ├── STACK-NEXTJS.md            Next.js + bun + Context7 + convenciones
-    ├── UI-LIBRARIES.md            shadcn/ui · Hero UI · MUI — criterio y qué cambia
-    ├── TOKEN-ECONOMY.md           lectura por niveles, topes de context/, tests, capturas
-    ├── STATUS-SCREENS.md          404 · 500 · sin conexión · mantenimiento: catálogo e implementación
-    ├── BRAND-ASSETS.md            logo, icono, favicon, touch icon, OG: qué se pregunta y qué se genera
-    ├── EMAIL-TEMPLATES.md         correos de la app: catálogo, restricciones para el diseño, React Email y Supabase
-    ├── DEPLOY.md                  crear el repo en GitHub y desplegar en Vercel
-    └── qa-scripts/
-        ├── design-qa.ts           barrido de Playwright (con node)
-        ├── test-related.ts        → scripts/: tests afectados por el grafo de imports
-        ├── pr-screenshots.ts      → scripts/: capturas para el PR (con node)
-        ├── publish-pr-shots.sh    → scripts/: las sube a la rama pr-shots
-        └── qa-local.ts            → scripts/: servidor de QA contra Supabase local (Docker) con cuentas de prueba
+    ├── STACK-NEXTJS.md            Next.js + bun + Context7 + conventions
+    ├── UI-LIBRARIES.md            shadcn/ui · Hero UI · MUI — criteria and what changes
+    ├── TOKEN-ECONOMY.md           reading by levels, context/ caps, tests, screenshots
+    ├── STATUS-SCREENS.md          404 · 500 · offline · maintenance: catalog and implementation
+    ├── BRAND-ASSETS.md            logo, icon, favicon, touch icon, OG: what is asked and what is generated
+    ├── EMAIL-TEMPLATES.md         the app's emails: catalog, design constraints, React Email, Supabase, Firebase, provider
+    ├── DEPLOY.md                  creating the GitHub repo and deploying on Vercel (or adopting an existing project)
+    └── scripts/
+        ├── design-qa.ts           Playwright sweep (with node)
+        ├── test-related.ts        → scripts/: tests affected by the import graph
+        ├── pr-screenshots.ts      → scripts/: PR screenshots (with node)
+        ├── publish-pr-shots.sh    → scripts/: uploads them to the pr-shots branch
+        ├── qa-local.ts            → scripts/: QA server against local Supabase (Docker) with test accounts
+        └── context-backup.sh      → scripts/: local context/ ↔ the context-state branch
 ```
 
 ---
 
-## Reglas transversales
+## Cross-cutting rules
 
-Valen para todos los agentes, en todo momento:
+They apply to every agent, at all times:
 
-- **Cero contenido inventado.** Ni copy, ni `alt` real, ni precios, ni datos de contacto, ni
-  testimonios. Placeholder marcado + fila en `CONTENT_CHECKLIST.md`. Contenido inventado que
-  parece final se publica sin que nadie lo revise.
-- **Cero lorem ipsum.** Placeholder realista, en el idioma del proyecto, con la longitud del
-  texto final. Un layout validado con lorem se rompe al llegar el copy real.
-- **Cero valores mágicos.** Todo sale de los tokens. Un `text-[#3a7bd5]` significa que falta
-  un token o falta registrar una decisión.
-- **Cero secretos en el código.** Variables de entorno siempre.
-- **Ambigüedad → exactamente 3 opciones**, con ventaja y desventaja real, y se espera.
-- **Falta un dato del handoff → se pregunta**, no se estima del mockup.
-- **Problema en código ya cerrado → se reporta**, no se arregla de paso dentro de otra unidad.
-- **Archivo sin uso → se señala**, no se borra.
-- **Accesibilidad gana sobre el handoff.** Si un color del diseño no llega a AA, se corrige el
-  diseño, no se hace la vista gorda.
-- **El servidor de desarrollo lo levantas tú.** Cuando un agente necesita el sitio corriendo,
-  te lo pide y espera. Única excepción: una tanda de `orchestrate` en la que tú autorices
-  que cada worker levante el suyo, en segundo plano y en su puerto. Ver
-  `reference/TOKEN-ECONOMY.md`.
-- **Playwright se corre con `node`, no con `bun`.** En Windows, Playwright lanzado desde un
-  script de Bun se cuelga al arrancar Chromium.
-
----
-
-## Economía de tokens
-
-Detalle en `reference/TOKEN-ECONOMY.md`. Lo que más pesa:
-
-| Regla | Por qué |
-|---|---|
-| **Lectura por niveles:** siempre `CLAUDE.md` + `CURRENT_PHASE.md`; lo demás según la tarea o con `grep` | "Lee estos 5 archivos antes de empezar" costaba ~20.000 tokens por sesión en el primer proyecto real |
-| **Topes:** `CLAUDE.md` ≤ 8 KB, `CURRENT_PHASE.md` ≤ 60 líneas, índices con filas de una línea | Lo que se lee siempre se paga siempre; lo cerrado va a `PHASE_LOG/<rama>.md` |
-| **Tests afectados en el bucle, todos en CI** (`test:related`, `--dots`) | Menos tiempo y menos salida mientras se itera, sin perder la red de seguridad |
-| **Capturas al disco, no al contexto** | Son para quien revisa el PR; el agente verifica midiendo el DOM |
-| **Subagentes para lo ruidoso**, con prompts que traen rutas y líneas | Su ruido se queda en su contexto; arrancan en frío, así que el prompt da el contexto mínimo suficiente |
-| **Esfuerzo según el papel:** orquestador alto, workers medio | Planificar bien una vez abarata ejecutar muchas |
-| El servidor lo levanta César (o cada worker el suyo, en segundo plano, si él lo autoriza) | Logs de compilación en el contexto; servidores huérfanos |
+- **Zero invented content.** No copy, no real `alt`, no prices, no contact details, no
+  testimonials. A flagged placeholder + a row in `CONTENT_CHECKLIST.md`. Invented content
+  that looks final gets published without anyone reviewing it.
+- **Zero lorem ipsum.** A realistic placeholder, in the project's language, with the final
+  text's length. A layout validated with lorem breaks when the real copy arrives.
+- **Zero magic values.** Everything comes from the tokens. A `text-[#3a7bd5]` means a token
+  is missing or a decision has not been recorded.
+- **Zero secrets in the code.** Environment variables always.
+- **Ambiguity → exactly 3 options**, with real advantage and disadvantage, and wait.
+- **A handoff value is missing → ask**, do not estimate it from the mockup.
+- **A problem in already-closed code → report it**, do not fix it along the way inside
+  another unit.
+- **Unused file → point it out**, do not delete it.
+- **Accessibility wins over the handoff.** If a design color does not reach AA, the design
+  gets corrected; it is not overlooked.
+- **You start the dev server.** When an agent needs the site running, it asks and waits.
+  Only exception: an `orchestrate` batch in which you authorize each worker to start its
+  own, in the background and on its port. See `reference/TOKEN-ECONOMY.md`.
+- **Playwright runs with `node`, not `bun`.** On Windows, Playwright launched from a Bun
+  script hangs starting Chromium.
 
 ---
 
-## Versiones y actualización de proyectos
+## Token economy
 
-El kit lleva versión (`VERSION`, ahora **3.7.0**) y cada proyecto guarda en `.kit-version`
-con cuál quedó alineado. Para ponerlo al día: `/kit-update` en una sesión del proyecto.
-Compara con la versión publicada (`origin/main` del clon del kit); si va atrás, calcula el
-camino con `ACTUALIZACIONES.md` y aplica cada versión en orden, en un PR.
+Details in `reference/TOKEN-ECONOMY.md`. What weighs most:
 
-Y el camino de vuelta: cada proyecto anota en `context/KIT_FEEDBACK.md` lo que César tuvo que
-corregir o repetir y lo que el kit no cubría. `/kit-feedback` lo sube a este repo como un PR
-(`feedback/`, etiqueta `kit-feedback`); en una sesión abierta aquí, "revisa el feedback"
-hace el triaje de todos los PRs juntos (`CLAUDE.md` dice cómo).
-
-### 3.7.0 (feedback de cuatro proyectos)
-
-| Antes | Ahora |
+| Rule | Why |
 |---|---|
-| Cada worker redescubría el entorno: heredocs rotos, suites colgadas, servidores huérfanos, Playwright sin resolver | Reglas de entorno en el brief; `wt` para lo que quede en el puerto del slot; scripts en `.qa/` |
-| Sin Docker, la QA de la ola quedaba bloqueada | `qa:local -- --offline`: QA de invitado y la de sesión, pendiente |
-| Un proyecto "al día" podía no tener `test:related`, `shots` o axe | `kit-update` revisa las piezas y añade lo que falte |
-| Correos de auth sin proveedor decidido; Firebase sin cubrir | Brevo por SMTP por defecto, en una decisión; envío propio con Firebase si la consola está bloqueada |
-| Barra de scroll del navegador sobre el fondo de marca | Tokens `scrollbar` junto a `::selection` |
+| **Reading by levels:** always `CLAUDE.md` + `CURRENT_PHASE.md`; the rest per task or with `grep` | "Read these 5 files before starting" cost ~20,000 tokens per session in the first real project |
+| **Caps:** `CLAUDE.md` ≤ 8 KB, `CURRENT_PHASE.md` ≤ 60 lines, indexes with one-line rows | What is always read is always paid for; what is closed goes to `PHASE_LOG/<branch>.md` |
+| **Affected tests in the loop, all of them in CI** (`test:related`, `--dots`) | Less time and less output while iterating, without losing the safety net |
+| **Screenshots to disk, not to the context** | They are for whoever reviews the PR; the agent verifies by measuring the DOM |
+| **Subagents for what is noisy**, with prompts that bring paths and lines | Their noise stays in their context; they start cold, so the prompt gives the minimal sufficient context |
+| **Effort by role:** orchestrator high, workers medium | Planning well once makes executing many cheaper |
+| César starts the server (or each worker its own, in the background, if he authorizes it) | Compilation logs in the context; orphaned servers |
+
+---
+
+## Versions and updating projects
+
+The kit is versioned (`VERSION`, now **3.8.0**) and each project keeps in `.kit-version`
+which one it is aligned with. To bring it up to date: `/kit-update` in a project session. It
+compares with the published version (`origin/main` of the kit's clone); if behind, it
+computes the path with `UPDATES.md` and applies each version in order, in a PR.
+
+And the way back: each project logs in `context/KIT_FEEDBACK.md` what César had to correct
+or repeat and what the kit did not cover. `/kit-feedback` uploads it to this repo as a PR
+(`feedback/`, `kit-feedback` label); in a session opened here, "revisa el feedback" triages
+all the PRs together (`CLAUDE.md` says how).
+
+### 3.8.0
+
+| Before | Now |
+|---|---|
+| The kit in Spanish | The kit in English; the agents still talk to César in Spanish |
+| Losing the local folder lost where the project stood (phase, wave, pending content, plans) | `context:backup` / `context:restore` with the orphan branch `context-state`; the fixed documents of `context/` and `supabase/` always in git |
+| `instalar-kit`, `nuevo-proyecto`, `GUIA`, `ACTUALIZACIONES` | `install-kit`, `new-project`, `GUIDE`, `UPDATES` (the old script names forward) |
+
+### 3.7.0 (feedback from four projects)
+
+| Before | Now |
+|---|---|
+| Each worker rediscovered the environment: broken heredocs, hanging suites, orphaned servers, Playwright not resolving | Environment rules in the brief; `wt` clears the slot's port; scripts in `.qa/` |
+| Without Docker, the wave QA was blocked | `qa:local -- --offline`: guest QA, the logged-in one pending |
+| A project "up to date" could lack `test:related`, `shots` or axe | `kit-update` checks the pieces and adds what is missing |
+| Auth emails without a decided provider; Firebase not covered | Brevo over SMTP by default, in a decision; sending them yourself with Firebase if the console is locked |
+| The browser's scrollbar over the brand background | `scrollbar` tokens next to `::selection` |
 
 ### 3.6.0
 
-| Antes | Ahora |
+| Before | Now |
 |---|---|
-| `ACTUALIZAR-KIT.md`: copiar skills a mano, cambiar la ruta en el bloque y pegarlo | `/kit-update`: compara versiones, reinstala skills si hace falta, dice si ya está al día |
-| El informe de feedback se pegaba en el chat del kit, de uno en uno | `/kit-feedback` abre un PR por informe; el triaje junta todos y suma lo repetido entre proyectos |
+| `ACTUALIZAR-KIT.md`: copy the skills by hand, change the path in the block and paste it | `/kit-update`: compares versions, reinstalls the skills if needed, says whether it is up to date |
+| The feedback report was pasted into the kit's chat, one at a time | `/kit-feedback` opens a PR per report; the triage gathers them all and adds up what repeats across projects |
 
 ### 3.3.0
 
-| Antes | Ahora |
+| Before | Now |
 |---|---|
-| "Estados de error (404, 500…)" como una casilla del brief | Catálogo de pantallas de estado: 404 con sesión/invitado (solo con auth), 500 con/sin código, sin conexión elegida según la red, mantenimiento con/sin hora — diseñadas, con estado HTTP real y galería `/estados` |
-| Color de selección sin definir | Token `selection` con contraste verificado, claro y oscuro |
-| Favicon y OG se generaban sin preguntar | El arranque pregunta qué assets tiene el cliente y cuáles hay que crear |
-| Crear el repo y ajustar GitHub eran acciones manuales | El arranque pregunta; con el sí, el agente crea el repo, lo configura y conecta Vercel |
-| Proyectos viejos: un prompt suelto por cambio | `.kit-version` + `ACTUALIZACIONES.md` + un solo `ACTUALIZAR-KIT.md` |
-| Las correcciones se perdían en el chat | `KIT_FEEDBACK.md` por proyecto → informe → mejora del kit |
+| "Error states (404, 500…)" as a checkbox in the brief | A catalog of status screens: logged-in/guest 404 (only with auth), 500 with/without a code, offline picked by the network, maintenance with/without a time — designed, with a real HTTP status and an `/estados` gallery |
+| Selection color undefined | `selection` token with verified contrast, light and dark |
+| Favicon and OG were generated without asking | The kickoff asks which assets the client has and which have to be created |
+| Creating the repo and adjusting GitHub were manual actions | The kickoff asks; with the yes, the agent creates the repo, configures it and connects Vercel |
+| Old projects: a loose prompt per change | `.kit-version` + `UPDATES.md` + a single update path |
+| Corrections got lost in the chat | `KIT_FEEDBACK.md` per project → report → kit improvement |
 
-## Qué cambió en la v3 (lo aprendido en World Flags)
+## What changed in v3 (learned on World Flags)
 
 | v2 | v3 |
 |---|---|
-| "Lee estos 5 archivos antes de empezar" | Lectura por niveles: siempre `CLAUDE.md` + `CURRENT_PHASE`; lo demás según la tarea o con `grep` |
-| `CURRENT_PHASE.md` "liviano" sin tope (llegó a 38 KB) | Tope de 60 líneas; la narrativa va a `PHASE_LOG/<rama>.md`; se poda al cerrar cada unidad |
-| Solo merge local con pausa de aprobación | Modo `pr` (PR que César revisa y mergea) además del `local` |
-| Una sesión hace todo, unidad a unidad | `orchestrate` + `feature-worker`: tandas en paralelo en un pool de worktrees reciclables, en olas, con números reservados |
-| Toda la suite de tests en cada iteración | `test:related` (grafo de imports) en el bucle; suite completa antes del PR y en CI |
-| PR sin capturas | `shots` + `shots:publish`: capturas a la rama `pr-shots`, enlazadas en el PR, sin que el agente las abra |
-| Scripts de Playwright con `bun` (se colgaban en Windows) | Con `node` |
-| Plantillas de ejemplo citadas que no existían (`01-colores.md`) | Ejemplo dentro de `decisions/README.md` |
+| "Read these 5 files before starting" | Reading by levels: always `CLAUDE.md` + `CURRENT_PHASE`; the rest per task or with `grep` |
+| A "light" `CURRENT_PHASE.md` without a cap (it reached 38 KB) | 60-line cap; the narrative goes to `PHASE_LOG/<branch>.md`; pruned when each unit closes |
+| Only local merge with an approval pause | `pr` mode (PR César reviews and merges) besides `local` |
+| One session does everything, unit by unit | `orchestrate` + `feature-worker`: parallel batches in a recyclable worktree pool, in waves, with reserved numbers |
+| The whole test suite on every iteration | `test:related` (import graph) in the loop; full suite before the PR and in CI |
+| PRs without screenshots | `shots` + `shots:publish`: screenshots to the `pr-shots` branch, linked in the PR, without the agent opening them |
+| Playwright scripts with `bun` (they hung on Windows) | With `node` |
+| Example templates cited that did not exist (`01-colores.md`) | An example inside `decisions/README.md` |
 
-## Qué cambió respecto de la v1
+## What changed from v1
 
 | v1 | v2 |
 |---|---|
-| 6 agentes de texto para pegar en un chat | 6 skills que se activan solas + 2 agentes de QA aislados |
-| El agente `WEB_DESIGNER` inventaba la paleta y el sistema | Claude Design diseña; el orquestador prepara el brief y verifica el handoff |
-| El traspaso a desarrollo era implícito | `HANDOFF.md` con estructura obligatoria y checklist de verificación |
-| Git como recomendación de texto | Flujo ejecutable con ramas madre, pausa de aprobación y regla de push |
-| Accesibilidad como auditoría posterior | Puerta obligatoria antes de cada commit |
-| Sin QA de dispositivos ni de funcionalidad | `design-qa` (320–3840px, daltonismo, zoom) y `functional-qa` (adversarial) |
-| Stack genérico | Next.js + TS, **bun**, **Context7**; la librería de componentes se decide por proyecto |
-| 10 fases de diseño | 9 fases de implementación, con 3 tracks según el proyecto |
+| 6 text agents to paste into a chat | 6 skills that activate on their own + 2 isolated QA agents |
+| The `WEB_DESIGNER` agent invented the palette and the system | Claude Design designs; the orchestrator prepares the brief and checks the handoff |
+| The handoff to development was implicit | `HANDOFF.md` with a mandatory structure and a verification checklist |
+| Git as a text recommendation | An executable flow with parent branches, approval pause and push rule |
+| Accessibility as a later audit | A mandatory gate before every commit |
+| No device or functionality QA | `design-qa` (320–3840px, color blindness, zoom) and `functional-qa` (adversarial) |
+| Generic stack | Next.js + TS, **bun**, **Context7**; the component library is decided per project |
+| 10 design phases | 9 implementation phases, with 3 tracks depending on the project |
 
-La v1 sigue siendo válida para ChatGPT o para Claude sin skills disponibles: sus agentes son
-prompts pegables. La v2 asume Claude Code o Cowork con acceso a archivos.
+v1 remains valid for ChatGPT or for Claude without skills available: its agents are pasteable
+prompts. v2 assumes Claude Code or Cowork with file access.

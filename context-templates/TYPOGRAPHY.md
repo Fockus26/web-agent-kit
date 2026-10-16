@@ -1,13 +1,13 @@
-# Typography — {{NOMBRE_DEL_PROYECTO}}
+# Typography — {{PROJECT_NAME}}
 
-## Familias
+## Families
 
-- Heading: {{NOMBRE_FUENTE}} — {{peso(s) usados, ej. 600/700}}
-- Body: {{NOMBRE_FUENTE}} — {{peso(s) usados, ej. 400/500}}
+- Heading: {{FONT_NAME}} — {{weight(s) used, e.g. 600/700}}
+- Body: {{FONT_NAME}} — {{weight(s) used, e.g. 400/500}}
 
-## Escala (mobile-first)
+## Scale (mobile-first)
 
-| Nivel | xs (mobile) | md (tablet) | 1920px+ (desktop grande) | Line-height | Letter-spacing |
+| Level | xs (mobile) | md (tablet) | 1920px+ (large desktop) | Line-height | Letter-spacing |
 |---|---|---|---|---|---|
 | h1 | {{28px}} | {{38px}} | {{46px}} | {{1.2}} | {{-0.01em}} |
 | h2 | {{24px}} | {{32px}} | {{38px}} | | |
@@ -16,8 +16,8 @@
 | small/caption | {{12px}} | {{12px}} | {{14px}} | | |
 | eyebrow/label | {{11px}} | {{11px}} | {{13px}} | | {{0.18em, uppercase}} |
 
-## Reglas
+## Rules
 
-- Todo tamaño de fuente que no esté en esta tabla es una decisión nueva — regístrala en
-  `decisions/D0NN-<tema>.md` antes de usarla.
-- {{REGLA_ADICIONAL}}
+- Any font size not in this table is a new decision — record it in
+  `decisions/D0NN-<topic>.md` before using it.
+- {{ADDITIONAL_RULE}}

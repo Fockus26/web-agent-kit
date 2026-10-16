@@ -1,10 +1,10 @@
-# Colors — {{NOMBRE_DEL_PROYECTO}}
+# Colors — {{PROJECT_NAME}}
 
 ## Light mode
 
-| Rol | Hex | Uso | Contraste verificado contra |
+| Role | Hex | Use | Contrast verified against |
 |---|---|---|---|
-| primary.main | {{#______}} | {{ej. CTAs, links activos}} | {{fondo: #______ → ratio X.X:1}} |
+| primary.main | {{#______}} | {{e.g. CTAs, active links}} | {{background: #______ → ratio X.X:1}} |
 | secondary.main | {{#______}} | | |
 | background.default | {{#______}} | | |
 | background.paper / surface | {{#______}} | | |
@@ -16,12 +16,12 @@
 | error.main | {{#______}} | | |
 | info.main | {{#______}} | | |
 | divider | {{#______}} | | |
-| selection.bg / selection.text | {{#______ / #______}} | `::selection` | {{texto sobre fondo de selección → ratio X.X:1}} |
-| scrollbar.thumb / scrollbar.track | {{#______ / #______}} | barra de scroll | {{thumb contra track → ratio X.X:1 (≥ 3:1)}} |
+| selection.bg / selection.text | {{#______ / #______}} | `::selection` | {{text over selection background → ratio X.X:1}} |
+| scrollbar.thumb / scrollbar.track | {{#______ / #______}} | scrollbar | {{thumb against track → ratio X.X:1 (≥ 3:1)}} |
 
 ## Dark mode
 
-| Rol | Hex | Uso | Contraste verificado contra |
+| Role | Hex | Use | Contrast verified against |
 |---|---|---|---|
 | primary.main | {{#______}} | | |
 | secondary.main | {{#______}} | | |
@@ -36,9 +36,9 @@
 | info.main | {{#______}} | | |
 | divider | {{#______}} | | |
 | selection.bg / selection.text | {{#______ / #______}} | `::selection` | |
-| scrollbar.thumb / scrollbar.track | {{#______ / #______}} | barra de scroll | |
+| scrollbar.thumb / scrollbar.track | {{#______ / #______}} | scrollbar | |
 
-## Notas de contraste
+## Contrast notes
 
-{{Cualquier par que requirió una excepción al token "main" (ej. usar shade 700 en vez de
-light para cumplir AA) — con referencia al ID de decisión (decisions/D0NN-<tema>.md)}}
+{{Any pair that needed an exception to the "main" token (e.g. using shade 700 instead of
+light to meet AA) — with the decision ID (decisions/D0NN-<topic>.md)}}

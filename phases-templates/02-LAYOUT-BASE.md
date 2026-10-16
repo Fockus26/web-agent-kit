@@ -1,47 +1,47 @@
-# Fase 02 — Layout base
+# Phase 02 — Base layout
 
-## Objetivo
+## Goal
 
-El esqueleto sobre el que se monta todo lo demás: contenedor, grid, ritmo vertical, providers
-y estilos globales.
+The skeleton everything else is mounted on: container, grid, vertical rhythm, providers and
+global styles.
 
-## Alcance
+## Scope
 
-- `app/layout.tsx`: html/body, idioma, fuentes, providers de tema.
-- Contenedor y anchos máximos por breakpoint, según §4 del handoff.
-- Grid global: columnas, gutters y padding lateral por breakpoint.
-- Ritmo vertical entre secciones.
-- Estilos globales mínimos: reset, `scroll-behavior`, `focus-visible` por defecto.
-- **Selección de texto:** `::selection` con los tokens `selection` (fondo y texto) en claro
-  y oscuro — nunca el azul del sistema sobre un sitio con identidad propia.
-- **Barra de scroll:** tokens `scrollbar` (thumb y track) en claro y oscuro, con
-  `scrollbar-color` y `::-webkit-scrollbar` como respaldo donde no se soporte. Sin ella,
-  el gris del navegador queda encima de un fondo de marca (se pidió aparte en un proyecto).
-- **Assets de marca** del init de `seo`: favicon, `icon.svg`, `apple-icon.png`, manifest y
-  OG por defecto, según lo que se decidió en el arranque (`reference/BRAND-ASSETS.md`).
-- Header y footer estructurales (aunque su contenido llegue después).
-- Skip link a `main`.
+- `app/layout.tsx`: html/body, language, fonts, theme providers.
+- Container and max widths per breakpoint, per the handoff's §4.
+- Global grid: columns, gutters and side padding per breakpoint.
+- Vertical rhythm between sections.
+- Minimal global styles: reset, `scroll-behavior`, default `focus-visible`.
+- **Text selection:** `::selection` with the `selection` tokens (background and text) in light
+  and dark — never the system blue on a site with its own identity.
+- **Scrollbar:** `scrollbar` tokens (thumb and track) in light and dark, with
+  `scrollbar-color` and `::-webkit-scrollbar` as a fallback where it is not supported.
+  Without it, the browser's gray sits on top of a brand background (a project asked for it
+  separately).
+- **Brand assets** from the `seo` init: favicon, `icon.svg`, `apple-icon.png`, manifest and
+  default OG, per what was decided at kickoff (`reference/BRAND-ASSETS.md`).
+- Structural header and footer (even if their content comes later).
+- Skip link to `main`.
 - Landmarks: `<header>`, `<nav>`, `<main>`, `<footer>`.
 
-## Entradas
+## Inputs
 
-`design/HANDOFF.md` §4 · fase 01 cerrada
+`design/HANDOFF.md` §4 · phase 01 closed
 
-## Criterio de cierre
+## Closing criteria
 
-- [ ] El contenedor se comporta igual en todos los breakpoints del proyecto.
-- [ ] Landmarks correctos y un solo `<main>`.
-- [ ] Skip link funcional y visible al enfocarlo.
-- [ ] Sin scroll horizontal a 320px en la página vacía.
-- [ ] Texto seleccionado con el color del sistema y ratio ≥ 4.5:1, en claro y oscuro.
-- [ ] Barra de scroll con los tokens `scrollbar`, thumb ≥ 3:1 contra el track, en claro y oscuro.
-- [ ] Favicon visible en la pestaña; lo que falte del cliente, en `CONTENT_CHECKLIST.md`.
-- [ ] Puerta `a11y` en verde.
-- [ ] Skill `seo` ejecutada en modo *init*: metadata base, `robots.ts`, `sitemap.ts`,
-      favicons, OG por defecto.
+- [ ] The container behaves the same at every breakpoint of the project.
+- [ ] Correct landmarks and a single `<main>`.
+- [ ] Working skip link, visible when focused.
+- [ ] No horizontal scroll at 320px on the empty page.
+- [ ] Selected text with the system's color and ratio ≥ 4.5:1, in light and dark.
+- [ ] Scrollbar with the `scrollbar` tokens, thumb ≥ 3:1 against the track, in light and dark.
+- [ ] Favicon visible in the tab; what the client still owes, in `CONTENT_CHECKLIST.md`.
+- [ ] `a11y` gate green.
+- [ ] `seo` skill run in *init* mode: base metadata, `robots.ts`, `sitemap.ts`, favicons,
+      default OG.
 
-## Ambigüedad frecuente
+## Frequent ambiguity
 
-Cómo se comporta el contenedor por encima de 1920px: ¿se ancla a un máximo, o sigue creciendo?
-Si el handoff no lo dice, pregunta — es la causa más común de que un sitio se vea vacío en un
-monitor grande.
+How the container behaves above 1920px: does it lock to a max, or keep growing? If the
+handoff does not say, ask — it is the most common reason a site looks empty on a big monitor.

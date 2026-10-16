@@ -1,41 +1,40 @@
-## {{W#}} — `{{rama}}`
+## {{W#}} — `{{branch}}`
 
-Eres el worker **{{W#}}**. Rama: `{{rama}}`. Slot y puerto: los del mensaje con el que te
-lanzan (`wt take`). Decisiones: rango **{{D0NN–D0NN}}**, un archivo
-`context/decisions/D0NN-<tema>.md` por cada una. Filas de CONTENT_CHECKLIST: **{{NN}}**.
+You are worker **{{W#}}**. Branch: `{{branch}}`. Slot and port: the ones in the message that
+launches you (`wt take`). Decisions: range **{{D0NN–D0NN}}**, one file
+`context/decisions/D0NN-<topic>.md` for each. CONTENT_CHECKLIST rows: **{{NN}}**.
 
-Primero lee el brief común: `{{ruta}}/context/plans/orquestacion-{{fecha}}.md`.
-Decisiones previas que te condicionan: {{D0NN (qué dice en 5 palabras), D0NN (…)}} —
-`cat context/decisions/D0NN-*.md` de cada una, no leas la carpeta entera.
+First read the shared brief: `{{path}}/context/plans/orchestration-{{date}}.md`.
+Earlier decisions that constrain you: {{D0NN (what it says in 5 words), D0NN (…)}} —
+`cat context/decisions/D0NN-*.md` for each; do not read the whole folder.
 
-### Qué pide César
-> "{{cita literal del pedido}}"
+### What César asks
+> "{{literal quote of the request}}"
 
-{{Interpretación, si la cita es ambigua: "Entiendo X porque Y".}}
+{{Interpretation, if the quote is ambiguous: "I read it as X because Y".}}
 
-### Dónde está
-- `{{src/.../Archivo.tsx:NN}}` — {{qué hay ahí hoy}}
-- `{{src/.../otro.ts:NN-NN}}` — {{…}}
+### Where it is
+- `{{src/.../File.tsx:NN}}` — {{what is there today}}
+- `{{src/.../other.ts:NN-NN}}` — {{…}}
 
-### Enfoque decidido
-{{Lo que ya decidió el orquestador o César, para que el worker no lo re-decida. Si hay
-opciones que quedan a su criterio, dilo explícitamente.}}
+### Approach decided
+{{What the orchestrator or César already decided, so the worker does not re-decide it. If
+some options are left to its judgment, say so explicitly.}}
 
-### Trampas conocidas
-- {{ej. "el merge se queda con el menor: si no marcas la versión, lo viejo resucita"}}
-- {{ej. "hay un test que vigila los imports de X: corre ese test"}}
-- {{ej. "otra unidad cambia las constantes de arriba de Y.tsx: no las toques"}}
+### Known traps
+- {{e.g. "the merge keeps the lower one: if you don't mark the version, the old data comes back"}}
+- {{e.g. "there is a test watching X's imports: run that test"}}
+- {{e.g. "another unit changes the constants at the top of Y.tsx: don't touch them"}}
 
-### Cómo verificar
-- {{qué medir, en qué anchos/temas, qué estados, con qué datos}}
-- {{tests nuevos que se esperan}}
-- {{Si es un arreglo medible: el mismo guion de medición en `main` (antes) y en tu rama
-  (después), con los dos resultados en el PR. Así queda probado que el fallo existía y que
-  ya no.}}
+### How to verify
+- {{what to measure, at which widths/themes, which states, with which data}}
+- {{new tests expected}}
+- {{If it is a measurable fix: the same measuring script on `main` (before) and on your
+  branch (after), with both results in the PR. That proves the bug existed and is gone.}}
 
-### Cierre
-Changeset: {{patch | minor | major | ninguno}} — {{texto en lenguaje de usuario}}.
-En el PR, "Decisión tomada / alternativa" para: {{…}}. Acciones manuales: {{…}}.
-Informe final según el brief.
+### Closing
+Changeset: {{patch | minor | major | none}} — {{user-facing text, in Spanish}}.
+In the PR, "Decision taken / alternative" for: {{…}}. Manual actions: {{…}}.
+Final report as the brief says.
 
 ---

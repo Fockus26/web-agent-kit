@@ -1,128 +1,128 @@
-# Librería de componentes — perfiles
+# Component library — profiles
 
-**No hay un default del kit.** La librería la elige César por proyecto, en la entrevista de
-`project-kickoff`, y queda escrita en `context/PROJECT_CONTEXT.md`. Ese archivo manda: todos
-los agentes leen de ahí, no de este documento.
+**There is no kit default.** César picks the library per project, in the `project-kickoff`
+interview, and it is written in `context/PROJECT_CONTEXT.md`. That file rules: every agent
+reads from there, not from this document.
 
-Este archivo existe para dos cosas: dar el criterio de la elección, y decirle a
-`frontend-build` cómo cambian las reglas según cuál se eligió.
+This file exists for two things: giving the criteria for the choice, and telling
+`frontend-build` how the rules change depending on which one was chosen.
 
 ---
 
-## Las tres opciones
+## The three options
 
 ### shadcn/ui
 
-**No es una librería instalada.** Es un CLI que **copia el código fuente** del componente
-dentro de tu repo. Debajo usa Radix UI (los primitivos accesibles) y Tailwind (los estilos).
+**It is not an installed library.** It is a CLI that **copies the component's source code**
+into your repo. Underneath it uses Radix UI (the accessible primitives) and Tailwind (the
+styles).
 
 ```bash
 bunx shadcn@latest init
 bunx shadcn@latest add button card dialog
-# → aparece components/ui/button.tsx en TU repo, tuyo para editar
+# → components/ui/button.tsx appears in YOUR repo, yours to edit
 ```
 
-| A favor | En contra |
+| For | Against |
 |---|---|
-| Control total: es tu código, lo editas sin pelear con la API de nadie | Tú lo mantienes: no hay actualizaciones automáticas |
-| Sin look impuesto — se ve como tus tokens digan | Empiezas con menos componentes listos |
-| Accesibilidad resuelta por Radix (teclado, foco, ARIA) | Los componentes complejos (tabla de datos, date picker) hay que armarlos |
-| Cero peso extra de librería | Requiere criterio de diseño para que no quede genérico |
+| Full control: it is your code, you edit it without fighting anyone's API | You maintain it: no automatic updates |
+| No imposed look — it looks like your tokens say | You start with fewer ready components |
+| Accessibility solved by Radix (keyboard, focus, ARIA) | Complex components (data table, date picker) have to be assembled |
+| Zero extra library weight | Needs design judgment so it does not look generic |
 
-**Cuándo:** proyectos donde el diseño es propio y específico, y quieres que el sistema de
-diseño mande sobre el componente.
+**When:** projects where the design is custom and specific, and you want the design system
+to rule over the component.
 
-### Hero UI (antes NextUI)
+### Hero UI (formerly NextUI)
 
-Librería real, instalada como dependencia. Construida sobre React Aria (Adobe) para
-accesibilidad, y sobre Tailwind para estilos, con su propio plugin de tema.
+A real library, installed as a dependency. Built on React Aria (Adobe) for accessibility,
+and on Tailwind for styles, with its own theme plugin.
 
 ```bash
 bun add @heroui/react framer-motion
 ```
 
-| A favor | En contra |
+| For | Against |
 |---|---|
-| Arrancas rápido: muchos componentes pulidos desde el minuto uno | Tiene un look propio; despegarse de él cuesta |
-| Accesibilidad de React Aria, muy sólida | Estás atado a su API y a su ritmo de versiones |
-| Tema por tokens, encaja bien con Tailwind | Menos control sobre el interior del componente |
-| Animaciones incluidas | Depende de framer-motion |
+| You start fast: many polished components from minute one | It has its own look; moving away from it costs |
+| React Aria's accessibility, very solid | You are tied to its API and its release pace |
+| Token-based theme, fits well with Tailwind | Less control over the component's internals |
+| Animations included | Depends on framer-motion |
 
-**Cuándo:** landings y sitios donde importa más la velocidad que la singularidad visual, y el
-look moderno por defecto ya te sirve como punto de partida.
+**When:** landing pages and sites where speed matters more than visual uniqueness, and the
+modern default look already works as a starting point.
 
 ### MUI (Material UI)
 
-Librería completa y madura, con **su propio motor de estilos** (Emotion) y su propio sistema
-de tema.
+A complete, mature library, with **its own styling engine** (Emotion) and its own theme
+system.
 
 ```bash
 bun add @mui/material @emotion/react @emotion/styled
 ```
 
-| A favor | En contra |
+| For | Against |
 |---|---|
-| El catálogo más grande: DataGrid, date pickers, tablas complejas | **No se lleva bien con Tailwind** — son dos sistemas de estilos compitiendo |
-| Sistema de tema muy potente | El look Material es fuerte; quitárselo es trabajo real |
-| Documentación y comunidad enormes | Bundle más pesado |
-| Accesibilidad cuidada | La API tiene su propia curva |
+| The largest catalog: DataGrid, date pickers, complex tables | **Does not get along with Tailwind** — two styling systems competing |
+| A very powerful theme system | The Material look is strong; removing it is real work |
+| Huge documentation and community | Heavier bundle |
+| Careful accessibility | The API has its own learning curve |
 
-**Cuándo:** dashboards y aplicaciones internas con mucha tabla, filtro y formulario complejo,
-donde el catálogo te ahorra semanas y el look Material no es un problema.
+**When:** dashboards and internal applications with many tables, filters and complex forms,
+where the catalog saves weeks and the Material look is not a problem.
 
-> **Regla dura si se elige MUI: se va Tailwind.** Mantener los dos es la receta para que la
-> mitad de los estilos vivan en `sx` y la otra mitad en clases, y que nadie sepa cuál gana.
-> Con MUI, el sistema de tokens es el `theme` de MUI y los estilos van en `sx` / `styled`.
-> El orquestador debe dejar esto escrito en `PROJECT_CONTEXT.md` y en `DESIGN_RULES.md`.
+> **Hard rule if MUI is chosen: Tailwind goes away.** Keeping both is the recipe for half
+> the styles living in `sx` and the other half in classes, with nobody knowing which wins.
+> With MUI, the token system is MUI's `theme` and styles go in `sx` / `styled`. The
+> orchestrator must write this in `PROJECT_CONTEXT.md` and in `DESIGN_RULES.md`.
 
 ---
 
-## Cómo elegir
+## How to choose
 
-| Si el proyecto… | Elige |
+| If the project… | Choose |
 |---|---|
-| Tiene un diseño propio y específico que hay que respetar al detalle | **shadcn/ui** |
-| Es una landing o sitio corporativo, y hay que entregar rápido | **Hero UI** |
-| Es un dashboard con tablas, filtros y formularios complejos | **MUI** |
-| Ya tiene código con una de las tres | **Esa.** Migrar a mitad de proyecto no se paga |
-| El cliente tiene un design system propio en Figma | **shadcn/ui** — es la única que te deja replicarlo sin pelear |
+| Has a custom, specific design that must be respected in detail | **shadcn/ui** |
+| Is a landing page or corporate site, and has to be delivered fast | **Hero UI** |
+| Is a dashboard with tables, filters and complex forms | **MUI** |
+| Already has code with one of the three | **That one.** Migrating mid-project does not pay off |
+| The client has its own design system in Figma | **shadcn/ui** — the only one that lets you replicate it without fighting |
 
 ---
 
-## Qué cambia para `frontend-build` según la elegida
+## What changes for `frontend-build` depending on the choice
 
 | | shadcn/ui | Hero UI | MUI |
 |---|---|---|---|
-| **Estilos** | Tailwind | Tailwind | `sx` / `styled` — **sin Tailwind** |
-| **Tokens viven en** | `tailwind.config` / `@theme` | plugin de tema de Hero UI + Tailwind | `createTheme()` de MUI |
-| **Instalar un componente** | `bunx shadcn@latest add <x>` | ya viene en el paquete | ya viene en el paquete |
-| **Personalizar** | editas el archivo, es tuyo | `classNames` y variantes del tema | `sx`, `styled()`, `components` del tema |
-| **Antes de crear uno propio** | mira si shadcn lo tiene | mira el catálogo de Hero UI | mira el catálogo de MUI |
-| **Modo oscuro** | clase `dark` de Tailwind | `ThemeProvider` de Hero UI | `colorSchemes` de MUI |
-| **Accesibilidad base** | Radix | React Aria | propia de MUI |
+| **Styles** | Tailwind | Tailwind | `sx` / `styled` — **no Tailwind** |
+| **Tokens live in** | `tailwind.config` / `@theme` | Hero UI's theme plugin + Tailwind | MUI's `createTheme()` |
+| **Installing a component** | `bunx shadcn@latest add <x>` | already in the package | already in the package |
+| **Customizing** | you edit the file, it is yours | `classNames` and theme variants | `sx`, `styled()`, the theme's `components` |
+| **Before creating your own** | check whether shadcn has it | check Hero UI's catalog | check MUI's catalog |
+| **Dark mode** | Tailwind's `dark` class | Hero UI's `ThemeProvider` | MUI's `colorSchemes` |
+| **Base accessibility** | Radix | React Aria | MUI's own |
 
-**Común a las tres:**
+**Common to all three:**
 
-- **Nunca reimplementes a mano un primitivo que la librería ya trae** (dialog, select, tabs,
-  popover, combobox). El comportamiento de teclado y foco de esos widgets es donde se cuelan
-  la mayoría de los bugs de accesibilidad, y las tres ya lo tienen resuelto.
-- **Cero valores mágicos.** Todo sale del sistema de tokens de la librería elegida.
-- **Consulta Context7** antes de usar la API de la librería: las tres cambian entre versiones
-  mayores.
+- **Never reimplement by hand a primitive the library already ships** (dialog, select, tabs,
+  popover, combobox). The keyboard and focus behavior of those widgets is where most
+  accessibility bugs slip in, and all three already have it solved.
+- **Zero magic values.** Everything comes from the chosen library's token system.
+- **Check Context7** before using the library's API: all three change between major versions.
 
 ---
 
-## Qué le dice el brief a la herramienta de diseño
+## What the brief tells the design tool
 
-El brief que produce `project-kickoff` tiene que nombrar la librería, porque cambia lo que es
-razonable diseñar:
+The brief `project-kickoff` produces has to name the library, because it changes what is
+reasonable to design:
 
-- **shadcn/ui** → "se implementa con Tailwind + shadcn/ui (Radix). Usa la escala de espaciado
-  de Tailwind. Puedes proponer tratamientos visuales propios: el componente se escribe a
-  medida."
-- **Hero UI** → "se implementa con Hero UI. Prefiere composiciones de su catálogo (Button,
-  Card, Modal, Input, Dropdown, Tabs, Accordion, Table). Diseña dentro de lo que su sistema
-  de tema permite: radios, colores y tamaños son tokens, no valores libres por componente."
-- **MUI** → "se implementa con MUI. Prefiere componentes de su catálogo. El diseño puede
-  alejarse del look Material, pero debe expresarse como un tema de MUI (paleta, tipografía,
-  forma, sombras), no como estilos sueltos por pantalla."
+- **shadcn/ui** → "it is implemented with Tailwind + shadcn/ui (Radix). Use Tailwind's
+  spacing scale. You may propose your own visual treatments: the component is written to
+  measure."
+- **Hero UI** → "it is implemented with Hero UI. Prefer compositions from its catalog
+  (Button, Card, Modal, Input, Dropdown, Tabs, Accordion, Table). Design within what its
+  theme system allows: radii, colors and sizes are tokens, not free values per component."
+- **MUI** → "it is implemented with MUI. Prefer components from its catalog. The design may
+  move away from the Material look, but it must be expressed as an MUI theme (palette,
+  typography, shape, shadows), not as loose styles per screen."

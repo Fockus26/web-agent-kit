@@ -1,73 +1,77 @@
 # decisions/
 
-**Un archivo por decisión.** No hay índice aparte: la primera línea de cada archivo es su
-fila de índice, y el índice se saca con `grep`. Así dos PRs en paralelo que deciden cosas
-nunca chocan, igual que los changesets: cada uno trae sus archivos nuevos y nadie edita un
-archivo compartido.
+**One file per decision.** There is no separate index: each file's first line is its index
+row, and the index comes from `grep`. So two parallel PRs that decide things never collide,
+just like changesets: each brings its new files and nobody edits a shared file.
 
-## Buscar
+## Search
 
 ```bash
-grep -rh "^# D" context/decisions/ | sort               # el índice entero (una línea cada una)
-grep -rhi "^# D.*ranking\|^# D.*leaderboard" context/decisions/   # ¿hay algo decidido sobre esto?
-cat context/decisions/D042-*.md                          # el detalle de una decisión citada
+grep -rh "^# D" context/decisions/ | sort               # the whole index (one line each)
+grep -rhi "^# D.*ranking\|^# D.*leaderboard" context/decisions/   # anything decided about this?
+cat context/decisions/D042-*.md                          # the detail of a cited decision
 ```
 
-## Nombre
+## Name
 
-`decisions/D0NN-<tema-kebab>.md`: `D001-primario-azul-logo.md`, `D017-tutorial-inicial.md`.
-El ID es secuencial y nunca se reutiliza.
+`decisions/D0NN-<topic-kebab>.md`: `D001-primary-logo-blue.md`, `D017-first-run-tutorial.md`.
+The ID is sequential and never reused.
 
-## Formato
+## Format
 
 ```markdown
-# D0NN · <Categoría> · <resumen de una línea, ≤ 120 caracteres> · <Estado>
+# D0NN · <Category> · <one-line summary, ≤ 120 characters> · <Status>
 
-**Decisión:** <qué se decidió, en 1-2 líneas>
-**Por qué:** <la razón; el dato o la medición que la sostiene>
-**Alternativa descartada:** <cuál y por qué no> (si la hubo)
+**Decision:** <what was decided, in 1-2 lines>
+**Why:** <the reason; the data or measurement behind it>
+**Discarded alternative:** <which and why not> (if there was one)
 ```
 
-`Estado`: `Implementado` | `Pendiente` | `Obsoleta → D0NN`. Categorías habituales: Colores,
-Tipografía, Tokens, Layout, Componentes, Responsive, Contenido, SEO, Datos, Auth, Pagos, QA.
+`Status`: `Implemented` | `Pending` | `Obsolete → D0NN`. Usual categories: Colors,
+Typography, Tokens, Layout, Components, Responsive, Content, SEO, Data, Auth, Payments, QA,
+Email.
 
-Ejemplo, `decisions/D001-primario-azul-logo.md`:
+Example, `decisions/D001-primary-logo-blue.md`:
 
 ```markdown
-# D001 · Colores · Primario en #0F6E8C (azul del logo), #5FB4D1 en oscuro · Implementado
+# D001 · Colors · Primary #0F6E8C (logo blue), #5FB4D1 in dark · Implemented
 
-**Decisión:** el primario es el azul del logo, #0F6E8C, en claro; #5FB4D1 en oscuro.
-**Por qué:** marca obligatoria. Texto blanco sobre #0F6E8C = 5,6:1 (AA); en oscuro,
-#0B1B22 sobre #5FB4D1 = 8,1:1.
-**Alternativa descartada:** #1487AD (más vivo) — 3,9:1 con texto blanco, falla AA.
+**Decision:** the primary is the logo blue, #0F6E8C, in light; #5FB4D1 in dark.
+**Why:** mandatory brand color. White text on #0F6E8C = 5.6:1 (AA); in dark, #0B1B22 on
+#5FB4D1 = 8.1:1.
+**Discarded alternative:** #1487AD (brighter) — 3.9:1 with white text, fails AA.
 ```
 
-## Reglas
+## Rules
 
-- Nunca se borra una decisión ni se reutiliza un ID. Si cambia: en la cabecera de la vieja,
-  el estado pasa a `Obsoleta → D0NN`, y la nueva va en su propio archivo con el ID siguiente.
-- La escribe quien decide, al cerrar la unidad — no "después".
-- La cabecera es una sola línea: si el resumen necesita un párrafo, el párrafo va al cuerpo.
-- Con unidades en paralelo, cada una usa el rango de IDs que le reservó el orquestador. Sin
-  orquestador, el ID siguiente al más alto de `main`
-  (`ls context/decisions | sort | tail -1`); si al sincronizar con `main` aparece otro
-  archivo con tu mismo ID, renumera el tuyo (archivo, cabecera y citas en tu rama).
+- A decision is never deleted and an ID is never reused. If it changes: in the old one's
+  header, the status becomes `Obsolete → D0NN`, and the new one goes in its own file with the
+  next ID.
+- Written by whoever decides, when the unit closes — not "later".
+- The header is a single line: if the summary needs a paragraph, the paragraph goes in the body.
+- With parallel units, each uses the ID range the orchestrator reserved for it. Without an
+  orchestrator, the ID after the highest on `main`
+  (`git fetch && git ls-tree --name-only origin/main context/decisions/ | sort | tail -1`);
+  if, when syncing with `main`, another file with your same ID shows up, renumber yours
+  (file, header and citations on your branch).
+- This folder goes in git (it is what a new session needs to know what was decided).
+- Projects from before kit 3.8.0 have their decisions in Spanish (`Categoría · Resumen ·
+  Estado`, `Implementado`): they stay as they are; new ones may follow the same language.
 
-## Migrar un proyecto con `DECISIONS_INDEX.md` y archivos por tema
+## Migrating a project with `DECISIONS_INDEX.md` and per-topic files
 
-En un PR propio, `chore/decisiones-por-archivo`, sin mezclar con otra cosa:
+In a PR of its own, `chore/decisions-per-file`, not mixed with anything else:
 
-1. Por cada `## D0NN — <título>` de `decisions/NN-<tema>.md`, un archivo
-   `decisions/D0NN-<tema-kebab>.md` con la cabecera armada desde su fila de
-   `DECISIONS_INDEX.md` (ID · Categoría · Resumen · Estado) y el cuerpo sin cambios (sin la
-   línea `**Estado:**`, que pasa a la cabecera). Una sección que agrupa varias
-   (`## D037 / D038 / D039`) da un archivo por ID: el cuerpo en el primero y
-   `**Agrupa:** ver D037` en los demás.
-2. Comprueba que no se pierde ninguna: el número de IDs de `DECISIONS_INDEX.md` es el mismo
-   que `ls context/decisions/D*.md | wc -l`.
-3. Borra `DECISIONS_INDEX.md` y los `NN-<tema>.md` viejos; cambia las citas
-   `decisions/NN-<tema>.md` por el ID (`grep -rn "decisions/[0-9]" .`).
-4. Actualiza `CLAUDE.md` (la tabla de "buscar, no leer" y lo que va al repo).
+1. For each `## D0NN — <title>` in `decisions/NN-<topic>.md`, a file
+   `decisions/D0NN-<topic-kebab>.md` with the header built from its `DECISIONS_INDEX.md`
+   row (ID · Category · Summary · Status) and the body unchanged (without the `**Status:**`
+   line, which moves to the header). A section that groups several (`## D037 / D038 / D039`)
+   becomes one file per ID: the body in the first and `**Groups:** see D037` in the others.
+2. Check nothing is lost: the number of IDs in `DECISIONS_INDEX.md` equals
+   `ls context/decisions/D*.md | wc -l`.
+3. Delete `DECISIONS_INDEX.md` and the old `NN-<topic>.md` files; replace the citations
+   `decisions/NN-<topic>.md` with the ID (`grep -rn "decisions/[0-9]" .`).
+4. Update `CLAUDE.md` (the "search, don't read" table and what goes in the repo).
 
-Los PRs abiertos que añadían filas al índice, al sincronizar con `main`: su fila pasa a ser
-la cabecera de un archivo nuevo y su cambio a `DECISIONS_INDEX.md` se descarta.
+Open PRs that added rows to the index, when syncing with `main`: their row becomes the
+header of a new file and their change to `DECISIONS_INDEX.md` is dropped.
