@@ -103,7 +103,8 @@ reviewable in two minutes. One unit = one branch = {{one PR | one local merge}}.
 In git: `.kit-version`, `supabase/` (migrations, seed, templates) and the fixed documents
 of `context/`: {{PROJECT_CONTEXT, DESIGN_RULES, COLORS, DESIGN_TOKENS, TYPOGRAPHY, decisions/}}.
 Local (gitignored): {{CURRENT_PHASE, CONTENT_CHECKLIST, KIT_FEEDBACK, inventories, PHASE_LOG/,
-plans/, .env*}} — backed up to `context-state` with `bun run context:backup`.
+plans/}} — backed up to `context-state` with `bun run context:backup`. `.env.local` is
+pulled from Vercel, never hand-edited (`vercel env pull`; kit `reference/DEPLOY.md` §2c).
 The worktree pool slots (`orchestrate`, `..\<repo>-wt\wtN`) get the `.env*` files copied,
 but **not** the local `context/`: it is read in the main folder
 (`{{ABSOLUTE_REPO_PATH}}`). A subagent in a slot may lack write permission there: then it

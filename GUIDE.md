@@ -420,6 +420,7 @@ feedback ones (they stay in `feedback/` as history). Then, `/kit-update` in each
 | `bun run qa:local -- --port <p>` | Server against the local database with the test accounts (`--offline` without Docker) |
 | `bun run context:backup` | Copies the local `context/` to the `context-state` branch |
 | `bun run context:restore` | Brings it back after losing the folder (never overwrites a local file) |
+| `bunx vercel env pull .env.local --yes` | Brings the environment variables from Vercel (Development) to `.env.local` |
 | `bunx playwright install chromium` | Once per machine, before the first screenshot or audit |
 
 Normally you do not run them: the skills do. They are there for when you want to check
@@ -435,9 +436,15 @@ something.
   to know what was decided. Local: the working state (`CURRENT_PHASE`, `CONTENT_CHECKLIST`,
   `KIT_FEEDBACK`, inventories, `PHASE_LOG/`, `plans/`), because parallel workers would
   collide on it in every PR. **Never ignore the whole of `context/` or `supabase/`.**
-- **If you lose the folder:** clone the repo and run `bun run context:restore`. The local
-  state comes back from the `context-state` branch as of the last backup (the agents make one
-  when closing each unit and each wave). Only on private repos.
+- **Environment variables: Vercel is where they live.** `.env.local` is a copy pulled from
+  there (`vercel env pull`), not a file you edit: a new variable goes in Vercel (`vercel env
+  add`, or the dashboard) and is pulled again. Your machine's overrides, in
+  `.env.development.local`. GitHub Secrets only receives the variable a workflow needs: it
+  cannot be read back, so it is never the source. Detail: `reference/DEPLOY.md` §2c.
+- **If you lose the folder:** clone the repo, run `bun run context:restore` and
+  `bunx vercel env pull .env.local --yes`. The local state comes back from the
+  `context-state` branch as of the last backup (the agents make one when closing each unit
+  and each wave; only on private repos), and the variables from Vercel.
 - **`context/CURRENT_PHASE.md`** is a board (≤ 60 lines): what is open, what blocks, what is
   next. If it grows, what is closed moves to `PHASE_LOG/<branch>.md`. The agents prune it
   when closing each unit; if you see they do not, ask them.

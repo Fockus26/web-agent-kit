@@ -292,7 +292,7 @@ web-agent-kit/
     ├── STATUS-SCREENS.md          404 · 500 · offline · maintenance: catalog and implementation
     ├── BRAND-ASSETS.md            logo, icon, favicon, touch icon, OG: what is asked and what is generated
     ├── EMAIL-TEMPLATES.md         the app's emails: catalog, design constraints, React Email, Supabase, Firebase, provider
-    ├── DEPLOY.md                  creating the GitHub repo and deploying on Vercel (or adopting an existing project)
+    ├── DEPLOY.md                  GitHub repo, Vercel deployment (or adopting one) and where the environment variables live
     └── scripts/
         ├── design-qa.ts           Playwright sweep (with node)
         ├── test-related.ts        → scripts/: tests affected by the import graph
