@@ -1,6 +1,6 @@
 ---
 name: kit-update
-description: Brings a project up to date with the latest web-agent-kit version. Use it when César asks "update the kit", "is the kit up to date?" ("actualiza el kit", "¿está al día el kit?"), "/kit-update", or when a project carries a kit version older than main's. Compares the project's version (.kit-version), the installed skills' version and the kit's origin/main (local clone + git fetch); if they match it says so and checks for missing pieces, if the skills are old it reinstalls them and asks for a new session, and if the project is behind it computes the path in UPDATES.md and applies it on a branch and a PR, one commit per version.
+description: Brings a project up to date with the latest web-agent-kit version (also from a cloud session, cloning the kit). Use it when César asks "update the kit", "is the kit up to date?" ("actualiza el kit", "¿está al día el kit?"), "/kit-update", or when a project carries a kit version older than main's. Compares the project's version (.kit-version), the installed skills' version and the kit's origin/main (local clone + git fetch); if they match it says so and checks for missing pieces, if the skills are old it reinstalls them and asks for a new session, and if the project is behind it computes the path in UPDATES.md and applies it on a branch and a PR, one commit per version.
 ---
 
 # Update the kit in a project
@@ -8,6 +8,37 @@ description: Brings a project up to date with the latest web-agent-kit version. 
 Runs in a session opened **in the project's folder**. It reads the kit from its local
 clone, always as it is on `origin/main` (what is published), never from a half-done branch.
 It does not touch the project's `main`: everything goes on a branch and a PR.
+
+**In a cloud session** (`CLAUDE_CODE_REMOTE=true`) it works too, with the differences of
+"Cloud session" below: read that section first.
+
+## Cloud session
+
+The container has no kit clone, no `~/.claude/` and no PowerShell. Why this path exists:
+César ran out of local sessions and needed to update a project that was behind from the
+cloud.
+
+- **`<clone>`**: add `Fockus26/web-agent-kit` to the session (`add_repo`) and clone it in the
+  scratchpad: `git clone https://github.com/Fockus26/web-agent-kit.git "<scratchpad>/web-agent-kit"`.
+  Its `origin/main` is the published version, as always.
+- **Installed skills** = the project's copy in `.claude/skills/` (there is no global install
+  and no `web-agent-kit.json`). Step 2b does not apply: there is nothing to reinstall
+  globally, and every version's "global pieces / install-kit" step is skipped. If the
+  `kit-update` loaded in this session is older than `<kit>`'s (or the project had none and
+  César pointed you to `<kit>/.claude/skills/kit-update/SKILL.md`), follow `<kit>`'s.
+- **PowerShell** for the steps that run `new-project.ps1`: download it to the scratchpad
+  (the tarball goes through the proxy; tested 2026-10-20):
+  ```bash
+  mkdir -p "<scratchpad>/pwsh" && curl -sSL https://github.com/PowerShell/PowerShell/releases/download/v7.4.6/powershell-7.4.6-linux-x64.tar.gz | tar xz -C "<scratchpad>/pwsh" && chmod +x "<scratchpad>/pwsh/pwsh"
+  ```
+  and run `"<scratchpad>/pwsh/pwsh" -NoProfile -File "<kit>/new-project.ps1" …`. If the
+  download fails, stop at the first version that needs it and say so.
+- **What cannot be done from the cloud** goes to the PR's "Acciones manuales", never
+  improvised: Vercel commands without a login (`vercel env ls`), Docker, and anything that
+  reads `.env.local`. There are no project memories in the cloud: skip that part of step 5.
+- **`gh`** not authenticated → the GitHub MCP tools (`cloud-session` skill, table).
+- **Closing** per the `cloud-session` skill (PR, green CI, merged by you), not §9's "César
+  merges". Then: "Abre una sesión nueva: las skills nuevas cargan al arrancar."
 
 **Language:** everything you tell César, the commits and the PR are in Spanish. Projects
 created before kit 3.8.0 keep their `context/` in Spanish (same files, Spanish headings,
@@ -125,6 +156,8 @@ happened: a project on 3.5.0 without `test:related` or `shots`, because it start
 | **`.gitignore` does NOT ignore** `supabase/` (except `.temp/`, `.branches/`) or the fixed documents of `context/` (`PROJECT_CONTEXT`, `DESIGN_RULES`, `COLORS`, `DESIGN_TOKENS`, `TYPOGRAPHY`, `decisions/`) | `git check-ignore -v supabase/migrations context/PROJECT_CONTEXT.md context/decisions` |
 | `biome.json` (if any) excludes `.claude/worktrees` | `files.includes` / `files.ignore` |
 | `CLAUDE.md` ≤ 8 KB | `wc -c CLAUDE.md` |
+| Kit copy for cloud sessions: `.claude/skills/<each kit skill>` and `.claude/agents/<each kit agent>`, equal to `<kit>`'s, not gitignored | `diff -rq "<kit>/.claude/skills/<name>" .claude/skills/<name>` per kit skill (and agents); `git check-ignore -q .claude/skills` |
+| `.claude/settings.json` with the `SessionStart` hook to `scripts/cloud-setup.sh`, and the script | `grep cloud-setup .claude/settings.json`; `ls scripts/cloud-setup.sh` |
 | Backup of the local `context/` on the remote | `git ls-remote --heads origin context-state` |
 
 What is missing is added with the kit's own script, which only adds what does not exist and
@@ -159,6 +192,14 @@ version is done:
 
 If a version fails halfway, stop there: what was done stays in commits and `.kit-version`
 says how far it got.
+
+With every version applied, **refresh the project's copy of the skills and agents** (cloud
+sessions load only that one): `powershell -ExecutionPolicy Bypass -File "<kit>\install-kit.ps1" -Project .`
+(macOS/Linux: `bash "<kit>/install-kit.sh" --project .`). It replaces only the kit's skills
+and agents; the project's own stay. Its own commit:
+`chore(kit): copia de skills y agentes <versión>`. If `.claude/settings.json` existed
+without the cloud hook, merge the kit's `reference/claude/settings.json` `SessionStart`
+into it (keep what it had).
 
 The project's `CLAUDE.md` stays at 8 KB or less (`wc -c CLAUDE.md`). If a step pushes it
 over, replace the old paragraph that the step supersedes instead of adding, and if it still

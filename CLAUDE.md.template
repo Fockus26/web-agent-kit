@@ -61,9 +61,8 @@ bun run shots:publish        # uploads them to the pr-shots branch; markdown in 
 bun run context:backup       # local context/ → branch context-state (restore: context:restore)
 ```
 
-**Dev server:** César starts it. Exceptions: the QA agents (`wave-qa`, `functional-qa`)
-always, and the workers if César authorizes it for a batch (each on its port, in the
-background). Build, typecheck, lint and tests run without asking.
+**Dev server:** César starts it. Exceptions: the QA agents (`wave-qa`, `functional-qa`),
+and the workers if César authorizes it for a batch (each on its port, in the background). Build, typecheck, lint and tests run without asking.
 
 **QA against a local database:** `bun run qa:local -- --port <p>` starts {{Supabase}} in
 Docker (migrations + seed), creates the `.env.test.local` accounts (`EMAIL_TEST`/
@@ -90,6 +89,8 @@ reviewable in two minutes. One unit = one branch = {{one PR | one local merge}}.
 
 - **`pr` mode:** on your branch you may commit and push without asking — César's approval is
   the PR review. **Never** push to `main`, never `gh pr merge`, never auto-merge.
+- **Cloud session** (`CLAUDE_CODE_REMOTE=true`): `cloud-session` skill at start and close.
+  It overrides both rules above: each unit ends merged into `main` (PR + green CI).
 - **`local` mode:** nothing gets committed without César's explicit approval (`git-flow` pause).
 - **Version:** {{nobody touches `version` or `CHANGELOG.md`. Visible change →
   `.changeset/<desc>.md` (`git-flow` §2.1.3). The `chore(release): versión` PR is opened by

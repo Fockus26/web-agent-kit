@@ -64,8 +64,22 @@ try {
   New-Item -ItemType Directory -Force design, scripts, .github\workflows, tests\unit | Out-Null
   # `bun test ./tests/unit` fails if the folder does not exist; empty + --pass-with-no-tests passes.
   if (-not (Get-ChildItem tests\unit -Force)) { New-Item tests\unit\.gitkeep | Out-Null }
-  foreach ($f in 'test-related.ts', 'pr-screenshots.ts', 'publish-pr-shots.sh', 'qa-local.ts', 'context-backup.sh') {
+  foreach ($f in 'test-related.ts', 'pr-screenshots.ts', 'publish-pr-shots.sh', 'qa-local.ts', 'context-backup.sh', 'cloud-setup.sh') {
     CopyIfMissing "$kit\reference\scripts\$f" "scripts\$f"
+  }
+  # Cloud sessions (claude.ai/code) only load what is committed in the repo: the kit's skills
+  # and agents go in the project's .claude/ (replaced on each run, like install-kit), and the
+  # SessionStart hook runs scripts/cloud-setup.sh (bun install + context:restore; local: no-op).
+  & "$kit\install-kit.ps1" -Project . *> $null
+  Write-Host "  + .claude\skills, .claude\agents (kit copy, for cloud sessions)"
+  if (Test-Path .claude\settings.json) {
+    $settings = Get-Content .claude\settings.json -Raw
+    if ($settings -notmatch 'cloud-setup\.sh') {
+      Write-Host "  = .claude\settings.json exists without the cloud hook: add the SessionStart of $kit\reference\claude\settings.json" -ForegroundColor Yellow
+    }
+  } else {
+    Copy-Item "$kit\reference\claude\settings.json" .claude\settings.json
+    Write-Host "  + .claude\settings.json (SessionStart -> scripts/cloud-setup.sh)"
   }
   CopyIfMissing "$kit\github-templates\pull_request_template.md" '.github\pull_request_template.md'
   CopyIfMissing "$kit\github-templates\workflows\ci.yml" '.github\workflows\ci.yml'

@@ -11,6 +11,10 @@
 
   With -Pull it runs `git pull` in the kit first.
 
+  With -Project <path> it copies them into that project's .claude\ instead, to be committed
+  with it: a Claude Code cloud session only loads what is in the repo, never ~\.claude\.
+  No web-agent-kit.json there: the project's .kit-version says which version its copy is.
+
   At the end it writes ~\.claude\web-agent-kit.json with this clone's path and the installed
   version: the kit-update skill reads it to compare with the kit's published version.
 
@@ -22,13 +26,20 @@
 
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\Desktop\agents\web-agent-kit\install-kit.ps1" -Pull
+
+.EXAMPLE
+  powershell -ExecutionPolicy Bypass -File "...\web-agent-kit\install-kit.ps1" -Project C:\path\my-project
 #>
 [CmdletBinding()]
-param([switch] $Pull)
+param([switch] $Pull, [string] $Project)
 
 $ErrorActionPreference = 'Stop'
 $kit = $PSScriptRoot
-$target = Join-Path $env:USERPROFILE '.claude'
+$target = Join-Path $HOME '.claude'
+if ($Project) {
+  if (-not (Test-Path (Join-Path $Project 'package.json'))) { throw "There is no package.json in $Project" }
+  $target = Join-Path (Resolve-Path $Project).Path '.claude'
+}
 
 if ($Pull) {
   Write-Host "... git pull in $kit"
@@ -51,6 +62,12 @@ foreach ($skill in Get-ChildItem (Join-Path $kit '.claude\skills') -Directory) {
 foreach ($agent in Get-ChildItem (Join-Path $kit '.claude\agents') -Filter '*.md' -File) {
   Copy-Item $agent.FullName (Join-Path $target "agents\$($agent.Name)") -Force
   Write-Host "  + agent  $($agent.BaseName)"
+}
+
+if ($Project) {
+  Write-Host ''
+  Write-Host "Done. Commit $target\skills and $target\agents with the project." -ForegroundColor Green
+  return
 }
 
 # For kit-update: where the clone is and which skills version got installed.

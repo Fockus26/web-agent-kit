@@ -15,6 +15,10 @@ them as they are.
 The skill activates at two moments: **when opening** a unit of work and **when closing**
 it. Between those two moments git is not touched at all.
 
+**In a cloud session** (`CLAUDE_CODE_REMOTE=true`) the branch and the closing follow the
+`cloud-session` skill: the container is deleted when the session ends, so each unit ends
+merged into `main` by the agent (PR + green CI). The gates of §2.1 do not change.
+
 ---
 
 ## 0. Branch state: `context/GIT_STATE.md`
