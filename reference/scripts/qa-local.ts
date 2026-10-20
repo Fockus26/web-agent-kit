@@ -36,6 +36,16 @@
  * (`*.supabase.co`) and this script does not override it, it aborts. Better not to start
  * than to test against the real database because of a variable with a different name.
  *
+ * Before anything it checks Playwright's Chromium (wave-qa needs it) and installs it if it is
+ * missing, with node and the project's own Playwright: `bunx` was not on the PATH and the QA
+ * stopped twice for it (world-flags). Not in a cloud session: there the browser comes
+ * preinstalled and must not be downloaded.
+ *
+ * The local stack starts without Studio and analytics and with 5 minutes of health check
+ * (env overrides; the project's config.toml is not touched): QA needs neither, and on a slow
+ * machine the default 2 minutes ran out on the first start (world-flags). The first start
+ * downloads the images and takes minutes.
+ *
  * Emails the app sends (sign-up, recovery) do not go out: Mailpit collects them (the URL is
  * printed at startup).
  *
@@ -111,6 +121,24 @@ if (taken) {
   process.exit(1)
 }
 
+// 0. Playwright's Chromium.
+try {
+  const { chromium } = await import('@playwright/test')
+  if (!existsSync(chromium.executablePath())) {
+    if (process.env.CLAUDE_CODE_REMOTE === 'true') {
+      console.warn('! Playwright\'s Chromium is not where this Playwright expects it (cloud: do not download it).')
+    } else {
+      console.log('… Playwright\'s Chromium is missing: installing it (once per machine)')
+      const r = spawnSync(process.execPath, ['node_modules/@playwright/test/cli.js', 'install', 'chromium'], {
+        stdio: 'inherit',
+      })
+      if (r.status !== 0) console.warn('! It failed: node node_modules/@playwright/test/cli.js install chromium')
+    }
+  }
+} catch {
+  console.warn('! The project has no @playwright/test: wave-qa will not be able to open a browser.')
+}
+
 function readEnv(file: string): Record<string, string> {
   if (!existsSync(file)) return {}
   const out: Record<string, string> = {}
@@ -122,7 +150,16 @@ function readEnv(file: string): Record<string, string> {
 }
 
 function supabase(...a: string[]): string {
-  const r = spawnSync('supabase', a, { encoding: 'utf8', shell: process.platform === 'win32' })
+  const r = spawnSync('supabase', a, {
+    encoding: 'utf8',
+    shell: process.platform === 'win32',
+    env: {
+      SUPABASE_STUDIO_ENABLED: 'false',
+      SUPABASE_ANALYTICS_ENABLED: 'false',
+      SUPABASE_DB_HEALTH_TIMEOUT: '5m',
+      ...process.env, // whatever César set wins
+    },
+  })
   if (r.status !== 0) {
     const detail = (r.stderr || r.stdout || '').trim()
     const docker = /docker|daemon|pipe/i.test(detail) ? '\n→ Is Docker Desktop running?' : ''
@@ -195,7 +232,7 @@ if (uncovered.length) {
 }
 
 // 2. Local stack and a clean database.
-console.log('… supabase start')
+console.log('… supabase start (the first time it downloads the images: minutes)')
 supabase('start')
 if (reset) {
   console.log('… supabase db reset (migrations + seed)')

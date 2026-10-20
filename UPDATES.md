@@ -37,6 +37,56 @@ other, the agent shows them and asks before choosing.
 
 ---
 
+## 3.11.0 — 2026-10-20 · Feedback round 2 (inversiones-js, world-flags)
+
+**What changed**
+
+- **`new-project.ps1 -OnlyPieces`** (implies `-Existing`): only the pieces the skills take
+  for granted — scripts, `package.json` scripts and devDependencies, `.gitignore`, Biome, the
+  kit copy in `.claude/`. No `phases/`, `design/`, `.github/`, `.changeset/`, `context/`,
+  `CLAUDE.md` or `.kit-version`. `kit-update`'s piece check uses it. It adds `typecheck`
+  (`next typegen`) only in Next.js projects, and rewrites `package.json` only if it added a
+  script. Why: two projects got phases and CI they did not need, and an Astro one a Next
+  typecheck.
+- **`test-related.ts --dir=<folder>`** (repeatable) replaces the default `tests/` and `src/`.
+  Why: integration tests needing an emulator (Firebase `tests/rules`) ran — and failed — on
+  every `package.json` change.
+- **`qa-local.ts`** installs Playwright's Chromium if it is missing (with node and the
+  project's Playwright; not in the cloud), and starts Supabase without Studio and analytics
+  and with `health_timeout` 5m through env overrides (the project's `config.toml` is not
+  touched). Why: the QA stopped twice for the browser, and on a slow machine the stack's
+  2-minute health check ran out.
+- **`git-flow`**: a PR that will still get commits (QA in progress) is opened as a draft
+  and marked ready when done. Why: César merged a PR while its QA commit was being pushed
+  (world-flags #95 → #100).
+- **`orchestrate`**: an environment check before §0 (bun, gh, pwsh, agents, local
+  `context/`, `context:restore` if it is missing). Why: on a new machine a wave failed for
+  everything that was missing.
+- **`CLAUDE.md.template`**: no absolute path to the main folder (it was another PC's), and
+  from any worktree — pool slot or `.claude/worktrees/` — `context/` changes go back in the
+  report. Why: a session worktree's hook blocked writing to the main `context/`.
+- `UPDATES.md` 3.8.0 step 4: if a decision fixed the ignore of `supabase/`, a new decision
+  supersedes it.
+
+**Not taken in:** stopping Astro 7's daemonized `astro dev` from `qa-local` (world-flags):
+specific to a stack the kit does not cover end to end, and not verifiable here. A project
+on Astro ≥ 7 adds `astro dev stop` to its own `qa-local` exit.
+
+**Steps for a project on 3.10.0**
+
+1. Global pieces: `install-kit.ps1 -Pull` and a new session (skipped in a cloud session).
+2. `scripts/test-related.ts` and `scripts/qa-local.ts` ← `<kit>/reference/scripts/`. If the
+   project had edited them (`ENV_MAP`, `ROLE_BY_ENV`, `assignRole`, its own globs), carry
+   those edits over instead of overwriting. If it has tests that need an emulator or a
+   database, its `test:related` script gets `--dir=<the unit tests' folder>`.
+3. `CLAUDE.md`, section on what goes in the repo: replace the absolute path of the main
+   folder and the sentence about the subagent in a slot with: "it is read in the main folder
+   (first line of `git worktree list`). From a worktree (pool slot or `.claude/worktrees/`)
+   you may lack write permission there: return the `context/` changes in your report." (in
+   the project's language).
+
+---
+
 ## 3.10.0 — 2026-10-20 · Cloud sessions
 
 **What changed**
@@ -70,7 +120,7 @@ other, the agent shows them and asks before choosing.
 
 1. Global pieces: `install-kit.ps1 -Pull` and a new session (already done if `kit-update`
    runs it; skipped in a cloud session).
-2. `pwsh -File "<kit>/new-project.ps1" -Path . -Existing` (plus `-NoVersion` if the project is
+2. `pwsh -File "<kit>/new-project.ps1" -Path . -OnlyPieces` (plus `-NoVersion` if the project is
    without versioning): it adds `scripts/cloud-setup.sh`, `.claude/settings.json` and the
    copy of the skills and agents, and overwrites nothing else. If `.claude/settings.json`
    already existed without the hook, merge the `SessionStart` of
@@ -187,7 +237,9 @@ other, the agent shows them and asks before choosing.
    `context/*_INVENTORY.md`, `context/PHASE_LOG/`, `context/plans/`, and for Supabase only
    `supabase/.temp/`, `supabase/.branches/`, `supabase/.env*`); check there are no secrets
    in what gets added (`grep -rniE "password|secret|service_role|sk_live" supabase context`);
-   `git add` them in this PR. Without his yes, leave it and note it in the report.
+   `git add` them in this PR. If a decision in `context/decisions/` fixed that ignore (e.g.
+   `/supabase/*`), record a new one that supersedes it and mark the old one
+   `Obsolete → D0NN`. Without his yes, leave it and note it in the report.
 5. `scripts/context-backup.sh` ← `<kit>\reference\scripts\context-backup.sh`, and in
    `package.json`: `"context:backup": "bash scripts/context-backup.sh"`,
    `"context:restore": "bash scripts/context-backup.sh --restore"`. `.gitignore`: `.qa/` if

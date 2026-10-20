@@ -270,7 +270,8 @@ web-agent-kit/
 ├── install-kit.ps1 / .sh          installs or reinstalls skills and agents in ~/.claude/ (-Pull: git pull first)
 │                                    and leaves ~/.claude/web-agent-kit.json (path + version) for kit-update;
 │                                    -Project <path>: into that project's .claude/ (cloud sessions)
-├── new-project.ps1                creates the app and copies the kit (-Existing: adds what is missing)
+├── new-project.ps1                creates the app and copies the kit (-Existing: adds what is missing;
+│                                    -OnlyPieces: only scripts, dependencies, .gitignore and .claude/)
 ├── instalar-kit.* / nuevo-proyecto.ps1   pre-3.8.0 names, forward to the ones above
 ├── .claude/
 │   ├── skills/                    the 10 skills → ~/.claude/skills/ and each project's .claude/skills/

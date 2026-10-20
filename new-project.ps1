@@ -11,6 +11,13 @@
   # Project that already exists (only adds the kit's pieces; does not touch the app)
   & "...\web-agent-kit\new-project.ps1" -Path C:\Users\Admin\Documents\Work\melao -Existing
 
+.PARAMETER OnlyPieces
+  For a project already under way (implies -Existing): only the pieces the skills take for
+  granted (scripts/, package.json scripts and devDependencies, .gitignore, Biome, the kit
+  copy in .claude/). It does not copy context/, phases/, design/, .github/, .changeset/,
+  CLAUDE.md or .kit-version. Why: kit-update's piece check used -Existing and two projects
+  got phases/ and CI they did not need (inversiones-js, world-flags).
+
 .PARAMETER NoVersion
   The project has no version or CHANGELOG: Changesets is not installed (.changeset/,
   release.yml, @changesets/cli).
@@ -25,11 +32,13 @@
 param(
   [Parameter(Mandatory)] [string] $Path,
   [switch] $Existing,
-  [switch] $NoVersion
+  [switch] $NoVersion,
+  [switch] $OnlyPieces
 )
 
 $ErrorActionPreference = 'Stop'
 $kit = $PSScriptRoot
+if ($OnlyPieces) { $Existing = $true }
 
 if (-not $Existing) {
   if (Test-Path $Path) { throw "$Path already exists. Use -Existing to add the kit to a created project." }
@@ -59,9 +68,12 @@ try {
   # If context/ was already there, the project followed an earlier kit version: it does not
   # get the current version (it is not migrated); the kit-update skill deduces it and updates it.
   $olderKit = Test-Path context
-  CopyIfMissing "$kit\context-templates" 'context'
-  CopyIfMissing "$kit\phases-templates" 'phases'
-  New-Item -ItemType Directory -Force design, scripts, .github\workflows, tests\unit | Out-Null
+  if (-not $OnlyPieces) {
+    CopyIfMissing "$kit\context-templates" 'context'
+    CopyIfMissing "$kit\phases-templates" 'phases'
+    New-Item -ItemType Directory -Force design, .github\workflows | Out-Null
+  }
+  New-Item -ItemType Directory -Force scripts, tests\unit | Out-Null
   # `bun test ./tests/unit` fails if the folder does not exist; empty + --pass-with-no-tests passes.
   if (-not (Get-ChildItem tests\unit -Force)) { New-Item tests\unit\.gitkeep | Out-Null }
   foreach ($f in 'test-related.ts', 'pr-screenshots.ts', 'publish-pr-shots.sh', 'qa-local.ts', 'context-backup.sh', 'cloud-setup.sh') {
@@ -81,18 +93,22 @@ try {
     Copy-Item "$kit\reference\claude\settings.json" .claude\settings.json
     Write-Host "  + .claude\settings.json (SessionStart -> scripts/cloud-setup.sh)"
   }
-  CopyIfMissing "$kit\github-templates\pull_request_template.md" '.github\pull_request_template.md'
-  CopyIfMissing "$kit\github-templates\workflows\ci.yml" '.github\workflows\ci.yml'
+  if (-not $OnlyPieces) {
+    CopyIfMissing "$kit\github-templates\pull_request_template.md" '.github\pull_request_template.md'
+    CopyIfMissing "$kit\github-templates\workflows\ci.yml" '.github\workflows\ci.yml'
+  }
   # Version and CHANGELOG with Changesets: each PR brings its .changeset/*.md and the Action
   # keeps the version PR. That way two parallel PRs do not collide on `version` or CHANGELOG.md.
-  if (-not $NoVersion) {
+  if (-not $NoVersion -and -not $OnlyPieces) {
     CopyIfMissing "$kit\changeset-templates" '.changeset'
     CopyIfMissing "$kit\github-templates\workflows\release.yml" '.github\workflows\release.yml'
   }
 
   # .kit-version: which kit version the project starts with (the kit-update skill reads it
   # to compute the update path).
-  if (Test-Path .kit-version) {
+  if ($OnlyPieces) {
+    # .kit-version and CLAUDE.md belong to kit-update's migration, not to the pieces.
+  } elseif (Test-Path .kit-version) {
     Write-Host "  = .kit-version already exists ($((Get-Content .kit-version -Raw).Trim())), left as is" -ForegroundColor Yellow
   } elseif ($olderKit) {
     Write-Host "  = context/ was already there: no .kit-version. In a project session, /kit-update brings it up to date" -ForegroundColor Yellow
@@ -105,7 +121,8 @@ try {
   # CLAUDE.md: the kit's, keeping the "@AGENTS.md" that Next.js 16 adds.
   $claude = Get-Content "$kit\CLAUDE.md.template" -Raw
   $current = if (Test-Path CLAUDE.md) { Get-Content CLAUDE.md -Raw } else { '' }
-  if ($current -and $current.Trim() -ne '@AGENTS.md') {
+  if ($OnlyPieces) {
+  } elseif ($current -and $current.Trim() -ne '@AGENTS.md') {
     Write-Host "  = CLAUDE.md already has its own content, left as is" -ForegroundColor Yellow
   } else {
     $header = if (Test-Path AGENTS.md) { "@AGENTS.md`n`n" } else { '' }
@@ -115,9 +132,13 @@ try {
 
   # package.json scripts the skills use.
   $pkg = Get-Content package.json -Raw | ConvertFrom-Json
+  if (-not $pkg.scripts) { $pkg | Add-Member -NotePropertyName scripts -NotePropertyValue ([pscustomobject] @{}) }
+  # `next typegen` only exists in Next.js: in Astro/Vite the typecheck is the project's own
+  # (Astro: astro check) and is not invented here (world-flags, Astro 7).
+  $isNext = ($pkg.dependencies -and $pkg.dependencies.PSObject.Properties['next']) -or
+    ($pkg.devDependencies -and $pkg.devDependencies.PSObject.Properties['next'])
   $scripts = @{
     'test'            = 'bun test ./tests/unit --dots --pass-with-no-tests'
-    'typecheck'       = 'next typegen && tsc --noEmit'
     'test:related'    = 'bun scripts/test-related.ts'
     'shots'           = 'node scripts/pr-screenshots.ts .pr-shots.json'
     'shots:publish'   = 'bash scripts/publish-pr-shots.sh .pr-shots'
@@ -125,13 +146,20 @@ try {
     'context:backup'  = 'bash scripts/context-backup.sh'
     'context:restore' = 'bash scripts/context-backup.sh --restore'
   }
+  if ($isNext) { $scripts['typecheck'] = 'next typegen && tsc --noEmit' }
+  elseif (-not $pkg.scripts.PSObject.Properties['typecheck']) {
+    Write-Host "  = script typecheck: not Next.js, add the project's own by hand (Astro: astro check)" -ForegroundColor Yellow
+  }
+  $added = 0
   foreach ($k in $scripts.Keys) {
     if (-not $pkg.scripts.PSObject.Properties[$k]) {
       $pkg.scripts | Add-Member -NotePropertyName $k -NotePropertyValue $scripts[$k]
       Write-Host "  + script $k"
+      $added++
     }
   }
-  ($pkg | ConvertTo-Json -Depth 20) + "`n" | Set-Content package.json -NoNewline
+  # Rewritten only if a script was added: ConvertTo-Json reformats the whole file.
+  if ($added) { ($pkg | ConvertTo-Json -Depth 20) + "`n" | Set-Content package.json -NoNewline }
 
   # .gitignore: local PR screenshots.
   $ignore = if (Test-Path .gitignore) { Get-Content .gitignore -Raw } else { '' }
@@ -215,13 +243,18 @@ try {
 
   # What was copied takes the project's format (quotes, semicolons, indentation).
   if ($pkg.devDependencies -and $pkg.devDependencies.PSObject.Properties['@biomejs/biome']) {
-    $paths = @('package.json', 'scripts')
+    $paths = @('scripts')
+    if ($added) { $paths += 'package.json' }
     if (Test-Path biome.json) { $paths += 'biome.json' }
     if (Test-Path .changeset) { $paths += '.changeset' }
     bunx biome check --write @paths | Out-Null
     Write-Host "  ~ formatted with the project's Biome: $($paths -join ', ')"
   }
 
+  if ($OnlyPieces) {
+    Write-Host "`nDone (pieces only). Review with git status." -ForegroundColor Green
+    return
+  }
   Write-Host "`nDone. Next:" -ForegroundColor Green
   Write-Host "  1. git status  -> review what was copied"
   Write-Host "  2. open Claude Code in $Path and type /project-kickoff"

@@ -175,7 +175,9 @@ everything keeps working.
 & "...\web-agent-kit\new-project.ps1" -Path C:\path\to\project -Existing
 ```
 
-Adds only the kit's pieces; does not touch the app. If you also created it **with ESLint and
+Adds only the kit's pieces; does not touch the app. For a project already under way that
+only lacks scripts, dependencies or `.gitignore` entries, `-OnlyPieces` instead: it does not
+copy `phases/`, `context/`, `.github/` or `CLAUDE.md` (it is what `/kit-update` uses). If you also created it **with ESLint and
 without React Compiler** (it happened with `melao`: `--biome` and `--react-compiler` were
 missing; `--typescript` was valid, it is an alias of `--ts`), this leaves the app as if you
 had created it right:
