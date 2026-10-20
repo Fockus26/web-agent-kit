@@ -423,10 +423,16 @@ agents in `.claude/` (the global `~/.claude/` does not exist there). What change
   `context-state` branch (public repo, never backed up) it starts without the phase state.
 - **What the cloud does not have:** PowerShell (so no worktree pool: `orchestrate` runs the
   wave's units one after another), Docker (`qa:local --offline`), `.env.local` (the
-  variables the build needs go in the cloud environment's settings) and the kit's clone
-  (`/kit-update` and `install-kit` from your machine).
-- **Requirement:** the project on kit 3.10.0 or later (`/kit-update` from your machine adds
-  the copy and the hook) and the repo connected to Claude's GitHub app.
+  variables the build needs go in the cloud environment's settings).
+- **Requirement:** the project on kit 3.10.0 or later and the repo connected to Claude's
+  GitHub app. `/kit-update` also runs in the cloud: it clones the kit and downloads
+  PowerShell for the session; what needs your machine (Vercel, Docker) goes to the PR's
+  manual actions.
+- **A project that does not have the kit copy yet** (on a version before 3.10.0) does not
+  have `/kit-update` in the cloud either. The first time, open a cloud session of the
+  project and write: *"Agrega el repo Fockus26/web-agent-kit a la sesión, clónalo y sigue su
+  `.claude/skills/kit-update/SKILL.md` para actualizar este proyecto."* When it finishes,
+  open a **new** session: that is where the skills are loaded.
 
 ---
 
@@ -486,7 +492,7 @@ something.
 | Symptom | Cause | What to do |
 |---|---|---|
 | "Agent type 'feature-worker' not found" | The session opened before installing/editing the agent | New session |
-| In a cloud session the kit's skills/agents do not exist | The project has no copy in `.claude/` (kit < 3.10.0), or it is gitignored | `/kit-update` from your machine, commit `.claude/skills` and `.claude/agents` |
+| In a cloud session the kit's skills/agents do not exist | The project has no copy in `.claude/` (kit < 3.10.0), or it is gitignored | The first-time message of "Working from the cloud" (§4), then a new session |
 | Playwright hangs launching Chromium | Playwright script run with `bun` on Windows | With `node` (the kit's scripts already do) |
 | A measuring script cannot find `@playwright/test` | It was saved in the scratchpad or `$TEMP` | Save it in `.qa/` inside the project |
 | `bun test` fails without tests | There are no test files yet | The `test` script uses `./tests/unit --pass-with-no-tests` |

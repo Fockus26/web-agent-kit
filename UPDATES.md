@@ -59,13 +59,17 @@ other, the agent shows them and asks before choosing.
   (`reference/claude/settings.json`): in the cloud only (`CLAUDE_CODE_REMOTE=true`) it runs
   `bun install` and `bun run context:restore`; on the machine it does nothing.
 - `CLAUDE.md.template` (one line: cloud sessions use `cloud-session`, which overrides "never
-  push to main / never merge"), `git-flow` and `orchestrate` point to it; `kit-update` refuses
-  to run in the cloud (there is no clone) and its piece check covers the copy and the hook.
+  push to main / never merge"), `git-flow` and `orchestrate` point to it; its piece check
+  covers the copy and the hook.
+- **`kit-update` runs in the cloud too**: it clones the kit into the scratchpad, downloads
+  PowerShell there for the `new-project.ps1` steps, skips the global install and closes per
+  `cloud-session`. A project without the copy yet gets it the first time by asking the
+  session to follow the cloned kit's `kit-update` (GUIDE.md, "Working from the cloud").
 
 **Steps for a project on 3.9.0**
 
 1. Global pieces: `install-kit.ps1 -Pull` and a new session (already done if `kit-update`
-   runs it).
+   runs it; skipped in a cloud session).
 2. `pwsh -File "<kit>/new-project.ps1" -Path . -Existing` (plus `-NoVersion` if the project is
    without versioning): it adds `scripts/cloud-setup.sh`, `.claude/settings.json` and the
    copy of the skills and agents, and overwrites nothing else. If `.claude/settings.json`

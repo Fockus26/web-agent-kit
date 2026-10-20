@@ -38,7 +38,7 @@ ls node_modules >/dev/null && ls context/CURRENT_PHASE.md
   one line: you start without the working state (phase, wave, pending content), and you
   rebuild it only from `git log` and the open PRs, never by inventing it.
 - The project has no `scripts/cloud-setup.sh` or `.claude/skills/` → it is on a kit older than
-  3.10.0: say so and suggest `/kit-update` from his machine.
+  3.10.0: say so and suggest `/kit-update` (it also runs in the cloud).
 
 **Branch:** if the session's instructions assign a branch (`claude/…`), that is the unit's
 branch: do not create the `<type>/<desc>` of `git-flow` §1.2, and do not push to another one.
@@ -53,7 +53,7 @@ Without an assigned branch, `git-flow` §1.2 as always.
 | `bun run qa:local` (Supabase in Docker) | No Docker: `--offline` (guest only) and say what was not tested with accounts |
 | `.env.local` (`vercel env pull`) | Not there. The variables the build needs go in the cloud environment's settings (César, at claude.ai/code › environment); a missing one is reported, never invented or hardcoded |
 | Dev server, screenshots | Allowed (it is your container). `shots:publish` pushes to `pr-shots`: if the push is refused, the screenshots go as "no disponibles — <motivo>" |
-| `kit-update`, `install-kit` | They need the kit's clone: run them from César's machine |
+| `kit-update` | Works: it clones the kit and downloads `pwsh` to the scratchpad (its "Cloud session" section) |
 
 ---
 
