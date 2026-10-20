@@ -41,7 +41,7 @@ Then:
 
 1. **Open a new Claude Code session.** Agents load at startup; a session that was already
    open does not see them.
-2. Check with `/skills` (9) and `/agents` (4: `feature-worker`, `wave-qa`, `design-qa`,
+2. Check with `/skills` (10) and `/agents` (4: `feature-worker`, `wave-qa`, `design-qa`,
    `functional-qa`).
 3. Connect the **Context7** MCP (up-to-date library documentation).
 4. Requirements: **bun**, **Node ≥ 23.6** (for the Playwright scripts), **git**, an
@@ -406,6 +406,28 @@ goes in, implements it, bumps the version, writes in `UPDATES.md` the steps for 
 projects and comments on each feedback PR what went in. You merge: the improvement's and the
 feedback ones (they stay in `feedback/` as history). Then, `/kit-update` in each project.
 
+### Working from the cloud (claude.ai/code, the mobile app)
+
+A cloud session clones the project's repo into a fresh container and deletes it when the
+session ends. The kit works there because the project carries its own copy of the skills and
+agents in `.claude/` (the global `~/.claude/` does not exist there). What changes for you:
+
+- **Each unit ends merged into `main`.** The agent opens the PR, waits for CI and, when it
+  is green, merges it itself (squash). That way nothing is left in a branch of a container
+  that no longer exists. If CI is red it fixes it; if `main`'s protection demands a human
+  review, the PR stays open and it tells you. The version PR (`chore(release)`) is still
+  yours. If you want to review a cloud unit before it merges, say so when you ask for it.
+- **The local `context/` comes back by itself**: the project's `SessionStart` hook
+  (`scripts/cloud-setup.sh`) runs `bun install` and `bun run context:restore` before your
+  first message, and the agent backs it up when closing each unit. Without a
+  `context-state` branch (public repo, never backed up) it starts without the phase state.
+- **What the cloud does not have:** PowerShell (so no worktree pool: `orchestrate` runs the
+  wave's units one after another), Docker (`qa:local --offline`), `.env.local` (the
+  variables the build needs go in the cloud environment's settings) and the kit's clone
+  (`/kit-update` and `install-kit` from your machine).
+- **Requirement:** the project on kit 3.10.0 or later (`/kit-update` from your machine adds
+  the copy and the hook) and the repo connected to Claude's GitHub app.
+
 ---
 
 ## 5. Day-to-day commands
@@ -464,6 +486,7 @@ something.
 | Symptom | Cause | What to do |
 |---|---|---|
 | "Agent type 'feature-worker' not found" | The session opened before installing/editing the agent | New session |
+| In a cloud session the kit's skills/agents do not exist | The project has no copy in `.claude/` (kit < 3.10.0), or it is gitignored | `/kit-update` from your machine, commit `.claude/skills` and `.claude/agents` |
 | Playwright hangs launching Chromium | Playwright script run with `bun` on Windows | With `node` (the kit's scripts already do) |
 | A measuring script cannot find `@playwright/test` | It was saved in the scratchpad or `$TEMP` | Save it in `.qa/` inside the project |
 | `bun test` fails without tests | There are no test files yet | The `test` script uses `./tests/unit --pass-with-no-tests` |

@@ -74,6 +74,7 @@ ones that **can talk to you**: ask questions, present 3 options, wait for your a
 | **`seo`** | Metadata, JSON-LD, sitemap, Core Web Vitals | Repo init · section with content · page |
 | **`kit-update`** | Compares the project's version with the kit's published one; checks for missing pieces; if behind, applies the path in `UPDATES.md` in a PR | `/kit-update` when a kit version comes out |
 | **`kit-feedback`** | Sends `context/KIT_FEEDBACK.md` to the kit's repo as a PR | `/kit-feedback` whenever you want · when closing phase 09 |
+| **`cloud-session`** | In a cloud session (claude.ai/code, the app): restores `context/`, maps `gh`/`pwsh`/Docker to what the cloud has, and closes each unit with a PR the agent merges into `main` with green CI | Start and close of every cloud session |
 
 ### Agents — run isolated and return a report
 
@@ -123,14 +124,16 @@ It copies each skill and agent of the kit to `~/.claude/`, replacing the install
 (without leaving old files) and without touching what is not the kit's. To update, the same
 command with `-Pull` (`--pull` in bash): it runs `git pull` in the kit first.
 
-Check with `/skills` and `/agents`. You should see the nine skills and the four agents.
+Check with `/skills` and `/agents`. You should see the ten skills and the four agents.
 
 > **Agents load when the session opens.** If you install or edit one with a session open,
 > that session does not see it ("Agent type not found"): open a new session.
 
-> If you prefer them per project instead of global, copy the whole `.claude/` folder to the
-> project root. Global is more convenient when all your projects follow this same flow;
-> local, when you want to version them with the client's repo.
+> **Each project also carries its own copy** in its `.claude/` (`new-project.ps1` puts it
+> there, `/kit-update` refreshes it): a cloud session (claude.ai/code, the mobile app) only
+> loads what is committed in the repo, never `~/.claude/`. On your machine the global ones
+> win for skills; both copies are the same version after `/kit-update`. See "Cloud sessions"
+> in GUIDE.md.
 
 ### Context7
 
@@ -265,11 +268,12 @@ web-agent-kit/
 ├── feedback/                      the projects' reports (kit-feedback PRs); goes to no project
 ├── CLAUDE.md.template             goes to each project's root (≤ 8 KB: a map, not a manual)
 ├── install-kit.ps1 / .sh          installs or reinstalls skills and agents in ~/.claude/ (-Pull: git pull first)
-│                                    and leaves ~/.claude/web-agent-kit.json (path + version) for kit-update
+│                                    and leaves ~/.claude/web-agent-kit.json (path + version) for kit-update;
+│                                    -Project <path>: into that project's .claude/ (cloud sessions)
 ├── new-project.ps1                creates the app and copies the kit (-Existing: adds what is missing)
 ├── instalar-kit.* / nuevo-proyecto.ps1   pre-3.8.0 names, forward to the ones above
 ├── .claude/
-│   ├── skills/                    the 9 skills → ~/.claude/skills/
+│   ├── skills/                    the 10 skills → ~/.claude/skills/ and each project's .claude/skills/
 │   │   └── orchestrate/           + brief-, unit-prompt- and phase-plan-template.md and
 │   │                                scripts/wt.ps1 (recyclable worktree pool)
 │   └── agents/                    design-qa, functional-qa, feature-worker, wave-qa → ~/.claude/agents/
@@ -293,13 +297,15 @@ web-agent-kit/
     ├── BRAND-ASSETS.md            logo, icon, favicon, touch icon, OG: what is asked and what is generated
     ├── EMAIL-TEMPLATES.md         the app's emails: catalog, design constraints, React Email, Supabase, Firebase, provider
     ├── DEPLOY.md                  GitHub repo, Vercel deployment (or adopting one) and where the environment variables live
+    ├── claude/settings.json       → .claude/settings.json: SessionStart hook that runs cloud-setup.sh
     └── scripts/
         ├── design-qa.ts           Playwright sweep (with node)
         ├── test-related.ts        → scripts/: tests affected by the import graph
         ├── pr-screenshots.ts      → scripts/: PR screenshots (with node)
         ├── publish-pr-shots.sh    → scripts/: uploads them to the pr-shots branch
         ├── qa-local.ts            → scripts/: QA server against local Supabase (Docker) with test accounts
-        └── context-backup.sh      → scripts/: local context/ ↔ the context-state branch
+        ├── context-backup.sh      → scripts/: local context/ ↔ the context-state branch
+        └── cloud-setup.sh         → scripts/: cloud session start (bun install + context:restore; local: nothing)
 ```
 
 ---

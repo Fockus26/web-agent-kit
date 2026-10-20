@@ -23,6 +23,7 @@ Projects before 3.3.0 do not have the file. It is deduced from signals, newest t
 
 | If the project… | It is on |
 |---|---|
+| has `scripts/cloud-setup.sh` and the kit's skills in `.claude/skills/` | **3.10.0** |
 | has `context/decisions/D0NN-*.md` (one file per decision) and no `context/DECISIONS_INDEX.md` | **3.2.0** |
 | its `CLAUDE.md` talks about the worktree pool (`..\<repo>-wt`, `wt take`) | **3.1.0** |
 | has `context/PHASE_LOG/` and `context/CURRENT_PHASE.md` | **3.0.0** |
@@ -33,6 +34,54 @@ The signals do not depend on Changesets on purpose: a project **without versioni
 or `release.yml` and is not older because of it. In that project, the Changesets steps of
 any version are skipped: they are not a pending migration. If the signals contradict each
 other, the agent shows them and asks before choosing.
+
+---
+
+## 3.10.0 — 2026-10-20 · Cloud sessions
+
+**What changed**
+
+- **Each project carries its copy of the kit's skills and agents** in `.claude/skills/` and
+  `.claude/agents/`, committed. Why: a Claude Code cloud session (claude.ai/code, the mobile
+  app) clones only the repo; `~/.claude/` does not exist there, so the kit's skills and
+  agents were missing. `install-kit.ps1 -Project <path>` / `install-kit.sh --project <path>`
+  copies them (replacing only the kit's); `new-project.ps1` runs it, and `kit-update`
+  refreshes the copy after every update. On César's machine the global skills win over the
+  project's (same version after `kit-update`).
+- **New skill `cloud-session`**: at the start, checks `node_modules` and the local
+  `context/`; maps what the cloud lacks (`gh` → GitHub MCP, no `pwsh` so no worktree pool,
+  no Docker, no `.env.local`); and **closes each unit with a PR that the agent merges into
+  `main` (squash) once CI is green**. Why: the container is deleted when the session ends,
+  and work left in open cloud PRs was being forgotten (César's decision, 2026-10-20, over
+  auto-merge — needs protection with required checks — and pushing straight to `main` —
+  skips CI). It never merges red, never bypasses protection, never merges the version PR.
+- **`scripts/cloud-setup.sh` + `SessionStart` hook** in `.claude/settings.json`
+  (`reference/claude/settings.json`): in the cloud only (`CLAUDE_CODE_REMOTE=true`) it runs
+  `bun install` and `bun run context:restore`; on the machine it does nothing.
+- `CLAUDE.md.template` (one line: cloud sessions use `cloud-session`, which overrides "never
+  push to main / never merge"), `git-flow` and `orchestrate` point to it; `kit-update` refuses
+  to run in the cloud (there is no clone) and its piece check covers the copy and the hook.
+
+**Steps for a project on 3.9.0**
+
+1. Global pieces: `install-kit.ps1 -Pull` and a new session (already done if `kit-update`
+   runs it).
+2. `pwsh -File "<kit>/new-project.ps1" -Path . -Existing` (plus `-NoVersion` if the project is
+   without versioning): it adds `scripts/cloud-setup.sh`, `.claude/settings.json` and the
+   copy of the skills and agents, and overwrites nothing else. If `.claude/settings.json`
+   already existed without the hook, merge the `SessionStart` of
+   `<kit>/reference/claude/settings.json` into it, keeping what it had.
+3. Check that `.claude/skills`, `.claude/agents` and `.claude/settings.json` are not
+   gitignored (`git check-ignore -v .claude/skills .claude/settings.json`); if a rule ignores
+   all of `.claude/`, replace it with `.claude/worktrees/` and `.claude/settings.local.json`.
+4. `CLAUDE.md`, section "How work is done here" / "Cómo se trabaja aquí": after the bullet of
+   `pr` mode, one bullet (in the project's language): "**Cloud session**
+   (`CLAUDE_CODE_REMOTE=true`): `cloud-session` skill at start and close. It overrides both
+   rules above: each unit ends merged into `main` (PR + green CI)." Check `wc -c CLAUDE.md`
+   ≤ 8 KB.
+5. **Manual action for César** in the PR: for the cloud, the repo has to be connected to
+   Claude's GitHub app, and the variables the build needs go in the cloud environment's
+   settings (claude.ai/code › environment), never in the repo.
 
 ---
 

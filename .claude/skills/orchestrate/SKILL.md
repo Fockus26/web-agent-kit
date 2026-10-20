@@ -28,6 +28,11 @@ pwsh -NoProfile -File "$USERPROFILE/.claude/skills/orchestrate/scripts/wt.ps1" <
 
 (With the kit installed inside the project, the path is `.claude/skills/orchestrate/scripts/wt.ps1`.)
 
+**In a cloud session** (`CLAUDE_CODE_REMOTE=true`) there is no PowerShell and no pool: the
+wave's units go one after another in this session, each opened and closed (PR, green CI,
+merge) with the `cloud-session` skill before the next. The rest of this skill (mapping,
+waves, single round of questions, `wave-qa`) does not change.
+
 **One wave per session.** César uses "wave" (ola) and "batch" (tanda) for the same thing: a
 group of units that run in parallel, get merged and go through QA together. Each wave lives
 in its own session: the one that launches it piles up mapping, prompts and reports, and

@@ -9,6 +9,10 @@ Runs in a session opened **in the project's folder**. It reads the kit from its 
 clone, always as it is on `origin/main` (what is published), never from a half-done branch.
 It does not touch the project's `main`: everything goes on a branch and a PR.
 
+**Not in a cloud session** (`CLAUDE_CODE_REMOTE=true`): there is no kit clone or
+`~/.claude/` there to compare against or reinstall. Say so and ask César to run
+`/kit-update` from his machine.
+
 **Language:** everything you tell César, the commits and the PR are in Spanish. Projects
 created before kit 3.8.0 keep their `context/` in Spanish (same files, Spanish headings,
 plan names such as `pendientes.md`): migration steps written for English headings apply to
@@ -125,6 +129,8 @@ happened: a project on 3.5.0 without `test:related` or `shots`, because it start
 | **`.gitignore` does NOT ignore** `supabase/` (except `.temp/`, `.branches/`) or the fixed documents of `context/` (`PROJECT_CONTEXT`, `DESIGN_RULES`, `COLORS`, `DESIGN_TOKENS`, `TYPOGRAPHY`, `decisions/`) | `git check-ignore -v supabase/migrations context/PROJECT_CONTEXT.md context/decisions` |
 | `biome.json` (if any) excludes `.claude/worktrees` | `files.includes` / `files.ignore` |
 | `CLAUDE.md` ≤ 8 KB | `wc -c CLAUDE.md` |
+| Kit copy for cloud sessions: `.claude/skills/<each kit skill>` and `.claude/agents/<each kit agent>`, equal to `<kit>`'s, not gitignored | `diff -rq "<kit>/.claude/skills/<name>" .claude/skills/<name>` per kit skill (and agents); `git check-ignore -q .claude/skills` |
+| `.claude/settings.json` with the `SessionStart` hook to `scripts/cloud-setup.sh`, and the script | `grep cloud-setup .claude/settings.json`; `ls scripts/cloud-setup.sh` |
 | Backup of the local `context/` on the remote | `git ls-remote --heads origin context-state` |
 
 What is missing is added with the kit's own script, which only adds what does not exist and
@@ -159,6 +165,14 @@ version is done:
 
 If a version fails halfway, stop there: what was done stays in commits and `.kit-version`
 says how far it got.
+
+With every version applied, **refresh the project's copy of the skills and agents** (cloud
+sessions load only that one): `powershell -ExecutionPolicy Bypass -File "<kit>\install-kit.ps1" -Project .`
+(macOS/Linux: `bash "<kit>/install-kit.sh" --project .`). It replaces only the kit's skills
+and agents; the project's own stay. Its own commit:
+`chore(kit): copia de skills y agentes <versión>`. If `.claude/settings.json` existed
+without the cloud hook, merge the kit's `reference/claude/settings.json` `SessionStart`
+into it (keep what it had).
 
 The project's `CLAUDE.md` stays at 8 KB or less (`wc -c CLAUDE.md`). If a step pushes it
 over, replace the old paragraph that the step supersedes instead of adding, and if it still
