@@ -107,9 +107,9 @@ Local (gitignored): {{CURRENT_PHASE, CONTENT_CHECKLIST, KIT_FEEDBACK, inventorie
 plans/}} — backed up to `context-state` with `bun run context:backup`. `.env.local` is
 pulled from Vercel, never hand-edited (`vercel env pull`; kit `reference/DEPLOY.md` §2c).
 The worktree pool slots (`orchestrate`, `..\<repo>-wt\wtN`) get the `.env*` files copied,
-but **not** the local `context/`: it is read in the main folder
-(`{{ABSOLUTE_REPO_PATH}}`). A subagent in a slot may lack write permission there: then it
-returns them in its report and the orchestrator copies them.
+but **not** the local `context/`: it is read in the main folder (first line of
+`git worktree list`). From a worktree (pool slot or `.claude/worktrees/`) you may lack write
+permission there: return the `context/` changes in your report.
 
 ### Quality gates
 

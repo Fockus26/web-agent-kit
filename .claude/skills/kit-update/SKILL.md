@@ -161,10 +161,12 @@ happened: a project on 3.5.0 without `test:related` or `shots`, because it start
 | Backup of the local `context/` on the remote | `git ls-remote --heads origin context-state` |
 
 What is missing is added with the kit's own script, which only adds what does not exist and
-overwrites nothing: `pwsh -File "<kit>/new-project.ps1" -Path . -Existing` (plus
-`-NoVersion` if the project is without versioning). It goes in the same PR, in its own
-commit (`chore(kit): piezas que faltaban`). If the stack is not Next.js (Astro, Vite), say
-so first: the scripts may need adjusting, and it is a question for the single round.
+overwrites nothing: `pwsh -File "<kit>/new-project.ps1" -Path . -OnlyPieces` (plus
+`-NoVersion` if the project is without versioning). `-OnlyPieces` does not copy `phases/`,
+`design/`, `.github/`, `context/` or `CLAUDE.md`, and rewrites `package.json` only if it
+adds a script. It goes in the same PR, in its own commit (`chore(kit): piezas que
+faltaban`). If the stack is not Next.js (Astro, Vite), it does not add `typecheck` and says
+so: tell César which pieces are left for him or for you by hand.
 
 If `supabase/` or the fixed documents of `context/` are gitignored, it is a question for the
 single round, not something you change silently: César may have done it on purpose. The

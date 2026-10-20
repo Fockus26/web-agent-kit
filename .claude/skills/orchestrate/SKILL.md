@@ -47,6 +47,21 @@ dragging that into the next wave costs tokens on every message for nothing
 
 ---
 
+## Before §0: the environment
+
+On a new machine (or after a long pause) a wave failed halfway because what this skill takes
+for granted was missing (world-flags, kit 3.9.0). Before mapping anything, one line each:
+
+```bash
+bun --version; gh auth status; pwsh -v                      # tools (pwsh: not in the cloud)
+ls ~/.claude/agents/feature-worker.md .claude/agents/feature-worker.md 2>/dev/null   # agents
+ls context/CURRENT_PHASE.md                                  # local state
+```
+
+Missing `CURRENT_PHASE.md` → `bun run context:restore` before anything else. Missing a tool
+or the agents → tell César what and how to install it (`install-kit`, then a new session),
+and do not launch the wave.
+
 ## 0. Split a phase into waves
 
 With the project's `phases/0N-*.md`, the relevant inventory and that phase's part of the

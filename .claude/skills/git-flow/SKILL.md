@@ -248,6 +248,12 @@ git push -u origin <branch>
 gh pr create --base main --title "<type>(<scope>): <descripción>" --body-file <file>
 ```
 
+If more commits are still coming after opening it (QA in progress on the open PR), open it
+as a draft (`gh pr create --draft …`) and `gh pr ready <n>` when they are pushed: César
+merged a PR while its QA commit was being pushed, and the commit was left out
+(world-flags #95 → #100). Same for a PR already open that goes back to QA: `gh pr ready <n>
+--undo` until it ends.
+
 The body follows `.github/pull_request_template.md`: what changes, why, how to test it,
 **screenshots**, how it was verified and what was not, decisions taken with their
 alternative, and **manual actions** (SQL, dashboards, deploy order).
