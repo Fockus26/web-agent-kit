@@ -152,6 +152,25 @@ set <NAME>` (César pastes it) or `gh secret set -f <file>` with only those line
 cannot be read, when the value changes in Vercel it is set again here too: list which
 secrets are duplicated in GitHub in `PROJECT_CONTEXT.md` › Repo and deployment.
 
+### 2d. Variables in a cloud session (claude.ai/code)
+
+The cloud container has no `.env.local` and no logged-in Vercel CLI. Pasting the file into
+the chat leaves the keys in the transcript (they then have to be rotated). Instead, once per
+project, César sets up the **cloud environment** (session title bar › environment › Edit):
+
+1. **Secret** `VERCEL_TOKEN`: a token from vercel.com/account/tokens, scoped to the project's
+   team, with an expiry. Under Network secrets (or as an environment variable if that
+   section is not offered).
+2. **Variables** `VERCEL_ORG_ID` and `VERCEL_PROJECT_ID` (not secret: in
+   `.vercel/project.json` after `vercel link`, or Vercel › Project › Settings). If the Next
+   app is not at the repo root (e.g. `web/`): `VERCEL_ENV_FILE=web/.env.local`.
+3. **Network access**: `api.vercel.com` in Allowed domains (leave package managers ticked).
+
+`scripts/cloud-setup.sh` then runs `bunx vercel env pull <file> --yes --environment=development`
+at the start of each session (only if the file does not exist) and prints only how many
+variables it wrote. It is the Development environment, the same one `.env.local` gets on the
+machine: no production secret reaches the container.
+
 ## 3. After the first deployment
 
 - [ ] Production answers 200 on `/`, 404 on an invented route (with the site's screen), and

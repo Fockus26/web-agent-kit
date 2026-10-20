@@ -424,8 +424,10 @@ agents in `.claude/` (the global `~/.claude/` does not exist there). What change
   first message, and the agent backs it up when closing each unit. Without a
   `context-state` branch (public repo, never backed up) it starts without the phase state.
 - **What the cloud does not have:** PowerShell (so no worktree pool: `orchestrate` runs the
-  wave's units one after another), Docker (`qa:local --offline`), `.env.local` (the
-  variables the build needs go in the cloud environment's settings).
+  wave's units one after another), Docker (`qa:local --offline`). `.env.local` comes from Vercel
+  if you set up the environment once (`reference/DEPLOY.md` §2d): `VERCEL_TOKEN`,
+  `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` in its settings and `api.vercel.com` allowed. Never
+  paste keys into the chat.
 - **Requirement:** the project on kit 3.10.0 or later and the repo connected to Claude's
   GitHub app. `/kit-update` also runs in the cloud: it clones the kit and downloads
   PowerShell for the session; what needs your machine (Vercel, Docker) goes to the PR's

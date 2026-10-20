@@ -37,6 +37,27 @@ other, the agent shows them and asks before choosing.
 
 ---
 
+## 3.12.0 — 2026-10-20 · `.env` in cloud sessions without pasting it
+
+**What changed**
+
+- **`cloud-setup.sh` pulls `.env.local` from Vercel** (Development) at the start of a cloud
+  session when the environment has `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`
+  (and optionally `VERCEL_ENV_FILE`) and allows `api.vercel.com`. Never prints values. Why:
+  in tutor-web the service-account key was pasted into the chat to get Firebase working in
+  the cloud, and had to be rotated.
+- `cloud-session`: the `.env.local` row points to that setup and forbids asking for keys in
+  the chat. `reference/DEPLOY.md` §2d documents the one-time setup; `GUIDE.md` cites it.
+
+**Steps for a project on 3.11.0**
+
+1. `scripts/cloud-setup.sh` ← `<kit>/reference/scripts/cloud-setup.sh` (carry over local edits).
+2. Refresh the kit copy (`install-kit --project .`): `cloud-session` changed.
+3. **Manual action for César** in the PR: the cloud environment setup of `DEPLOY.md` §2d
+   (if the project deploys to Vercel and the cloud needs its variables).
+
+---
+
 ## 3.11.0 — 2026-10-20 · Feedback round 2 (inversiones-js, world-flags)
 
 **What changed**
