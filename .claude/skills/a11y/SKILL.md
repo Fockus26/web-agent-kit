@@ -166,6 +166,11 @@ Applies to everything you touched.
       `useRef`. With StrictMode in development the effect runs twice, the ref is already
       `true` on the second run and focus jumps to the `h1` on mount, with no visible error.
 - [ ] There is a "skip to content" if the nav has more than ~5 links.
+- [ ] Measured with real keys: `el.focus()` from a script does not turn on React Aria's
+      (or any `:focus-visible` heuristic's) ring, and reads as "no ring" when there is one.
+      Press `Tab` (or a key first, then `Tab`). Touch scrolling: `synthesizeScrollGesture`
+      does not scroll in headless — drag with CDP `Input.dispatchTouchEvent` or it is a
+      false negative. Why: both gave wrong findings in world-flags.
 
 ### Accessible name
 - [ ] Every control has a name: visible text, `aria-label`, or `aria-labelledby`.

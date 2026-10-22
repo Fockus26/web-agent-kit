@@ -84,7 +84,7 @@ implement: a whole unit, in its worktree pool slot, up to the PR.
 | Agent | What it does | When you launch it |
 |---|---|---|
 | **`feature-worker`** | Implements a unit end to end (branch, code, tests, verification, screenshots, PR) with the prompt `orchestrate` prepares. Opus, medium effort | `orchestrate` launches it |
-| **`wave-qa`** | With the wave merged, starts the server on `main` and walks its flows as a real user, against a local database (Supabase in Docker, `bun run qa:local`; `--offline` without Docker) and with the per-role test accounts of `.env.test.local` (`EMAIL_TEST`, `ADMIN_EMAIL_TEST`, `<ROLE>_EMAIL_TEST`…) | `orchestrate` launches it when closing each wave |
+| **`wave-qa`** | With the wave merged, starts the server on `main` and walks its flows as a real user, against a local database (Supabase in Docker or the Firebase emulators, `bun run qa:local`; `--offline` without them) and with the per-role test accounts of `.env.test.local` (`EMAIL_TEST`, `ADMIN_EMAIL_TEST`, `<ROLE>_EMAIL_TEST`…) | `orchestrate` launches it when closing each wave |
 | **`design-qa`** | 320px to 3840px, color blindness, 400% zoom, reduced motion, high contrast, focus, token consistency. With Playwright + axe. | When closing a page or the whole integration |
 | **`functional-qa`** | Tries to break the flow: edge-case inputs, double clicks, dropped network, expired session, tampered prices, duplicated webhooks | When closing a full flow |
 
@@ -304,7 +304,7 @@ web-agent-kit/
         ├── test-related.ts        → scripts/: tests affected by the import graph
         ├── pr-screenshots.ts      → scripts/: PR screenshots (with node)
         ├── publish-pr-shots.sh    → scripts/: uploads them to the pr-shots branch
-        ├── qa-local.ts            → scripts/: QA server against local Supabase (Docker) with test accounts
+        ├── qa-local.ts            → scripts/: QA server against local Supabase (Docker) or Firebase emulators, with test accounts
         ├── context-backup.sh      → scripts/: local context/ ↔ the context-state branch
         └── cloud-setup.sh         → scripts/: cloud session start (bun install + context:restore; local: nothing)
 ```
@@ -356,7 +356,7 @@ Details in `reference/TOKEN-ECONOMY.md`. What weighs most:
 
 ## Versions and updating projects
 
-The kit is versioned (`VERSION`, now **3.8.0**) and each project keeps in `.kit-version`
+The kit is versioned (`VERSION`, now **3.13.0**) and each project keeps in `.kit-version`
 which one it is aligned with. To bring it up to date: `/kit-update` in a project session. It
 compares with the published version (`origin/main` of the kit's clone); if behind, it
 computes the path with `UPDATES.md` and applies each version in order, in a PR.
@@ -365,6 +365,16 @@ And the way back: each project logs in `context/KIT_FEEDBACK.md` what César had
 or repeat and what the kit did not cover. `/kit-feedback` uploads it to this repo as a PR
 (`feedback/`, `kit-feedback` label); in a session opened here, "revisa el feedback" triages
 all the PRs together (`CLAUDE.md` says how).
+
+### 3.13.0 (feedback round 3)
+
+| Before | Now |
+|---|---|
+| Each QA opened a wave, each fix got its own QA that found more: four rounds of the same class | Fixes in the same wave, closed by the finding's reproduction script; a class is swept whole |
+| Every closing QA re-walked everything | Scope from `git diff` since the last QA + what was never verified |
+| Every worker on the big model | Model and effort per unit (`TOKEN-ECONOMY` §12); risk is always `opus` |
+| Cloud PRs merged with no `functional-qa`/`design-qa` | Closing QA gate (`git-flow` 5b) or a visible `QA pendiente` |
+| `qa:local` only for Supabase; Astro 7's server left orphaned | Firebase emulators and Astro ≥ 7 supported; `--preview` for the build |
 
 ### 3.8.0
 

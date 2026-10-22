@@ -144,6 +144,24 @@ The orchestrator (plans, groups, writes prompts, consolidates) justifies high ef
 workers that run a well-specified prompt do just as well at medium effort. It is set in the
 agent's definition (`effort:` in the frontmatter of `.claude/agents/*.md`).
 
+**Model per unit.** The frontmatter is the default; `orchestrate` overrides it per unit
+(`model`/`effort` in `Agent(...)`) with this table:
+
+| Unit | Model · effort | Examples |
+|---|---|---|
+| Mechanical: the approach is in the prompt, 1-2 files, copy/CSS/data list/docs | `sonnet` · low | extend a data list, a `flex-wrap` on listed rows |
+| Normal: UI logic, 3-6 files of one zone, pick between known approaches | `sonnet` · medium | a section, a component with states, notices at 200 % |
+| **Risk**: auth, session, concurrency, stored data, migrations with data, security — or the solution has to be designed | `opus` · medium (`high` if it crosses tabs or races) | confirmation polling + expired link, a cross-tab close mark |
+
+**Risk wins:** with any of those risks it is `opus`, however small the unit. QA agents:
+`wave-qa` `sonnet` when the scope (§8 of `orchestrate`) has no auth or cross-tab data,
+`opus` when it does; `design-qa` with a versioned measuring script, `sonnet`.
+
+Why: in world-flags every worker ran on the big model and mechanical units spent 100-280 k
+tokens a smaller one would have covered; the one that found a real race was a risk unit.
+If a `sonnet` worker fails its gates twice, relaunch the unit with `opus` in the same slot
+and branch (`SendMessage` does not change the model).
+
 ## 13. Separate sessions per block
 
 A very long session accumulates all its history on every turn. It is cheaper to close and

@@ -5,11 +5,20 @@
  *   node scripts/qa-local.ts --port 4301            (= bun run qa:local -- --port 4301)
  *   node scripts/qa-local.ts --port 4301 --no-reset (keeps the previous run's data)
  *   node scripts/qa-local.ts --port 4301 --offline  (no Docker or database: guest only)
+ *   node scripts/qa-local.ts --port 4301 --preview  (build + preview server instead of dev)
  *
- * What it does:
- *   1. `supabase start` (Docker Desktop running): the project's local stack.
+ * The local backend is picked by what the project has:
+ *   - `supabase/config.toml` → Supabase stack in Docker (below).
+ *   - `firebase.json` with `emulators` → Firebase emulators (needs Java; see "Firebase").
+ *   - neither → the normal server: there is no external database to replace.
+ *
+ * Supabase:
+ *   1. `supabase start` (Docker Desktop running): the project's local stack. If the first
+ *      start fails, it is retried once: the first one on a machine failed with
+ *      `StatusDbNotRunningError` and the second worked, three times (world-flags).
  *   2. `supabase db reset`: an empty database with the current tree's migrations and seed
- *      (in a pool slot, `main`'s). The local database is disposable: keep nothing in it.
+ *      (in a pool slot, `main`'s), with its output live (it takes minutes). The local
+ *      database is disposable: keep nothing in it.
  *   3. Creates the `.env.test.local` test accounts in that database (local stack's Auth):
  *        EMAIL_TEST / PASSWORD_TEST              → role "user"
  *        ADMIN_EMAIL_TEST / ADMIN_PASSWORD_TEST  → role "admin"
@@ -22,34 +31,59 @@
  *      local stack. They go through process.env, which beats the `.env*` files in both Next
  *      and Vite (Astro, SvelteKit…): no file is written and the slot stays clean.
  *
+ * Firebase (`firebase.json` with an `emulators` block):
+ *   1. Starts the emulators (`bun run emulators` if the project has that script, otherwise
+ *      `bun x firebase emulators:start`) with the project `FIREBASE_QA_PROJECT` (`demo-*`:
+ *      the emulators then cannot reach real resources) and waits up to 4 minutes: the first
+ *      start on a machine took more than 90 s (inversiones-js). If they are already
+ *      listening, it uses them. The emulators start empty and go down with this script.
+ *   2. `scripts/seed-emulator.ts` if the project has it (skipped with `--no-reset`).
+ *   3. The same `.env.test.local` accounts, in the Auth emulator, with the role as a custom
+ *      claim (`role`). Role in a Firestore document (`admins/{uid}`) → `assignRoleFirebase`.
+ *   4. The server with `FIREBASE_AUTH_EMULATOR_HOST`/`FIRESTORE_EMULATOR_HOST` (the Admin SDK
+ *      reads them), `<prefix>USE_EMULATORS=true` and `<prefix>FIREBASE_PROJECT_ID` for the
+ *      client. The client code has to honour that flag (`connectAuthEmulator`,
+ *      `connectFirestoreEmulator`): `backend-build`, Firebase.
+ *
  * With `--offline` (a machine without Docker, or a project still without
  * `supabase/config.toml` or migrations): no database is started. The Supabase variables are
  * pointed at a dead address (127.0.0.1:9) and the server starts: testing is as a guest, and
  * whatever needs data fails instead of touching the real database.
+ *
+ * With `--preview`: the same backend, but `bun run build` with those variables and then the
+ * project's `preview` script (Astro, Vite) or `start` (Next) on the port. For Playwright
+ * against the build; it was done by hand (world-flags).
  *
  * Before starting it checks the port is free: if not, it aborts (the server would jump to
  * the next one without warning and could land on another pool slot's). To stop it on
  * Windows: `taskkill /PID <this script's pid> /T /F` (with /T the server goes down too; a
  * plain kill leaves the child orphaned on the port).
  *
+ * Astro ≥ 7 detaches `astro dev`/`astro preview` into the background when it detects an
+ * agent: the script exited with 0 and the server was left orphaned (world-flags). The server
+ * starts with `ASTRO_DEV_BACKGROUND=0` and `ASTRO_PREVIEW_BACKGROUND=0` (foreground, so the
+ * kill above reaches it), and on exit, if a lock is left in this folder (`.astro/dev.json`,
+ * `.astro/preview.json`), `astro dev stop` / `astro preview stop` here: the lock is per
+ * folder, so it only stops this slot's server.
+ *
  * Safety: before starting, if any `.env*` variable points to a remote Supabase
  * (`*.supabase.co`) and this script does not override it, it aborts. Better not to start
  * than to test against the real database because of a variable with a different name.
+ * With Firebase, it aborts if `FIREBASE_QA_PROJECT` does not start with `demo-`.
  *
  * Before anything it checks Playwright's Chromium (wave-qa needs it) and installs it if it is
  * missing, with node and the project's own Playwright: `bunx` was not on the PATH and the QA
  * stopped twice for it (world-flags). Not in a cloud session: there the browser comes
  * preinstalled and must not be downloaded.
  *
- * The local stack starts without Studio and analytics and with 5 minutes of health check
- * (env overrides; the project's config.toml is not touched): QA needs neither, and on a slow
- * machine the default 2 minutes ran out on the first start (world-flags). The first start
- * downloads the images and takes minutes.
+ * The local Supabase stack starts without Studio and analytics, with 5 minutes of health
+ * check and with the email rate limit raised (env overrides; the project's config.toml is not
+ * touched): QA needs neither Studio nor analytics, on a slow machine the default 2 minutes
+ * ran out on the first start, and the default 2 emails per hour blocked repeating sign-up
+ * tests (world-flags). The first start downloads the images and takes minutes.
  *
- * Emails the app sends (sign-up, recovery) do not go out: Mailpit collects them (the URL is
- * printed at startup).
- *
- * Without `supabase/config.toml` (the project does not use Supabase): the normal server starts.
+ * Emails the app sends (sign-up, recovery) do not go out: Mailpit (Supabase) or the Auth
+ * emulator's UI (Firebase) collects them.
  *
  * Test passwords are never printed. The stack's local keys are public (the same on every
  * install) and are not secrets.
@@ -58,7 +92,7 @@
  * ROL_POR_ENV = ROLE_BY_ENV, asignarRol = assignRole.)
  */
 
-import { spawn, spawnSync } from 'node:child_process'
+import { type ChildProcess, spawn, spawnSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { connect } from 'node:net'
 
@@ -85,19 +119,55 @@ const ROLE_BY_ENV: Record<string, string> = {
   // admin: 'ADMIN_EMAILS',
 }
 
+const pkg = existsSync('package.json') ? JSON.parse(readFileSync('package.json', 'utf8')) : {}
+const pkgScripts: Record<string, string> = pkg.scripts ?? {}
+
+// Firebase: always a `demo-*` project (the emulators refuse to reach real resources with it).
+// The one the `emulators` script already passes, if any; otherwise demo-<package name>.
+const FIREBASE_QA_PROJECT =
+  pkgScripts.emulators?.match(/--project[ =](\S+)/)?.[1] ??
+  `demo-${String(pkg.name ?? 'app').replace(/^@[^/]+\//, '').replace(/^demo-/, '').toLowerCase()}`
+
 const args = process.argv.slice(2)
 const port = args[args.indexOf('--port') + 1]
 if (!args.includes('--port') || !/^\d+$/.test(port ?? '')) {
-  console.error('Usage: node scripts/qa-local.ts --port <port> [--no-reset] [--offline]')
+  console.error('Usage: node scripts/qa-local.ts --port <port> [--no-reset] [--offline] [--preview]')
   process.exit(2)
 }
 const reset = !args.includes('--no-reset')
 const offline = args.includes('--offline')
+const preview = args.includes('--preview')
+
+// Processes this script starts (emulators, build, server): they go down with it.
+const children: ChildProcess[] = []
+function stopAll(): void {
+  for (const c of children) {
+    if (c.pid === undefined || c.exitCode !== null) continue
+    // On Windows, with shell: true, `c` is the shell: kill() kills it and leaves the server
+    // (or the emulators' Java) orphaned. taskkill /T takes down the whole tree.
+    if (process.platform === 'win32') {
+      spawnSync('taskkill', ['/PID', String(c.pid), '/T', '/F'], { stdio: 'ignore' })
+    } else c.kill('SIGTERM')
+  }
+  // Astro ≥ 7 in the background: its lock is per folder, so this stops only this slot's.
+  for (const mode of ['dev', 'preview']) {
+    if (existsSync(`.astro/${mode}.json`)) {
+      spawnSync('bun', ['x', 'astro', mode, 'stop'], { stdio: 'ignore', shell: process.platform === 'win32' })
+    }
+  }
+}
+for (const s of ['SIGINT', 'SIGTERM'] as const) {
+  process.on(s, () => {
+    stopAll()
+    process.exit(0)
+  })
+}
 
 // An error at any step ends the process with a message, instead of leaving it hanging.
 function abort(message: string): never {
   console.error(message)
   if (!offline) console.error('→ Without Docker or a local database, you can test as a guest with --offline.')
+  stopAll()
   process.exit(1)
 }
 
@@ -107,8 +177,14 @@ function answers(host: string, p: number): Promise<boolean> {
   return new Promise((done) => {
     const s = connect({ host, port: p })
     s.setTimeout(1000)
-    s.once('connect', () => (s.destroy(), done(true)))
-    s.once('timeout', () => (s.destroy(), done(false)))
+    s.once('connect', () => {
+      s.destroy()
+      done(true)
+    })
+    s.once('timeout', () => {
+      s.destroy()
+      done(false)
+    })
     s.once('error', () => done(false))
   })
 }
@@ -149,43 +225,77 @@ function readEnv(file: string): Record<string, string> {
   return out
 }
 
-function supabase(...a: string[]): string {
-  const r = spawnSync('supabase', a, {
-    encoding: 'utf8',
-    shell: process.platform === 'win32',
-    env: {
-      SUPABASE_STUDIO_ENABLED: 'false',
-      SUPABASE_ANALYTICS_ENABLED: 'false',
-      SUPABASE_DB_HEALTH_TIMEOUT: '5m',
-      ...process.env, // whatever César set wins
-    },
-  })
+const SUPABASE_ENV = {
+  SUPABASE_STUDIO_ENABLED: 'false',
+  SUPABASE_ANALYTICS_ENABLED: 'false',
+  SUPABASE_DB_HEALTH_TIMEOUT: '5m',
+  SUPABASE_AUTH_RATE_LIMIT_EMAIL_SENT: '1000',
+  ...process.env, // whatever César set wins
+}
+
+// `live`: output straight to the terminal (long steps), nothing returned.
+function supabase(a: string[], { retry = false, live = false } = {}): string {
+  const run = () =>
+    spawnSync('supabase', a, {
+      encoding: 'utf8',
+      stdio: live ? 'inherit' : 'pipe',
+      shell: process.platform === 'win32',
+      env: SUPABASE_ENV,
+    })
+  let r = run()
+  if (r.status !== 0 && retry) {
+    console.log(`… supabase ${a.join(' ')} failed; retrying once (the first start often does)`)
+    r = run()
+  }
   if (r.status !== 0) {
     const detail = (r.stderr || r.stdout || '').trim()
     const docker = /docker|daemon|pipe/i.test(detail) ? '\n→ Is Docker Desktop running?' : ''
     abort(`supabase ${a.join(' ')} failed:\n${detail}${docker}`)
   }
-  return r.stdout
+  return r.stdout ?? ''
+}
+
+function launch(cmd: string, a: string[], env: NodeJS.ProcessEnv): ChildProcess {
+  const child = spawn(cmd, a, { stdio: 'inherit', env, shell: process.platform === 'win32' })
+  children.push(child)
+  return child
 }
 
 // Never returns: the script lives as long as the server does.
-function startDev(env: NodeJS.ProcessEnv): Promise<never> {
-  const child = spawn('bun', ['run', 'dev', '--', '--port', port], {
-    stdio: 'inherit',
-    env,
-    shell: process.platform === 'win32',
-  })
-  // On Windows, with shell: true, `child` is the shell: kill() kills it and the server is
-  // left orphaned on the port. taskkill /T takes down the whole tree.
-  const stop = () => {
-    if (process.platform === 'win32' && child.pid) {
-      spawnSync('taskkill', ['/PID', String(child.pid), '/T', '/F'], { stdio: 'ignore' })
-    } else child.kill('SIGTERM')
+async function startServer(base: NodeJS.ProcessEnv): Promise<never> {
+  const env = { ...base, ASTRO_DEV_BACKGROUND: '0', ASTRO_PREVIEW_BACKGROUND: '0' }
+  let script = 'dev'
+  if (preview) {
+    script = pkgScripts.preview ? 'preview' : 'start'
+    if (!pkgScripts[script]) abort('--preview: the project has neither a "preview" nor a "start" script.')
+    console.log('… bun run build (with the local backend\'s variables)')
+    const build = launch('bun', ['run', 'build'], env)
+    const code = await new Promise<number | null>((done) => build.on('exit', done))
+    if (code !== 0) abort('The build failed.')
   }
-  for (const s of ['SIGINT', 'SIGTERM'] as const) process.on(s, stop)
-  child.on('exit', (code) => process.exit(code ?? 0))
+  console.log(`… bun run ${script} on port ${port}`)
+  const server = launch('bun', ['run', script, '--', '--port', port], env)
+  server.on('exit', (code) => {
+    stopAll()
+    process.exit(code ?? 0)
+  })
   return new Promise<never>(() => {})
 }
+
+// .env.test.local accounts: EMAIL_TEST → user, <ROLE>_EMAIL_TEST → <role>.
+const testEnv = readEnv('.env.test.local')
+const accounts = Object.keys(testEnv)
+  .map((k) => k.match(/^(?:([A-Z0-9_]+)_)?EMAIL_TEST$/))
+  .filter((m): m is RegExpMatchArray => m !== null)
+  .map((m) => {
+    const prefix = m[1] ? `${m[1]}_` : ''
+    return {
+      role: m[1] ? m[1].toLowerCase() : 'user',
+      email: testEnv[`${prefix}EMAIL_TEST`],
+      password: testEnv[`${prefix}PASSWORD_TEST`],
+    }
+  })
+if (!accounts.length) console.warn('! .env.test.local without *_EMAIL_TEST: QA can only test what is public.')
 
 // 1. Does anything point to a remote Supabase?
 const envFiles = readdirSync('.').filter((f) => /^\.env/.test(f) && f !== '.env.example')
@@ -207,10 +317,104 @@ if (offline) {
   const env: NodeJS.ProcessEnv = { ...process.env, QA_LOCAL: '1', QA_OFFLINE: '1' }
   for (const k of [...Object.keys(ENV_MAP), ...remote.map((r) => r.key)]) env[k] = dead(k)
   console.log('--offline: no database. The database variables point to 127.0.0.1:9; guest testing only.')
-  console.log(`… bun run dev on port ${port}`)
-  await startDev(env)
+  await startServer(env)
 }
 
+// ── Firebase ────────────────────────────────────────────────────────────────────────────
+const firebaseJson = existsSync('firebase.json') ? JSON.parse(readFileSync('firebase.json', 'utf8')) : null
+if (firebaseJson?.emulators && !existsSync('supabase/config.toml')) {
+  if (!FIREBASE_QA_PROJECT.startsWith('demo-')) abort('Firebase QA runs only against a demo-* project.')
+  const emu = firebaseJson.emulators
+  const AUTH = `127.0.0.1:${emu.auth?.port ?? 9099}`
+  const FIRESTORE = `127.0.0.1:${emu.firestore?.port ?? 8080}`
+  const up = (hostPort: string) => answers('127.0.0.1', Number(hostPort.split(':')[1]))
+
+  // Waits up to `seconds`, printing progress every 15 s so a slow first start does not look hung.
+  async function waitFor(hostPort: string, seconds: number): Promise<void> {
+    for (let i = 1; i <= seconds; i++) {
+      if (await up(hostPort)) return
+      if (i % 15 === 0) console.log(`  … waiting for the emulator on ${hostPort} (${i} s)`)
+      await new Promise((r) => setTimeout(r, 1000))
+    }
+    abort(`The emulator on ${hostPort} did not answer in ${seconds} s (is Java installed?).`)
+  }
+
+  const emulatorEnv = {
+    ...process.env,
+    FIREBASE_AUTH_EMULATOR_HOST: AUTH,
+    FIRESTORE_EMULATOR_HOST: FIRESTORE,
+    GCLOUD_PROJECT: FIREBASE_QA_PROJECT,
+  }
+  if ((await up(AUTH)) && (await up(FIRESTORE))) {
+    console.log('= emulators already running')
+  } else {
+    console.log('… firebase emulators:start (the first time on a machine: minutes)')
+    if (pkgScripts.emulators?.includes('--project')) launch('bun', ['run', 'emulators'], process.env)
+    else if (pkgScripts.emulators) launch('bun', ['run', 'emulators', '--', '--project', FIREBASE_QA_PROJECT], process.env)
+    else launch('bun', ['x', 'firebase', 'emulators:start', '--project', FIREBASE_QA_PROJECT], process.env)
+    await waitFor(AUTH, 240)
+    await waitFor(FIRESTORE, 240)
+  }
+
+  if (reset && existsSync('scripts/seed-emulator.ts')) {
+    console.log('… scripts/seed-emulator.ts')
+    const seed = launch('bun', ['scripts/seed-emulator.ts'], emulatorEnv)
+    if ((await new Promise<number | null>((done) => seed.on('exit', done))) !== 0) abort('seed-emulator failed')
+  }
+
+  // `Bearer owner` is the emulator's admin credential (it only works against the emulator).
+  const owner = { Authorization: 'Bearer owner', 'Content-Type': 'application/json' }
+  const authApi = `http://${AUTH}/identitytoolkit.googleapis.com/v1/projects/${FIREBASE_QA_PROJECT}`
+
+  async function assignRoleFirebase(uid: string, email: string, role: string): Promise<void> {
+    // The role already goes as a custom claim (`role`). If your project keeps it in a
+    // Firestore document instead, write it here with the emulator's REST API, e.g.:
+    //   if (role === 'admin') await fetch(`http://${FIRESTORE}/v1/projects/${FIREBASE_QA_PROJECT}` +
+    //     `/databases/(default)/documents/admins/${uid}`, { method: 'PATCH', headers: owner,
+    //     body: JSON.stringify({ fields: { email: { stringValue: email } } }) })
+    void uid
+    void email
+    void role
+  }
+
+  for (const a of accounts) {
+    if (!a.email || !a.password) {
+      console.warn(`! role ${a.role}: email or password missing in .env.test.local; skipped`)
+      continue
+    }
+    const r = await fetch(`${authApi}/accounts`, {
+      method: 'POST',
+      headers: owner,
+      body: JSON.stringify({ email: a.email, password: a.password, emailVerified: true }),
+    })
+    const body = (await r.json()) as { localId?: string; error?: { message: string } }
+    if (r.ok && body.localId) {
+      await fetch(`${authApi}/accounts:update`, {
+        method: 'POST',
+        headers: owner,
+        body: JSON.stringify({ localId: body.localId, customAttributes: JSON.stringify({ role: a.role }) }),
+      })
+      await assignRoleFirebase(body.localId, a.email, a.role)
+      console.log(`  + test account: role ${a.role}`)
+    } else if (body.error?.message === 'EMAIL_EXISTS') {
+      console.log(`  = test account: role ${a.role} (already existed)`)
+    } else {
+      abort(`Could not create the account for role ${a.role}: ${r.status} ${body.error?.message}`)
+    }
+  }
+
+  const env: NodeJS.ProcessEnv = { ...emulatorEnv, QA_LOCAL: '1' }
+  for (const prefix of ['', 'NEXT_PUBLIC_', 'PUBLIC_', 'VITE_']) {
+    env[`${prefix}USE_EMULATORS`] = 'true'
+    env[`${prefix}FIREBASE_PROJECT_ID`] = FIREBASE_QA_PROJECT
+    // The SDK demands an apiKey even though the emulator does not check it.
+    env[`${prefix}FIREBASE_API_KEY`] = 'demo-qa-local'
+  }
+  console.log(`Emulators: Auth ${AUTH} · Firestore ${FIRESTORE}${emu.ui?.port ? ` · UI http://127.0.0.1:${emu.ui.port}` : ''}`)
+  await startServer(env)
+}
+
+// ── Supabase ────────────────────────────────────────────────────────────────────────────
 if (!existsSync('supabase/config.toml')) {
   if (remote.length) {
     abort(
@@ -219,8 +423,8 @@ if (!existsSync('supabase/config.toml')) {
         '\nQA does not run against the real database. It needs `supabase init` and the migrations in the repo (backend-build).',
     )
   }
-  console.log('No supabase/config.toml: no external database to replace. Normal server.')
-  await startDev(process.env)
+  console.log('No supabase/config.toml nor Firebase emulators: no external database to replace. Normal server.')
+  await startServer(process.env)
 }
 
 const uncovered = remote.filter((r) => !(r.key in ENV_MAP))
@@ -233,12 +437,12 @@ if (uncovered.length) {
 
 // 2. Local stack and a clean database.
 console.log('… supabase start (the first time it downloads the images: minutes)')
-supabase('start')
+supabase(['start'], { retry: true })
 if (reset) {
-  console.log('… supabase db reset (migrations + seed)')
-  supabase('db', 'reset')
+  console.log('… supabase db reset (migrations + seed; minutes)')
+  supabase(['db', 'reset'], { live: true })
 }
-const status = JSON.parse(supabase('status', '-o', 'json')) as Record<string, string>
+const status = JSON.parse(supabase(['status', '-o', 'json'])) as Record<string, string>
 const api = status.API_URL
 const serviceKey = status.SERVICE_ROLE_KEY
 if (!api || !serviceKey) abort('supabase status did not return API_URL / SERVICE_ROLE_KEY')
@@ -263,20 +467,6 @@ const headers = {
   Authorization: `Bearer ${serviceKey}`,
   'Content-Type': 'application/json',
 }
-const testEnv = readEnv('.env.test.local')
-const accounts = Object.keys(testEnv)
-  .map((k) => k.match(/^(?:([A-Z0-9_]+)_)?EMAIL_TEST$/))
-  .filter((m): m is RegExpMatchArray => m !== null)
-  .map((m) => {
-    const prefix = m[1] ? `${m[1]}_` : ''
-    return {
-      role: m[1] ? m[1].toLowerCase() : 'user',
-      email: testEnv[`${prefix}EMAIL_TEST`],
-      password: testEnv[`${prefix}PASSWORD_TEST`],
-    }
-  })
-
-if (!accounts.length) console.warn('! .env.test.local without *_EMAIL_TEST: QA can only test what is public.')
 for (const a of accounts) {
   if (!a.email || !a.password) {
     console.warn(`! role ${a.role}: email or password missing in .env.test.local; skipped`)
@@ -312,5 +502,4 @@ for (const [role, variable] of Object.entries(ROLE_BY_ENV)) {
   env[variable] = accounts.filter((a) => a.role === role && a.email).map((a) => a.email).join(',')
 }
 console.log(`Local database: ${api}${status.MAILPIT_URL ? ` · emails at ${status.MAILPIT_URL}` : ''}`)
-console.log(`… bun run dev on port ${port}`)
-await startDev(env)
+await startServer(env)

@@ -45,6 +45,19 @@ jobs:
       - name: Build
         run: bun run build
 
+  # One job per nested subproject with its own package.json (`bot/`, `functions/`): CI only
+  # runs the root, and a subproject's red typecheck went unseen on main (inversiones-js).
+  # bot:
+  #   runs-on: ubuntu-latest
+  #   defaults:
+  #     run: { working-directory: bot }
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: oven-sh/setup-bun@v2
+  #     - run: bun install --frozen-lockfile
+  #     - run: bun run typecheck
+  #     - run: bun run test
+
   # optional e2e: the affected tests first (fast feedback), then everything.
   # e2e:
   #   runs-on: ubuntu-latest

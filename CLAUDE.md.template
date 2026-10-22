@@ -64,10 +64,10 @@ bun run context:backup       # local context/ → branch context-state (restore:
 **Dev server:** César starts it. Exceptions: the QA agents (`wave-qa`, `functional-qa`),
 and the workers if César authorizes it for a batch (each on its port, in the background). Build, typecheck, lint and tests run without asking.
 
-**QA against a local database:** `bun run qa:local -- --port <p>` starts {{Supabase}} in
-Docker (migrations + seed), creates the `.env.test.local` accounts (`EMAIL_TEST`/
-`PASSWORD_TEST`, `ADMIN_…`, `<ROLE>_…`) and starts the server pointing at it. Never against
-the real database. Without Docker: `--offline` (guest only).
+**QA against a local database:** `bun run qa:local -- --port <p>` starts {{Supabase in
+Docker | the Firebase emulators (Java, no Docker)}}, creates the `.env.test.local` accounts
+(`EMAIL_TEST`/`PASSWORD_TEST`, `ADMIN_…`, `<ROLE>_…`) and starts the server on it. Never the
+real database. Without it: `--offline` (guest only).
 
 **Playwright scripts run with `node`, not `bun`** (under Bun it hangs on Windows), saved in
 `.qa/` (ignored by git).

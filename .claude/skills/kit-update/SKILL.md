@@ -159,6 +159,8 @@ happened: a project on 3.5.0 without `test:related` or `shots`, because it start
 | Kit copy for cloud sessions: `.claude/skills/<each kit skill>` and `.claude/agents/<each kit agent>`, equal to `<kit>`'s, not gitignored | `diff -rq "<kit>/.claude/skills/<name>" .claude/skills/<name>` per kit skill (and agents); `git check-ignore -q .claude/skills` |
 | `.claude/settings.json` with the `SessionStart` hook to `scripts/cloud-setup.sh`, and the script | `grep cloud-setup .claude/settings.json`; `ls scripts/cloud-setup.sh` |
 | Backup of the local `context/` on the remote | `git ls-remote --heads origin context-state` |
+| **Nested subprojects** (a `package.json` below the root: `bot/`, `functions/`) are installed and checked in CI | `git ls-files '*/package.json' \| grep -v node_modules`; for each: does `<dir>/node_modules` exist, does its typecheck pass, and does `.github/workflows/ci.yml` run its install + typecheck + tests (the commented job in `<kit>/github-templates/workflows/ci.yml`) |
+| Firebase project: `firebase.json` with `emulators`, an `emulators` script with `--project demo-*`, Java available | `grep -q emulators firebase.json`; `java -version` |
 
 What is missing is added with the kit's own script, which only adds what does not exist and
 overwrites nothing: `pwsh -File "<kit>/new-project.ps1" -Path . -OnlyPieces` (plus
@@ -167,6 +169,11 @@ overwrites nothing: `pwsh -File "<kit>/new-project.ps1" -Path . -OnlyPieces` (pl
 adds a script. It goes in the same PR, in its own commit (`chore(kit): piezas que
 faltaban`). If the stack is not Next.js (Astro, Vite), it does not add `typecheck` and says
 so: tell César which pieces are left for him or for you by hand.
+
+A nested subproject `-OnlyPieces` does not touch: `bun install` in its folder and its
+typecheck, and if it fails, that goes in the PR as a finding, not hidden. Its CI job is
+added in the same commit. Why: inversiones-js had a `bot/` never installed, whose typecheck
+was red on `main` for weeks, because CI only ran the root.
 
 If `supabase/` or the fixed documents of `context/` are gitignored, it is a question for the
 single round, not something you change silently: César may have done it on purpose. The

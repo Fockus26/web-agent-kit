@@ -128,6 +128,14 @@ Before even mentioning a commit:
 4. `bunx tsc --noEmit` and the linter pass, if the project has them configured.
 5. **Tests:** during the work `bun run test:related` was enough; here goes the full suite
    (`bun run test`, with `--dots`). CI runs it again on the PR.
+5b. **Closing QA**, outside a wave of `orchestrate` (which has its own `wave-qa`): if the
+   unit **completes a flow** (sign-up/login/session, a form that really submits, a CRUD,
+   checkout) → launch `functional-qa`; if it **completes a page** or the status screens →
+   `design-qa`. If it cannot run now (no server, no local backend, a cloud session without
+   accounts), one line in "Blocked" of `CURRENT_PHASE.md`: `QA pendiente: <functional|design>-qa
+   — <flujo/página> — PR #N`, and the same in the PR body. Never silent. Why: six PRs made in
+   cloud sessions were merged without either, and the debt surfaced weeks later as three
+   High data-loss findings (inversiones-js #19).
 6. **Changeset**, if the project is versioned (it has `.changeset/`; if its `CLAUDE.md`
    says "no versioning", never: it is a decision, not something left to migrate): if
    whoever uses the site notices the change, add `.changeset/<desc>.md` (see 2.1.3). Do not

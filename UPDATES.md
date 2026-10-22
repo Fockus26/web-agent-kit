@@ -37,6 +37,81 @@ other, the agent shows them and asks before choosing.
 
 ---
 
+## 3.13.0 — 2026-10-22 · Feedback round 3 (inversiones-js, world-flags): QA without loops, Firebase and Astro
+
+**What changed**
+
+- **QA findings are fixed in the same wave and closed by a script, not by another QA.**
+  `wave-qa`, `design-qa` and `functional-qa` leave a reproduction script per finding
+  (`.qa/repro/<n>-<slug>.mjs`, prints `PASS`/`FAIL`); `orchestrate` §8 turns Critical/High
+  into fix units **of this wave**, whose worker runs the script on `main` (FAIL) and on its
+  branch (PASS). No second QA of the fixes. A finding that is a **class** is swept whole
+  (`grep` pattern + measuring script versioned in the repo). Why: in world-flags each QA
+  opened a wave, each fix got a QA that found more of the same reflow class: four rounds.
+- **QA scope from `git diff`**: `orchestrate` §8 passes `wave-qa` the files changed since
+  the last QA's sha; it walks those flows, the never-verified ones and a smoke pass. Why:
+  three QAs re-walked flows whose files had not changed.
+- **Model and effort per unit** (`reference/TOKEN-ECONOMY.md` §12, a 3-row table; risk —
+  auth, data, concurrency — is always `opus`); `orchestrate` §4 reserves it with "Docker
+  yes/no", and passes both in `Agent(...)`. Why: mechanical units spent 100-280 k tokens on
+  the big model.
+- **Brief**: a "Simulating the backend" section (shared mock script, exact build command);
+  rule 16 "fix the class in the first pass" (and after that, Medium/Low → backlog, at most
+  one extra round per PR); Astro ≥ 7 server rule; `gh pr create --body-file`.
+- **Closing QA outside waves** (`git-flow` §2.1 gate 5b, `cloud-session` §2): a unit that
+  completes a flow gets `functional-qa`, a page `design-qa`, or a `QA pendiente: …` line in
+  "Blocked". Why: six cloud PRs in inversiones-js merged with no QA; three High data-loss
+  findings came out weeks later.
+- **`qa-local.ts`**: **Firebase emulators** when the project has `firebase.json` with
+  `emulators` (`demo-*` project, 4-minute wait with progress, accounts with a `role` custom
+  claim, `scripts/seed-emulator.ts`, `<prefix>USE_EMULATORS=true`); **Astro ≥ 7** server kept
+  in the foreground (`ASTRO_*_BACKGROUND=0`) and `astro dev stop` on exit; `supabase start`
+  retried once; `db reset` output live; email rate limit raised locally; new `--preview`
+  (build + preview/start). Why: inversiones-js ran its own Firebase copy; world-flags'
+  first `supabase start` failed every time and its Astro server was left orphaned.
+- **Firebase and Astro documented as supported stacks**: `reference/STACK-NEXTJS.md`
+  ("Astro in the kit", "Backend: Supabase or Firebase"), `backend-build` (emulators, rules
+  tests with `beforeAll(…, 30_000)`), `project-kickoff` question 13, the QA agents and the
+  `CLAUDE.md.template` QA line.
+- QA measuring methods: `design-qa` (ResizeObserver instead of rAF, `Range` per word,
+  `hyphens`), `a11y` (real keys for React Aria's focus ring, CDP touch drag), and the Windows
+  file rules (no Python/`node -e` with backticks, `fetch` instead of `curl`) in the three QA
+  agents.
+- `frontend-build`: the `/estados` gallery in the states unit, and a 200 %/320 px build
+  checklist (`flex-wrap`, no bare `truncate`, `fixed` with `max-height`).
+- `kit-update` piece check: nested `package.json` (installed, typechecked, in CI) and the
+  Firebase pieces; `ci.yml` has a commented job per subproject.
+- `new-project.ps1 -OnlyPieces`: does not append `* text=auto` to an existing
+  `.gitattributes` (it overrode a global `eol=lf`), uses `bun x` instead of `bunx` (not on
+  pwsh's PATH) and formats `.claude/settings.json` too.
+
+**Steps for a project on 3.12.0**
+
+1. Global pieces: `install-kit.ps1 -Pull` and a new session (skipped in a cloud session).
+   Then refresh the kit copy (`install-kit --project .`): skills and agents changed.
+2. `scripts/qa-local.ts` ← `<kit>/reference/scripts/qa-local.ts`, carrying over the
+   project's edits (`ENV_MAP`, `ROLE_BY_ENV`, `assignRole`). **A Firebase project that had
+   its own `qa-local.ts`** (inversiones-js): replace it with the kit's; its seed script
+   becomes `scripts/seed-emulator.ts` (rename or a one-line wrapper), a role kept in a
+   document (`admins/{uid}`) goes to `assignRoleFirebase`, and if the client reads a flag
+   with another name than `<prefix>USE_EMULATORS`, add it to the env loop. Check
+   `package.json` has `"emulators": "firebase emulators:start --project demo-<name>"`.
+3. `CLAUDE.md`, the "QA against a local database" paragraph: replace it with the template's
+   new one, keeping only the project's backend ("Supabase in Docker" or "the Firebase
+   emulators (Java, no Docker)"). Same length; check `wc -c CLAUDE.md` ≤ 8 KB.
+4. `.gitattributes`: if it has a global `* … eol=lf` rule **followed by** a bare
+   `* text=auto` line (added by an earlier `-OnlyPieces`), delete that later line.
+5. Nested subprojects (`git ls-files '*/package.json'`): for each, `bun install` in its
+   folder, its typecheck, and its job in `.github/workflows/ci.yml` (the commented `bot:`
+   job of `<kit>/github-templates/workflows/ci.yml`). A red typecheck goes to the PR as a
+   finding, not fixed silently.
+6. Firebase rules tests (`@firebase/rules-unit-testing`): `beforeAll(…, 30_000)` around
+   `initializeTestEnvironment`.
+7. If a wave is in progress with QA findings planned "for the next wave": nothing to
+   migrate; from now on `orchestrate` puts them in the current one.
+
+---
+
 ## 3.12.0 — 2026-10-20 · `.env` in cloud sessions without pasting it
 
 **What changed**

@@ -143,7 +143,9 @@ Me faltan estas para armar el plan:
 ### Block D — Technical
 
 13. **Stack** — Next.js (App Router) + TypeScript and **bun** are the kit's default.
-    Confirm or adjust. See `reference/STACK-NEXTJS.md`.
+    Confirm or adjust (Astro for a mostly static content site). If there are users or data:
+    **Supabase or Firebase** — both supported; it decides whether local QA needs Docker or
+    Java. See `reference/STACK-NEXTJS.md` ("Astro in the kit", "Backend").
 
 13b. **Component library — always ask, do not assume it.** It is César's decision, not
     yours, and it changes how the whole frontend is written. Offer him the three with

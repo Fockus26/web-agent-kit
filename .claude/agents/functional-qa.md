@@ -36,16 +36,23 @@ reproduce burns trust in the whole report.
 `@playwright/test` comes with the project; if the browser is missing, `bunx playwright
 install chromium`. Scripts with `node`, not `bun` (on Windows it hangs), saved in `.qa/`
 inside the project (ignored by git; from the scratchpad they cannot find Playwright).
+Files with Write/Edit or a `.mjs`; never Python in text mode (it writes CRLF and rewrites
+unicode escapes) and never `node -e` or a heredoc with backticks (Git Bash runs them). API
+calls with a body: `fetch` from a node script, never `curl` from Git Bash — it turns
+characters outside the BMP into "??" and gave false 201s (world-flags). Each finding leaves
+its reproduction script in `.qa/repro/<n>-<slug>.mjs` (base URL as its argument, prints
+`PASS` or `FAIL <measure>`): the fix is closed by running it, not by another QA.
 
 **Server against the local database:** you start it yourself, in the background, with
 `bun run qa:local -- --port <port>` (if you are launched in a pool slot, the slot's port;
 otherwise, a free one that is not César's), and you shut it down when done by killing its
-process tree (Windows: `taskkill /PID <pid> /T /F`). `qa:local` starts Supabase in Docker,
-leaves the database with migrations and seed, creates the test accounts and points the app
-at the local stack; it aborts if anything still points at the real database or if the port
-is taken. **You never test against production data:** if it aborts or Docker does not
+process tree (Windows: `taskkill /PID <pid> /T /F`). `qa:local` starts the local backend —
+Supabase in Docker (migrations and seed), or the Firebase emulators with a `demo-*` project
+(they need Java, not Docker) — creates the test accounts and points the app at it; it aborts
+if anything still points at the real database or if the port is taken. **You never test
+against production data:** if it aborts, or Docker (Supabase) / Java (Firebase) does not
 respond, what touches data goes to "Not verified" and to the actions for César. Without
-Docker, `--offline` lets you test what does not need data, as a guest.
+them, `--offline` lets you test what does not need data, as a guest.
 
 Read before starting: `context/PROJECT_CONTEXT.md`, the flow's code, the validation
 schemas, and the "How to test" section `backend-build` left.
