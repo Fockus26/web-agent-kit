@@ -31,6 +31,19 @@ Do not use numbers outside your range.
 - {{e.g. "each worker may start its server on its port"}}
 - {{e.g. "W1 may apply new columns through the MCP; nothing destructive"}}
 
+## Simulating the backend
+
+How a worker sees data-dependent states without logging in to the real backend. Fill it in
+before launching: with "intercept Supabase" alone, two workers copied a mocks file from
+another slot and guessed the build command, and a third inherited stale `.qa/` scripts
+(world-flags).
+
+- Shared mock script (in the repo): `{{scripts/qa/mock-backend.mjs | none yet: W1 creates it}}`
+- Exact build / server command with it: `{{e.g. PUBLIC_SUPABASE_URL=http://127.0.0.1:9 bun run build && …}}`
+- App state to skip (tutorial, cookie banner, onboarding): `{{helper or localStorage key}}`
+
+Nothing from another slot's `.qa/`: it belongs to a previous unit and may be stale.
+
 ## Batch rules (on top of `CLAUDE.md`)
 
 1. **Read only** `CLAUDE.md` and what your prompt cites (paths, lines, decisions). Do not
@@ -54,7 +67,10 @@ Do not use numbers outside your range.
    Shut it down when done by killing **your** process and its children (Windows:
    `taskkill /PID <pid> /T /F`; a plain `kill` only kills the shell and leaves the server
    orphaned on the port), never with a `<framework> stop`, which stops the project's server
-   and may be another slot's.
+   and may be another slot's. **Astro ≥ 7** detaches `astro dev` into the background: start
+   it with `ASTRO_DEV_BACKGROUND=0` so the kill reaches it; if it detached anyway, `bun x astro
+   dev stop` run **inside your slot** is safe (its lock, `.astro/dev.json`, is per folder).
+   **Docker:** only if your prompt says "Docker: yes" (another unit may be using it).
    If it says "Node.js subprocess crashed … deadline has elapsed" (Turbopack with several
    servers at once): shut it down, delete `.next/dev` and restart it; the 500 stays cached
    and a restart is not enough.
@@ -92,12 +108,20 @@ Do not use numbers outside your range.
     open the images.
 15. **Unable to ask:** when data is missing, the conservative option + "Decision taken /
     alternative" in the PR. Do not block.
-16. **New copy = provisional:** flagged in the code + your reserved checklist row.
-17. **Closing:** Conventional commits (only your files) with the description in Spanish,
-    push of your branch, `gh pr create` with the template (PR in Spanish). Leave the slot
+16. **Fix the class, in the first pass.** If what you fix (or a bug you meet) has the same
+    shape elsewhere — the same anatomy, the same missing `flex-wrap`, the same `truncate` —
+    find it with `grep` over the whole `src/`, not only the folder your prompt names, and fix
+    it now. What you notice after your PR is up goes in the report as "seen in passing"; if
+    Medium or Low, the orchestrator sends it to the backlog, not back to you. Why: in
+    world-flags, a snackbar with the same anatomy in another folder was missed, and "bugs in
+    passing" cost 2-3 rounds per PR.
+17. **New copy = provisional:** flagged in the code + your reserved checklist row.
+18. **Closing:** Conventional commits (only your files) with the description in Spanish,
+    push of your branch, `gh pr create --body-file .qa/pr-body.md` with the template (PR in
+    Spanish; the body written with Write, never inline: quotes and backticks break it). Leave the slot
     clean: everything committed and pushed (empty `git status`), or the orchestrator cannot
     free it. **Never** `gh pr merge`, push to `main`, force-push or amend what was pushed.
     Database: only the authorized additive changes; nothing destructive.
-18. **Final report** (the orchestrator reads it, be brief): PR URL, slot, changeset,
+19. **Final report** (the orchestrator reads it, be brief): PR URL, slot, changeset,
     verified / not verified, open decisions, manual actions, bugs seen in passing, and your
     PHASE_LOG if you could not write it.

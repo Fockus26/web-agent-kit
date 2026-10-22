@@ -50,7 +50,7 @@ Without an assigned branch, `git-flow` §1.2 as always.
 |---|---|
 | `gh pr create`, `gh api`, `gh pr view` | `gh auth status` first; if it is not authenticated, the GitHub MCP tools (`mcp__github__create_pull_request`, `pull_request_read`, `merge_pull_request`…; load them with ToolSearch) |
 | `pwsh`, `wt.ps1` (worktree pool), `new-project.ps1` | There is no PowerShell. `orchestrate` does not use the pool here: the wave's units go **one after another** in this session, each closed with §2 before the next one opens |
-| `bun run qa:local` (Supabase in Docker) | No Docker: `--offline` (guest only) and say what was not tested with accounts |
+| `bun run qa:local` (Supabase in Docker / Firebase emulators) | No Docker: `--offline` (guest only) and say what was not tested with accounts. Firebase: the emulators need Java and `firebase-tools`; if the container has a JDK they work, otherwise `--offline` too |
 | `.env.local` (`vercel env pull`) | `cloud-setup.sh` pulls it at start when the cloud environment has `VERCEL_TOKEN` (secret), `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` (and `VERCEL_ENV_FILE` if the app is not at the root) and allows `api.vercel.com` (`reference/DEPLOY.md` §2d). Without them: say so and point César to that setup. **Never ask César to paste keys or a `.env` into the chat**: it stays in the transcript; if he does, use it only in the container's gitignored file and tell him to rotate what he pasted. A missing variable is reported, never invented or hardcoded |
 | Dev server, screenshots | Allowed (it is your container). `shots:publish` pushes to `pr-shots`: if the push is refused, the screenshots go as "no disponibles — <motivo>" |
 | `kit-update` | Works: it clones the kit and downloads `pwsh` to the scratchpad (its "Cloud session" section) |
@@ -61,7 +61,15 @@ Without an assigned branch, `git-flow` §1.2 as always.
 
 Instead of `git-flow` §2A/§2B (whatever `GIT_STATE.md` says: in the cloud there is always a
 remote). The gates of `git-flow` §2.1 do not change: a11y, seo, build, typecheck, lint, the
-full test suite, changeset, screenshots, prune `context/`, kit feedback.
+full test suite, **closing QA (5b)**, changeset, screenshots, prune `context/`, kit feedback.
+
+**Closing QA before merging.** You merge yourself, so nobody else will ask for it: a unit
+that completes a flow gets `functional-qa`, one that completes a page gets `design-qa`,
+launched here before step 6 (`--offline` or the emulators, whatever the cloud allows). A
+High or Critical finding is fixed in the same PR before merging. What could not be tested
+in the cloud goes as `QA pendiente: …` to "Blocked" of `CURRENT_PHASE.md` and to the PR body,
+and is repeated in the last message (§3). Why: six cloud PRs in inversiones-js were merged
+with no QA and three High data-loss findings came out weeks later.
 
 1. **Back up `context/`**: `bun run context:backup`. It is the only copy of the working state
    that survives the container. If the push to `context-state` is refused, paste the changed
@@ -96,5 +104,5 @@ git log origin/main..HEAD --oneline        # nothing unpushed or unmerged
 
 The last message to César, in Spanish: each PR with its link and whether it is **merged**
 (and the commit on `main`) or **open and why** (red CI you could not fix, a review the
-protection demands), whether `context/` got backed up, and what you could not verify in the
-cloud (Docker, real accounts, missing variables).
+protection demands), whether `context/` got backed up, what you could not verify in the
+cloud (Docker, real accounts, missing variables), and every `QA pendiente` left.

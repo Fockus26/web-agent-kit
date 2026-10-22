@@ -46,7 +46,8 @@ Then:
 3. Connect the **Context7** MCP (up-to-date library documentation).
 4. Requirements: **bun**, **Node ≥ 23.6** (for the Playwright scripts), **git**, an
    authenticated **gh**, **PowerShell 7** (`pwsh`). If the project uses Supabase: **Docker
-   Desktop** running and the **Supabase CLI** (QA runs against a local database).
+   Desktop** running and the **Supabase CLI**; if it uses Firebase: **Java (a JDK)** and
+   `firebase-tools`, no Docker (QA runs against a local database).
 
 ### Updating the kit
 
@@ -354,7 +355,16 @@ starts Supabase in **Docker Desktop** (keep it running), applies `main`'s migrat
 creates the test accounts and starts the server pointing at that database. There QA can
 create, break and change whatever it wants: each run starts from scratch, and the emails the
 app sends stay in Mailpit. That is why the local database is **disposable**: keep nothing of
-yours in it.
+yours in it. With **Firebase** it is the same with the emulators (they need Java, not
+Docker; the emails stay in the emulator's UI). `--preview` serves the build instead of the
+dev server.
+
+**What happens with the QA's findings.** The Critical and High ones are fixed **in the same
+wave**: each fix closes when the finding's reproduction script goes from FAIL on `main` to
+PASS on its branch; there is no second QA of the fixes. The next QA only tests what changed
+since the last one (and what was never tested). When you work without waves (a loose unit,
+a cloud session), closing a flow or a page launches `functional-qa`/`design-qa`, or leaves
+"QA pendiente" in "Blocked" so it is never forgotten.
 
 Without Docker on the machine (or without a local database yet), the wave is not blocked: QA
 runs with `bun run qa:local -- --offline`, guest only, and the wave's closing tells you the
@@ -449,7 +459,7 @@ agents in `.claude/` (the global `~/.claude/` does not exist there). What change
 | `bun run lint` / `bun run format` | Biome |
 | `bun run shots` | Screenshots of the states defined in `.pr-shots.json` (uses node + Playwright) |
 | `bun run shots:publish` | Uploads the screenshots to the `pr-shots` branch; markdown in `.pr-shots/README.md` |
-| `bun run qa:local -- --port <p>` | Server against the local database with the test accounts (`--offline` without Docker) |
+| `bun run qa:local -- --port <p>` | Server against the local database (Supabase or Firebase emulators) with the test accounts (`--offline` without one, `--preview` for the build) |
 | `bun run context:backup` | Copies the local `context/` to the `context-state` branch |
 | `bun run context:restore` | Brings it back after losing the folder (never overwrites a local file) |
 | `bunx vercel env pull .env.local --yes` | Brings the environment variables from Vercel (Development) to `.env.local` |

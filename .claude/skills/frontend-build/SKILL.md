@@ -91,6 +91,14 @@ and flag that part of the code as "written without checking current docs".
   Reimplementing a primitive is how half the accessibility bugs slip in: the keyboard and
   focus behavior is already solved there. See `reference/UI-LIBRARIES.md` for what changes
   depending on which one was chosen.
+- **Built to survive 200 % text and 320 px**, from the first version — in world-flags the
+  same reflow class came back with every new piece and took four QA rounds:
+  - a row of buttons or chips → `flex-wrap`, and the button allows its text to wrap;
+  - a name or title that can be long → never `truncate` without another way to read it
+    (tooltip, a second line); headings with `wrap-anywhere` / `break-words`;
+  - a `fixed` container (toast, banner, sheet) → `max-height` in `dvh` + its own scroll;
+  - if the project has a versioned reflow script (`tests/e2e/reflow-*`), run it on the new
+    piece before closing.
 - **Names:** components in `PascalCase`, component files in `PascalCase.tsx`, utilities in
   `camelCase.ts`, routes in `kebab-case`.
 
@@ -123,7 +131,9 @@ Follow the order the handoff brings. If it brings none, this one:
 5. Sections        → in each page's vertical order
 6. Pages           → assemble and wire routes
 7. States          → empty, loading, error; 404 / 500 / offline / maintenance screens
-                     (the kit's reference/STATUS-SCREENS.md)
+                     (the kit's reference/STATUS-SCREENS.md), AND the /estados?screen=…
+                     gallery in the same unit (dev only, 404 in production): design-qa
+                     audits through it; without it the 500 went unaudited (inversiones-js)
 8. Responsive      → polish across every breakpoint
 ```
 

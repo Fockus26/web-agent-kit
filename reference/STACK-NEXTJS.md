@@ -25,10 +25,39 @@ overrides this one**.
 ### When to deviate
 
 - **Astro** — a content site, almost all static, with no interactivity beyond a form. Less
-  JavaScript shipped. (The kit's skills assume Next.js; with Astro, scripts and status
-  screens need adapting.)
+  JavaScript shipped. See "Astro in the kit" below.
 - **Vite + React** — an app behind a login, with no need for SEO or SSR.
 - **Next.js anyway** — for everything else. When in doubt, Next.js.
+
+### Astro in the kit
+
+Supported, with these differences (world-flags, Astro 7 + a React island):
+
+- Client variables are `PUBLIC_*` (`qa-local.ts` already maps them). Typecheck:
+  `bun x astro check` (`new-project.ps1` does not add `typecheck` there; CI's comment says it).
+- **Astro ≥ 7 detaches `astro dev` and `astro preview` into the background** when it detects
+  an agent: the command exits with 0 and the server stays. `qa:local` starts it with
+  `ASTRO_DEV_BACKGROUND=0` / `ASTRO_PREVIEW_BACKGROUND=0` and runs `astro dev stop` on exit;
+  a worker starting its own server does the same (brief, rule 6). `astro dev stop` acts on
+  the folder's lock (`.astro/dev.json`), so inside a pool slot it only stops that slot's.
+- Status screens: `404.astro` and the gallery as a page excluded in production
+  (`STATUS-SCREENS.md`, "Other stacks").
+- React islands with React Aria: focus rings show only after keyboard input — measure focus
+  with real keys (`a11y`).
+
+## Backend: Supabase or Firebase
+
+Both are covered, and QA runs against a local copy of either (`qa:local`):
+
+| | Supabase | Firebase (Auth + Firestore) |
+|---|---|---|
+| Local backend | stack in **Docker** (`supabase start`) | **emulators** (`firebase-tools` + **Java**, no Docker) |
+| Schema in git | `supabase/migrations/` + `seed.sql` | `firestore.rules`, `firestore.indexes.json`, `firebase.json` + `scripts/seed-emulator.ts` |
+| Test accounts' role | `app_metadata.role` | custom claim `role` |
+| Rules/policies tests | SQL/RLS tests | `@firebase/rules-unit-testing`, `beforeAll(…, 30_000)` |
+
+Details in `backend-build` ("Local database for QA"). The choice goes in `PROJECT_CONTEXT.md`
+and in the QA line of `CLAUDE.md`.
 
 ---
 

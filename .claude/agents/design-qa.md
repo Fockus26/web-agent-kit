@@ -47,6 +47,30 @@ Use the kit's `reference/scripts/design-qa.ts` as a base, copied into `.qa/` of 
 (ignored by git; inside the project it resolves Playwright), and adjust the project's routes.
 If Playwright cannot be installed or the server does not come up, say so **at the top of the
 report** and fall back to code review, marking each finding as "not verified in a browser".
+If the project already has a versioned measuring script (`tests/e2e/reflow-*`,
+`scripts/qa/`), run it first: it is the class a previous QA found, and it must stay green.
+
+Files with Write/Edit or a `.mjs`; never Python in text mode (CRLF) and never `node -e` or a
+heredoc with backticks (Git Bash runs them). Each finding leaves its reproduction script in
+`.qa/repro/<n>-<slug>.mjs` (base URL as its argument, prints `PASS` or `FAIL <measure>`), as
+`wave-qa` §4 says: the fix is closed by running it, not by another audit.
+
+**Measuring without false results** (world-flags, each one cost a wrong finding or a missed
+one):
+
+- Layout read inside `requestAnimationFrame` catches states that are never painted: read in
+  a `ResizeObserver` created **after** the app's, or after `await page.waitForTimeout(0)`
+  following the change.
+- An overflow check does not see a word broken across lines inside a button that does not
+  overflow ("Países" in five pieces): measure each word with a `Range` — more than one line
+  of `getClientRects()` while the word alone would fit the box is a finding.
+- Text clipped at 200 % shows up as `scrollWidth > clientWidth` under `overflow: hidden`,
+  text outside its box, and `position: fixed` elements taller than the viewport. Measure all
+  four on every route, not only the reported one.
+- `hyphens: auto` changes line breaks at normal size too in Chromium with a dictionary:
+  compare pixel screenshots before and after before proposing it.
+- Pages that only exist as built files: `npx serve` (or a small static `.mjs` server) and a
+  diff of the measured signatures before/after the fix.
 
 ---
 
@@ -151,6 +175,10 @@ for (let i = 0; i < 60; i++) {
   // finding if !visible, if top < 0 or outside the viewport, or if there is no focus indicator
 }
 ```
+
+Real key presses, not `el.focus()` from a script: libraries like React Aria show the focus
+ring only after keyboard input, so a scripted focus reads as "no ring" — a false finding
+(world-flags). To check one element's ring, press a key first (`Shift`) and then `Tab` to it.
 
 **What counts as a finding:** invisible focus, focus on an element off screen, an order that
 jumps illogically, a trap you cannot leave, focus that does not return to the trigger when a

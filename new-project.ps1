@@ -49,7 +49,7 @@ if (-not $Existing) {
   try {
     # --biome and --react-compiler: the kit uses Biome (not ESLint) and React Compiler.
     # --typescript and --ts are the same. create-next-app already initializes git.
-    bunx create-next-app@latest $name --ts --tailwind --app --biome --react-compiler `
+    bun x create-next-app@latest $name --ts --tailwind --app --biome --react-compiler `
       --import-alias "@/*" --use-bun --yes
     if ($LASTEXITCODE -ne 0) { throw "create-next-app failed" }
   } finally { Pop-Location }
@@ -220,14 +220,23 @@ try {
   }
 
   # bash fails with a .sh in CRLF: git would convert it when cloning on Windows.
-  if (-not (Test-Path .gitattributes) -or (Get-Content .gitattributes -Raw) -notmatch '\*\.sh') {
-    Add-Content .gitattributes "* text=auto`n*.sh text eol=lf"
+  # An existing file only gets the *.sh line, and not even that if a global rule already
+  # forces LF: appending `* text=auto` after `* text=auto eol=lf` overrode it (inversiones-js).
+  if (-not (Test-Path .gitattributes)) {
+    Set-Content .gitattributes "* text=auto`n*.sh text eol=lf`n" -NoNewline
     Write-Host "  + .gitattributes: *.sh with LF"
+  } else {
+    $attrs = Get-Content .gitattributes -Raw
+    if ($attrs -notmatch '\*\.sh' -and $attrs -notmatch '(?m)^\*\s.*eol=lf') {
+      $sep = if ($attrs -and -not $attrs.EndsWith("`n")) { "`n" } else { '' }
+      Add-Content .gitattributes "$sep*.sh text eol=lf`n" -NoNewline
+      Write-Host "  + .gitattributes: *.sh with LF"
+    }
   }
 
   # The scripts import 'bun' and '@playwright/test': without their types, `tsc` and
   # `next build` fail (tsconfig includes **/*.ts). Playwright's browsers are not downloaded
-  # here: `bunx playwright install chromium` when screenshots or audits are needed.
+  # here: `bun x playwright install chromium` when screenshots or audits are needed.
   # @axe-core/playwright: the a11y gate uses it on every unit, and a pool worker does not add
   # dependencies (it ended up injecting axe from a CDN).
   $deps = @('@types/bun', '@playwright/test', '@axe-core/playwright')
@@ -247,7 +256,9 @@ try {
     if ($added) { $paths += 'package.json' }
     if (Test-Path biome.json) { $paths += 'biome.json' }
     if (Test-Path .changeset) { $paths += '.changeset' }
-    bunx biome check --write @paths | Out-Null
+    if (Test-Path .claude/settings.json) { $paths += '.claude/settings.json' }
+    # `bun x`, not `bunx`: bunx was not on pwsh's PATH and the format step failed (inversiones-js).
+    bun x biome check --write @paths | Out-Null
     Write-Host "  ~ formatted with the project's Biome: $($paths -join ', ')"
   }
 
@@ -259,5 +270,5 @@ try {
   Write-Host "  1. git status  -> review what was copied"
   Write-Host "  2. open Claude Code in $Path and type /project-kickoff"
   Write-Host "     (it asks whether to create the GitHub repo and the Vercel project, and with your yes it sets them up;"
-  Write-Host "      have 'gh auth login' and 'bunx vercel login' done if you will want them)"
+  Write-Host "      have 'gh auth login' and 'bun x vercel login' done if you will want them)"
 } finally { Pop-Location }

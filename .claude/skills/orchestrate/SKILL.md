@@ -140,6 +140,12 @@ So that parallel units do not collide, assign each one:
 | `CONTENT_CHECKLIST` rows | 26–27 |
 | Changeset bump | `minor` (or `none`) |
 | Range of custom error codes, if the project uses them (SQLSTATE of `raise … using errcode`) | MS010–MS014 |
+| Model · effort (`reference/TOKEN-ECONOMY.md` §12) | `sonnet` · medium |
+| Docker for this unit (local database, containers) | yes / no |
+
+**Docker yes/no is decided here**, not left to the worker: "Docker only if the other unit
+finished" could not be followed, since a worker cannot know that (world-flags). At most one
+unit per wave gets "yes" unless they use separate stacks.
 
 **IDs are reserved against `origin/main`**, not against the local folder, which may be
 behind (D186 was reserved by looking at `context/decisions/` without a pull and it already
@@ -198,6 +204,7 @@ pool grows with `wt init -Count <N>`.
 Agent(
   subagent_type: "feature-worker",
   run_in_background: true,
+  model: "sonnet", effort: "medium",      # the unit's row of §4
   description: "W3 modals",
   prompt: "Work ONLY in `C:\…\<repo>-wt\wt2` (branch feat/…, already created); your port is 4302.
            Your full prompt is section '## W3 — …' of <path>/orchestration-<date>-prompts.md.
@@ -226,6 +233,11 @@ When each report arrives:
 When César asks for changes on a PR or `main` moved: continue the worker with `SendMessage`
 (it keeps its context) instead of launching a new one. The slot stays its own until merge.
 
+**One extra round per PR, at most.** The worker fixes everything of its class or zone in the
+first pass (its prompt says so). What it reports "in passing" after that, if Medium or Low,
+goes to `backlog.md`, not to another `SendMessage`: chaining "a bug in passing → another
+round" cost 2-3 rounds per PR (world-flags). A Low never opens a wave by itself.
+
 After each PR is merged: `wt free <slot>`. It goes back to `origin/main` detached and deletes
 the local branch if merged; `node_modules` stays. If `free` aborts because of uncommitted
 changes, ask the worker what they are before touching anything.
@@ -253,27 +265,48 @@ Agent(
   prompt: "Slot `C:\…\<repo>-wt\wt1` (main @ <sha>), port 4301. Main folder: `…`.
            Phase 0N, wave N. PRs: #12 (W1 hero: <its 'How to test' in 2 lines>), #13 (…).
            Flows with login or data: <which, and which role uses them>.
-           Seams: <#12 and #13 touch the same page X>."
+           Seams: <#12 and #13 touch the same page X>.
+           Scope: files changed since the last QA (<sha>): <list>. Never verified: <flows>."
 )
 ```
 
-No need to repeat what the agent already knows: it starts its server with `bun run
-qa:local` against the local database (Supabase in Docker; never the real one); it logs in
-with `EMAIL_TEST`/`PASSWORD_TEST`, `ADMIN_EMAIL_TEST`/`ADMIN_PASSWORD_TEST` and
-`<ROLE>_EMAIL_TEST`/`<ROLE>_PASSWORD_TEST` from `.env.test.local` without seeing the values.
-If Docker is not running, it will report it as an action for César: do not start it yourself.
+**The scope is computed, not "everything".** The last QA's sha is in the header of the
+previous `qa-wave-*.md` ("main @ <sha>"); `git diff --name-only <sha>..origin/main` gives
+the files, and the flows that touch them are what gets walked, plus whatever was never
+verified and a smoke pass. Why: each closing QA in world-flags re-walked sign-up, login, two
+tabs and axe on every screen with no file of theirs changed (×3). With no previous QA, the
+whole wave.
 
-**No local database possible** (the machine has no Docker, or the project has no
-`supabase/config.toml` or migrations yet): the wave does not stay blocked. Launch it anyway,
+No need to repeat what the agent already knows: it starts its server with `bun run
+qa:local` against the local backend (Supabase in Docker, or the Firebase emulators with
+Java; never the real one); it logs in with `EMAIL_TEST`/`PASSWORD_TEST`,
+`ADMIN_EMAIL_TEST`/`ADMIN_PASSWORD_TEST` and `<ROLE>_EMAIL_TEST`/`<ROLE>_PASSWORD_TEST` from
+`.env.test.local` without seeing the values. If Docker (or Java) is missing, it will report
+it as an action for César: do not start it yourself.
+
+**No local database possible** (Supabase without Docker on the machine, Firebase without
+Java, or the project has no `supabase/config.toml`/`firebase.json` emulators yet): the wave does not stay blocked. Launch it anyway,
 with "no local database: `qa:local -- --offline`" in the prompt; it tests as a guest with the
 database variables pointing nowhere. In the closing (§9), "QA: guest only — <reason>", and
 that wave's logged-in QA goes to "Blocked" until there is a local database.
 
 With the report:
-- Save it to `context/plans/qa-wave-0N-N.md` and `wt free` the QA slot.
-- **Critical or High** → a fix unit at the start of the next wave. If it blocks what is
-  built on top, it is a fix wave of its own before the next planned one.
+- Save it to `context/plans/qa-wave-0N-N.md`, copy the slot's `.qa/repro/` to
+  `context/plans/qa-wave-0N-N/`, and `wt free` the QA slot.
+- **Critical or High** → a fix unit **in this same wave** (same slots, no new wave or
+  session), with the finding's reproduction script in its prompt: the worker runs it on
+  `main` (FAIL) and on its branch (PASS) and attaches both to the PR. That closes the
+  finding: **no second QA of the fixes**. The wave closes when those PRs are merged. Why: in
+  world-flags each QA opened a wave and each fix got a QA that found more, a loop with no
+  end; the owner fixed this rule on 2026-10-22.
+- **A finding that is a class** (several instances of the same defect) → the fix unit
+  sweeps the **whole class**: the `grep` pattern from the report over `src/`, every instance
+  fixed, and the measuring script left versioned in the repo (`tests/e2e/` or
+  `scripts/qa/`) so later workers run it before their PR. Its prompt says "every component
+  with this anatomy", never one folder. Why: four QAs in a row found more of the same
+  reflow-at-200 % class, because each fix covered only the listed instances (world-flags ×4).
 - **Medium or Low** → `context/plans/backlog.md`.
+- The next QA exists only when new functionality arrives (the next wave), with §8's scope.
 - **Data not deleted** and **actions for César** → "Blocked" in `CURRENT_PHASE.md`.
 - Its "Kit feedback" → `context/KIT_FEEDBACK.md`, like the workers'.
 
@@ -295,10 +328,10 @@ tests what is public and flags it), and in the closing ask César to add them
 ```
 **Fase 04 — Secciones · ola 2 de 3 cerrada**
 PRs mergeados: #12 hero · #13 servicios
-QA: 0 críticos · 1 alto · 2 medios — el alto pasa a la ola 3 (doble envío del formulario)
+QA: 0 críticos · 1 alto · 2 medios — el alto se arregló en esta ola (#14, script de reproducción en verde)
 Bloquea: <datos sin borrar / cuentas que faltan / nada>
 
-**Sigue: ola 3 de 3** — fix doble envío · `feat/testimonios` · `feat/precios`
+**Sigue: ola 3 de 3** — `feat/testimonios` · `feat/precios`
 Para lanzarla: "inicia la ola en otra sesión"
 ```
 
@@ -331,7 +364,8 @@ If it was the last wave, "Sigue" is the next phase of the track (its wave 1 star
   Automatically delete head branches*.
 - **Production `.env`:** `feature-worker`s verify as guests; they do not log in, create
   accounts or write real data. For states that depend on data (rankings, long lists), they
-  intercept the response in the browser, for debugging only. Logged-in testing with data
+  intercept the response in the browser, for debugging only — with the shared script the
+  brief names in "Simulating the backend", never one copied from another slot. Logged-in testing with data
   belongs to `wave-qa`, after the merge (§8), with the test accounts.
 - **Shared browser:** each worker creates its own tab and passes its `tabId`.
 - **Destructive database operations** (DELETE of old rows): the worker writes them, does
