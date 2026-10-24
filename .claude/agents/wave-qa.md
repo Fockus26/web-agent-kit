@@ -198,7 +198,13 @@ pasos exactos para César, o "ninguno">
 
 ## Feedback para el kit
 <tipo · pieza · qué pasó · propuesta — solo si algo del kit te hizo improvisar>
+<Prevención · reference/QA-PREVENTION.md · <la clase> · <la regla que la habría evitado al construir> — una por cada hallazgo de clase que no esté ya en esa lista>
 ```
+
+**Prevention rows.** A finding that is a class (or one any project would hit: spaces as
+content, double submit) and is not in the kit's `reference/QA-PREVENTION.md` gets a
+`Prevención` row in "Feedback para el kit": it is how the builders of the next project learn
+it before QA. Why: César saw the same findings return in every project (2026-10-23).
 
 **Severities:** *Critical* = improper access, loss of data or money, or the main flow does
 not complete. *High* = completes with the wrong state or fails in a realistic case.

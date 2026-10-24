@@ -115,6 +115,11 @@ Nothing from another slot's `.qa/`: it belongs to a previous unit and may be sta
     Medium or Low, the orchestrator sends it to the backlog, not back to you. Why: in
     world-flags, a snackbar with the same anatomy in another folder was missed, and "bugs in
     passing" cost 2-3 rounds per PR.
+    **Prevent what QA always finds**, before the PR: {{the rows of the kit's
+    `reference/QA-PREVENTION.md` that apply to this phase, pasted here — e.g. text fields
+    `z.string().trim().min(1)`, submit `disabled` while in flight + idempotent server,
+    `flex-wrap` on button rows}}. Why: the same classes (spaces as content, double submit,
+    reflow at 200 %) came back in every project because only QA knew them.
 17. **New copy = provisional:** flagged in the code + your reserved checklist row.
 18. **Closing:** Conventional commits (only your files) with the description in Spanish,
     push of your branch, `gh pr create --body-file .qa/pr-body.md` with the template (PR in

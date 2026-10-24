@@ -85,8 +85,8 @@ implement: a whole unit, in its worktree pool slot, up to the PR.
 |---|---|---|
 | **`feature-worker`** | Implements a unit end to end (branch, code, tests, verification, screenshots, PR) with the prompt `orchestrate` prepares. Opus, medium effort | `orchestrate` launches it |
 | **`wave-qa`** | With the wave merged, starts the server on `main` and walks its flows as a real user, against a local database (Supabase in Docker or the Firebase emulators, `bun run qa:local`; `--offline` without them) and with the per-role test accounts of `.env.test.local` (`EMAIL_TEST`, `ADMIN_EMAIL_TEST`, `<ROLE>_EMAIL_TEST`…) | `orchestrate` launches it when closing each wave |
-| **`design-qa`** | 320px to 3840px, color blindness, 400% zoom, reduced motion, high contrast, focus, token consistency. With Playwright + axe. | When closing a page or the whole integration |
-| **`functional-qa`** | Tries to break the flow: edge-case inputs, double clicks, dropped network, expired session, tampered prices, duplicated webhooks | When closing a full flow |
+| **`design-qa`** | 320px to 3840px, color blindness, 400% zoom, reduced motion, high contrast, focus, token consistency. With Playwright + axe. | Only at the version QA (phase 09 / before the release PR) |
+| **`functional-qa`** | Tries to break the flow: edge-case inputs, double clicks, dropped network, expired session, tampered prices, duplicated webhooks | When closing a risk flow (auth, saved data, payments) · all flows at the version QA |
 
 ### Why some are skills and others agents
 
@@ -203,7 +203,8 @@ Each unit ends with a review on your side (the PR, or a pause in `local` mode).
 
 **5. Functionality.** `/backend-build` when auth, data or payments come up.
 
-**6. QA.** Launch `design-qa` and `functional-qa`. They can run in parallel.
+**6. QA.** At the end of the version (phase 09), launch `design-qa` and `functional-qa`.
+They can run in parallel. During development only the risk flows get `functional-qa`.
 
 ---
 
@@ -294,6 +295,7 @@ web-agent-kit/
     ├── STACK-NEXTJS.md            Next.js + bun + Context7 + conventions
     ├── UI-LIBRARIES.md            shadcn/ui · Hero UI · MUI — criteria and what changes
     ├── TOKEN-ECONOMY.md           reading by levels, context/ caps, tests, screenshots
+    ├── QA-PREVENTION.md           defects QA keeps finding, and the rule that prevents each
     ├── STATUS-SCREENS.md          404 · 500 · offline · maintenance: catalog and implementation
     ├── BRAND-ASSETS.md            logo, icon, favicon, touch icon, OG: what is asked and what is generated
     ├── EMAIL-TEMPLATES.md         the app's emails: catalog, design constraints, React Email, Supabase, Firebase, provider
@@ -365,6 +367,15 @@ And the way back: each project logs in `context/KIT_FEEDBACK.md` what César had
 or repeat and what the kit did not cover. `/kit-feedback` uploads it to this repo as a PR
 (`feedback/`, `kit-feedback` label); in a session opened here, "revisa el feedback" triages
 all the PRs together (`CLAUDE.md` says how).
+
+### 3.14.0 (César's feedback)
+
+| Before | Now |
+|---|---|
+| Model and effort chosen only for `orchestrate`'s workers | Every task: the session says `Modelo recomendado` and every subagent carries both (`TOKEN-ECONOMY` §12) |
+| `design-qa` per page and `functional-qa` per flow, during development | `design-qa` only at the version QA (phase 09 / before the release PR); during development only risk flows get `functional-qa` |
+| QA knew the recurring defects; the builders did not | `reference/QA-PREVENTION.md`, cited by the build skills and the brief; QA adds its new classes through the feedback |
+| Accordions, tabs and anchor links that jump | Transitions with the motion tokens, smooth scroll under the sticky header, all off under reduced motion |
 
 ### 3.13.0 (feedback round 3)
 

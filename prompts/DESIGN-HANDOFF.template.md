@@ -79,6 +79,9 @@ For each section, in the page's vertical order:
 
 ### 6. Motion
 - [ ] What animates, duration and curve
+- [ ] Accordion/FAQ, tabs + active nav link, select/dropdown, dialog/sheet: how each opens,
+      closes or switches
+- [ ] Anchor links: smooth scroll and the offset under the sticky header
 - [ ] What turns off under `prefers-reduced-motion`
 
 ### 7. Implementation order

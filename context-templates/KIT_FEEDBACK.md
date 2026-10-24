@@ -12,6 +12,7 @@
 | **Repetition** | César had to ask for the same thing a second time, or do by hand a step the kit could do |
 | **Gap** | The kit did not say what to do and the agent had to improvise or ask something that should be settled |
 | **Friction** | A kit step cost a lot for what it gave (tokens, time, ceremony), or an instruction was wrong |
+| **Prevention** | A QA report brings a class finding not yet in the kit's `reference/QA-PREVENTION.md` (its "Prevención" row): the rule that would have prevented it while building |
 
 Not logged: agent mistakes the kit already clearly forbids (that is something else), or
 preferences of this project alone (they go to `decisions/`).

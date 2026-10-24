@@ -16,7 +16,7 @@ One phase per file. Each phase runs to completion before moving to the next, and
 | 06 | States | `frontend-build` |
 | 07 | Backend | `backend-build` |
 | 08 | Responsive and polish | `frontend-build` |
-| 09 | Final QA | `design-qa` + `functional-qa` |
+| 09 | Final QA (version QA: the only `design-qa`) | `design-qa` + `functional-qa` |
 
 ## Tracks
 

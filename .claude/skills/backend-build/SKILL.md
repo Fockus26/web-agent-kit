@@ -104,6 +104,12 @@ a database:
 - **Always validate on the server**, even if you validate on the client. Client validation
   is UX; server validation is security. An attacker does not use your form.
 - A single Zod schema, shared between client and server.
+- **Every text field trimmed before it is checked:** `z.string().trim().min(1, '…').max(<the
+  column's>)`; emails also `.toLowerCase()`. Dates with a 4-digit year enforced, never
+  `new Date(<free text>)`. Why: "only spaces" passing as filled is the finding QA brings
+  back in every project, and a 2-digit year was saved as 1926 (inversiones-js, High).
+- **Before closing the unit**, the kit's `reference/QA-PREVENTION.md` §1-§3: the defects QA
+  keeps finding in forms, submits and errors, with the rule that prevents each.
 - Never trust client data for authorization: the `userId` comes from the server session,
   never from the request body.
 
@@ -220,11 +226,12 @@ Identical to the frontend's:
         ↓
 [git-flow: close — pr mode: PR César reviews · local mode: pause → commit → merge]
         ↓
-[functional-qa: when a full flow closes] ← launch the subagent
+[functional-qa: when a risk flow closes] ← launch the subagent
 ```
 
-`functional-qa` is launched when a **full flow** closes (sign-up + login + session, or
-cart + checkout + confirmation), not after every loose route.
+`functional-qa` is launched when a **full risk flow** closes (sign-up + login + session,
+cart + checkout + confirmation, a form that saves data), not after every loose route. The
+adversarial pass over every flow, and `design-qa`, are the version QA (phase 09).
 
 ---
 

@@ -128,14 +128,19 @@ Before even mentioning a commit:
 4. `bunx tsc --noEmit` and the linter pass, if the project has them configured.
 5. **Tests:** during the work `bun run test:related` was enough; here goes the full suite
    (`bun run test`, with `--dots`). CI runs it again on the PR.
-5b. **Closing QA**, outside a wave of `orchestrate` (which has its own `wave-qa`): if the
-   unit **completes a flow** (sign-up/login/session, a form that really submits, a CRUD,
-   checkout) → launch `functional-qa`; if it **completes a page** or the status screens →
-   `design-qa`. If it cannot run now (no server, no local backend, a cloud session without
-   accounts), one line in "Blocked" of `CURRENT_PHASE.md`: `QA pendiente: <functional|design>-qa
-   — <flujo/página> — PR #N`, and the same in the PR body. Never silent. Why: six PRs made in
-   cloud sessions were merged without either, and the debt surfaced weeks later as three
-   High data-loss findings (inversiones-js #19).
+5b. **Closing QA — only for risk**, outside a wave of `orchestrate` (which has its own
+   `wave-qa`): if the unit **completes a risk flow** (sign-up/login/session, a form that
+   saves data, a CRUD, payments, checkout) → launch `functional-qa` on that flow, with
+   `model`/`effort` from `TOKEN-ECONOMY.md` §12. A page, a section or the status screens do
+   **not** get `design-qa` here: the visual audit runs once, at the version QA (phase 09 /
+   `phases-templates/09-QA-FINAL.md`); until then the `a11y` gate and the project's
+   versioned class scripts (`tests/e2e/`, `scripts/qa/`) cover it. If `functional-qa`
+   cannot run now (no server, no local backend, a cloud session without accounts), one line
+   in "Blocked" of `CURRENT_PHASE.md`: `QA pendiente: functional-qa — <flujo> — PR #N`, and
+   the same in the PR body. Never silent. Why: six PRs made in cloud sessions were merged
+   without QA, and the debt surfaced weeks later as three High data-loss findings
+   (inversiones-js #19) — that is what is kept per unit; a `design-qa` per page re-audited
+   320-3840 px for every change and was the most expensive QA in tokens (César, 2026-10-23).
 6. **Changeset**, if the project is versioned (it has `.changeset/`; if its `CLAUDE.md`
    says "no versioning", never: it is a decision, not something left to migrate): if
    whoever uses the site notices the change, add `.changeset/<desc>.md` (see 2.1.3). Do not
@@ -220,7 +225,9 @@ collide: each brings its own file.
 When it reaches `main`, the `release.yml` Action opens (or updates) the
 `chore(release): version` PR, which gathers the changesets, bumps `version` and writes
 `CHANGELOG.md`. **The Action opens it and César merges it** when he wants to publish; no
-agent edits or merges it. In `local` mode there is no Action: when César asks to publish,
+agent edits or merges it. **Before he merges it, the version QA** (`design-qa` +
+`functional-qa` over what changed since the last one, `phases-templates/09-QA-FINAL.md`):
+when the PR appears, remind him in one line if it has not run. In `local` mode there is no Action: when César asks to publish,
 `bunx --bun changeset version` on the base, and the `chore(release): version` commit goes
 through the approval pause like any other.
 

@@ -209,7 +209,8 @@ Applies to everything you touched.
 
 ### Motion and time
 - [ ] `prefers-reduced-motion: reduce` respected: decorative animations turn off or reduce
-      to a fade.
+      to a fade; smooth scroll and widget transitions (accordion, tabs, overlays) behind
+      `motion-safe:`.
 - [ ] Nothing flashes more than 3 times per second.
 - [ ] Carousels and autoplay with a pause control. Nothing moves on its own without a way
       to stop it.
