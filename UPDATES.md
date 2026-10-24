@@ -37,6 +37,70 @@ other, the agent shows them and asks before choosing.
 
 ---
 
+## 3.14.0 — 2026-10-23 · QA at the end of the version, prevention while building, model per task, widget motion
+
+**What changed**
+
+- **Model and effort for any task**, not only `orchestrate`'s workers
+  (`reference/TOKEN-ECONOMY.md` §12): every subagent carries `model`/`effort` from the
+  table, and the main session opens each task with `Modelo recomendado: <model · effort>`
+  so César switches with `/model` / `/effort` when it differs. Why: the main session and
+  the QA launched from `git-flow` 5b ran on the big model at high effort whatever the task.
+- **`design-qa` only at the version QA.** Phase 09 is now the version QA: `design-qa` over
+  every route + `functional-qa` over every flow, report in
+  `context/plans/qa-version-<version>.md` with the sha; later versions run it before César
+  merges the `chore(release)` PR, scoped by `git diff` since that sha. During development:
+  `git-flow` 5b and `cloud-session` launch `functional-qa` **only on risk flows** (auth,
+  saved data, payments), no `design-qa` per page; `orchestrate` §8 skips `wave-qa` for a
+  wave with no risk flow. Phase 09's fixes close with their reproduction scripts, not with
+  a second QA. Why: per-page and per-wave audits were most of the QA tokens, and their
+  visual findings were classes one sweep fixes at once (César, 2026-10-23). The risk-flow
+  QA stays because of inversiones-js #19 (three High data-loss findings weeks later).
+- **`reference/QA-PREVENTION.md`**: the defect classes QA keeps finding (spaces as content,
+  2-digit years, double submit, concurrent overwrite, reflow, widgets without transition),
+  each with the rule that prevents it while building. `backend-build` (trim in every Zod
+  text field), `frontend-build` (submitting forms) and the brief (rule 16) cite it. The
+  three QA agents add a `Prevención` row to their "Feedback para el kit" for a class not in
+  the list, and `KIT_FEEDBACK.md` has a new **Prevention** type, so the list grows from the
+  feedback.
+- **Motion in interactive widgets** (`frontend-build`, phases 02 and 03, the Claude Design
+  brief and handoff §6, `design-qa` §4, `a11y`): accordions animate their height with the
+  library's variable (or `grid-template-rows` 0fr → 1fr), tabs and nav links slide their
+  indicator, overlays fade in and out, anchor links scroll with `motion-safe:scroll-smooth`
+  and land under the sticky header with `scroll-margin-top`; everything off under
+  `prefers-reduced-motion`. `design-qa` measures the transition durations.
+- `CLAUDE.md.template`: one "Model per task" line, the QA gates table (three rows), and a
+  shorter header box and comments so it stays ≤ 8 KB.
+
+**Steps for a project on 3.13.0**
+
+1. Global pieces: `install-kit.ps1 -Pull` and a new session (skipped in a cloud session).
+   Then refresh the kit copy (`install-kit --project .`): skills and agents changed.
+2. `CLAUDE.md`, after the "**Documentation:** Context7…" line, add (Spanish projects: the
+   same in Spanish):
+
+   ```
+   **Model per task:** before each, `Modelo recomendado: <model · effort>` (kit
+   `TOKEN-ECONOMY.md` §12; risk → `opus`); subagents get both in `Agent(...)`.
+   ```
+3. `CLAUDE.md`, "Quality gates" table: replace the `wave-qa` and `design-qa / functional-qa`
+   rows with the template's three (`wave-qa` · `functional-qa` · `design-qa`). Spanish
+   projects: same rows in Spanish. Then `wc -c CLAUDE.md`: if it is over 8 KB, shorten the
+   comments of the commands block as the template did, never the rules.
+4. `context/KIT_FEEDBACK.md` (or `KIT_FEEDBACK.md` in Spanish): add the **Prevention** row
+   to the types table (Spanish: **Prevención**). Missing file: nothing to do.
+5. `context/CURRENT_PHASE.md` "Blocked": `QA pendiente: design-qa — …` lines are removed
+   (they go to the version QA); `QA pendiente: functional-qa — …` lines stay only if the
+   flow is a risk one.
+6. If the project already delivered a version and has no `context/plans/qa-version-*.md`:
+   nothing to migrate; the next version QA runs over everything and leaves the first one.
+7. A project whose phase 09 is already closed: nothing; a project past phase 03 with
+   accordions, tabs or anchor links without transitions: a row in `plans/backlog.md`
+   (`Movimiento en widgets — frontend-build › Motion in interactive widgets`), not a
+   migration commit.
+
+---
+
 ## 3.13.0 — 2026-10-22 · Feedback round 3 (inversiones-js, world-flags): QA without loops, Firebase and Astro
 
 **What changed**

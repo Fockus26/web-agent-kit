@@ -99,6 +99,29 @@ and flag that part of the code as "written without checking current docs".
   - a `fixed` container (toast, banner, sheet) → `max-height` in `dvh` + its own scroll;
   - if the project has a versioned reflow script (`tests/e2e/reflow-*`), run it on the new
     piece before closing.
+- **Motion in interactive widgets** — nothing that opens, closes or moves does it with a
+  jump. Why: accordions, tabs and anchor links that teleport kept coming back as polish
+  requests César made by hand (2026-10-23).
+  - **Accordion / FAQ / collapsible:** height animated with the library's variable
+    (`--radix-accordion-content-height` with Radix/shadcn, `--accordion-panel-height` with
+    Base UI); by hand, a grid with `grid-template-rows` from `0fr` to `1fr` — never `height:
+    auto` or a fixed `max-height`. The chevron rotates with the same duration.
+  - **Tabs and nav links:** the active indicator slides between items (`transform` on one
+    indicator, not a border that appears); the panel content fades.
+  - **Select, dropdown, popover, menu, dialog:** enter/exit with opacity + a small
+    translate/scale, using the library's states (`data-[state=open]` / `data-starting-style`).
+  - **Anchor links (in-page nav, "volver arriba"):** `motion-safe:scroll-smooth` on `<html>`
+    and `scroll-margin-top` on the targets equal to the sticky header's height token. A
+    `scrollIntoView` from JS uses `behavior: 'smooth'` only if `prefers-reduced-motion` is
+    not `reduce`.
+  - Always the `DESIGN_TOKENS.md` durations and easing, only `transform`/`opacity` (or the
+    grid rows) — never `top`/`height` in px — and every one behind `motion-safe:` (or
+    turned off under `prefers-reduced-motion: reduce`).
+- **Forms that submit:** the button is `disabled` + `aria-busy` while the request is in
+  flight (double click and repeated Enter are the most common QA finding), the shared Zod
+  schema trims every text field, and a failed request ends in an error state with a retry,
+  never an endless spinner. The full list, with what each prevents: the kit's
+  `reference/QA-PREVENTION.md` — go through the sections your unit touches before closing.
 - **Names:** components in `PascalCase`, component files in `PascalCase.tsx`, utilities in
   `camelCase.ts`, routes in `kebab-case`.
 

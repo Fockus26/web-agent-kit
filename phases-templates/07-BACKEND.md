@@ -47,5 +47,6 @@ Emails follow the kit's `reference/EMAIL-TEMPLATES.md` and the design in
 - [ ] Webhooks with verified signature and idempotent.
 - [ ] UI contract documented for the frontend.
 - [ ] Emails: closing criteria of `reference/EMAIL-TEMPLATES.md` met (if it applies).
-- [ ] `functional-qa` launched when each full flow closes, and its critical findings resolved.
+- [ ] `functional-qa` launched when each risk flow closes (auth, saved data, payments), and
+      its critical findings resolved. The full adversarial pass over every flow is phase 09.
 - [ ] César's manual actions documented with exact steps.

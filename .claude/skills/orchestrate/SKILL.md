@@ -253,6 +253,14 @@ A wave does not close with open PRs. When César says they are merged (check it:
 When **all** the wave's PRs are merged. One QA per wave, not per PR: what nobody has tested
 yet is the units together, on `main`, logged in.
 
+**Only if the wave touched a risk flow** (login/session, data that is saved, payments, roles)
+or two units share a page or a table. A wave of sections, copy or styles gets no `wave-qa`:
+the workers' gates (`a11y`, the versioned class scripts) cover it, and its visual review is
+the version QA's `design-qa` (phase 09). `wave-qa` is never a visual audit either. Why: the
+full audit per wave and per page was most of the QA tokens, and its visual findings were
+classes one end-of-version sweep fixes at once (César, 2026-10-23). Note it in the closing
+(§9): "QA: no aplica — ola sin flujos de riesgo".
+
 ```bash
 wt take qa/p0N-wave-N        # branch with no commits on origin/main: reserves the slot
 ```

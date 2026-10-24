@@ -1,9 +1,7 @@
 # {{PROJECT_NAME}}
 
-> Copy this file to the project root as `CLAUDE.md` and fill in the `{{...}}`.
-> It loads by itself in every session: that is why it is short (**≤ 8 KB**) and works as a
-> **map**, not a manual. The long material lives in `context/` and is read only when the task
-> asks for it. Delete this box when copying it.
+> Copied to the project root as `CLAUDE.md`, `{{...}}` filled. Loaded every session: a
+> **map** ≤ 8 KB, not a manual; the long material lives in `context/`. Delete this box.
 
 {{ONE_LINE_DESCRIPTION}}
 
@@ -39,7 +37,7 @@ grep -rhi "^# D.*modal\|^# D.*ranking" context/decisions/   # already decided? D
 grep -n "Button" context/COMPONENTS_INVENTORY.md            # does it exist already?
 ```
 
-Details and size budgets: the kit's `reference/TOKEN-ECONOMY.md`.
+Size budgets: the kit's `reference/TOKEN-ECONOMY.md`.
 
 ---
 
@@ -54,15 +52,15 @@ Details and size budgets: the kit's `reference/TOKEN-ECONOMY.md`.
 bun run build
 bun run typecheck            # Next: next typegen && tsc --noEmit · Astro: astro check
 bun run lint
-bun run test:related         # while working: only the affected tests (import graph)
-bun run test                 # before the PR: the whole suite, alone (CI always runs it)
+bun run test:related         # while working: only the affected tests
+bun run test                 # before the PR: the whole suite
 bun run shots                # PR screenshots (node + Playwright, see scripts/)
 bun run shots:publish        # uploads them to the pr-shots branch; markdown in .pr-shots/README.md
 bun run context:backup       # local context/ → branch context-state (restore: context:restore)
 ```
 
 **Dev server:** César starts it. Exceptions: the QA agents (`wave-qa`, `functional-qa`),
-and the workers if César authorizes it for a batch (each on its port, in the background). Build, typecheck, lint and tests run without asking.
+and the workers if César authorizes it for a batch (each on its port). Build, typecheck, lint and tests run without asking.
 
 **QA against a local database:** `bun run qa:local -- --port <p>` starts {{Supabase in
 Docker | the Firebase emulators (Java, no Docker)}}, creates the `.env.test.local` accounts
@@ -73,6 +71,9 @@ real database. Without it: `--offline` (guest only).
 `.qa/` (ignored by git).
 
 **Documentation:** Context7 before using any library's API.
+
+**Model per task:** before each, `Modelo recomendado: <model · effort>` (kit
+`TOKEN-ECONOMY.md` §12; risk → `opus`); subagents get both in `Agent(...)`.
 
 ---
 
@@ -119,8 +120,9 @@ permission there: return the `context/` changes in your report.
 | `seo` | Repo init · closing a section with content · closing a page |
 | `git-flow` | When opening and closing each unit |
 | `orchestrate` | A list arrives, or a phase is done in waves (one wave per session) |
-| `wave-qa` | Launched by `orchestrate` with the wave merged, before closing it |
-| `design-qa` / `functional-qa` | When a page / a full flow closes |
+| `wave-qa` | `orchestrate`, after a wave with risk flows |
+| `functional-qa` | A risk flow closes (auth, data, payments) · version QA |
+| `design-qa` | Only the version QA (phase 09 / release PR) |
 
 ---
 

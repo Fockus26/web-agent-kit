@@ -64,8 +64,9 @@ remote). The gates of `git-flow` §2.1 do not change: a11y, seo, build, typechec
 full test suite, **closing QA (5b)**, changeset, screenshots, prune `context/`, kit feedback.
 
 **Closing QA before merging.** You merge yourself, so nobody else will ask for it: a unit
-that completes a flow gets `functional-qa`, one that completes a page gets `design-qa`,
-launched here before step 6 (`--offline` or the emulators, whatever the cloud allows). A
+that completes a risk flow (auth, data that is saved, payments) gets `functional-qa`,
+launched here before step 6 (`--offline` or the emulators, whatever the cloud allows).
+`design-qa` is not run per page: it belongs to the version QA (phase 09). A
 High or Critical finding is fixed in the same PR before merging. What could not be tested
 in the cloud goes as `QA pendiente: …` to "Blocked" of `CURRENT_PHASE.md` and to the PR body,
 and is repeated in the last message (§3). Why: six cloud PRs in inversiones-js were merged

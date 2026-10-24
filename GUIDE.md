@@ -293,15 +293,19 @@ environment variable on Vercel…).
 
 ### Step 5 — QA
 
-When closing the page or a full flow:
+While building, the agent launches `functional-qa` by itself when a risk flow closes (auth,
+data that is saved, payments). The full QA is once per version — phase 09, or before you
+merge a later version's `chore(release)` PR:
 
 ```
-Lanza design-qa sobre la home
+Haz el QA de versión
 Lanza functional-qa sobre el formulario de cita
 ```
 
 They run isolated (their noise does not fill your session) and give you back a report with
-verified findings. The fixes are new units.
+verified findings. The fixes are new units, each closed by its reproduction script. Before
+each task the agent also tells you `Modelo recomendado: …`: if it is not the session's,
+switch with `/model` and `/effort` before it goes on.
 
 ### Step 6 — Batches: when you come with a list
 
@@ -363,8 +367,10 @@ dev server.
 wave**: each fix closes when the finding's reproduction script goes from FAIL on `main` to
 PASS on its branch; there is no second QA of the fixes. The next QA only tests what changed
 since the last one (and what was never tested). When you work without waves (a loose unit,
-a cloud session), closing a flow or a page launches `functional-qa`/`design-qa`, or leaves
-"QA pendiente" in "Blocked" so it is never forgotten.
+a cloud session), closing a risk flow (auth, saved data, payments) launches `functional-qa`,
+or leaves "QA pendiente" in "Blocked" so it is never forgotten. `design-qa` runs only at
+the version QA: phase 09, and before you merge a later version's `chore(release)` PR. A
+wave of sections or styles gets no `wave-qa`.
 
 Without Docker on the machine (or without a local database yet), the wave is not blocked: QA
 runs with `bun run qa:local -- --offline`, guest only, and the wave's closing tells you the

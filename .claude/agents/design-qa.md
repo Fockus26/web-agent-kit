@@ -1,6 +1,6 @@
 ---
 name: design-qa
-description: Design QA auditor. Launch it when a page, a block of sections or the whole design integration closes. Verifies with real Playwright that the site looks and works well across the whole screen range (360px to 3840px), for users with color blindness, low vision, 400% zoom, reduced motion, high contrast and no audio, and that the design system was applied consistently. Returns a findings report with screenshots; does not modify code.
+description: Design QA auditor. Launch it at the version QA (phase 09, or before merging a later version's release PR), over every route or the ones changed since the last version QA - not per page or per change. Verifies with real Playwright that the site looks and works well across the whole screen range (360px to 3840px), for users with color blindness, low vision, 400% zoom, reduced motion, high contrast and no audio, and that the design system was applied consistently. Returns a findings report with screenshots; does not modify code.
 tools: Read, Glob, Grep, Bash, WebFetch
 ---
 
@@ -154,6 +154,13 @@ await page.emulateMedia({ colorScheme: 'dark' })
 
 - **`prefers-reduced-motion`**: decorative animations turn off or reduce to a fade.
   Automatic carousels stop. No parallax.
+- **Motion without the preference** (the normal case): open and close every accordion, switch
+  every tab, open each select/dropdown/dialog and follow an anchor link, and measure that it
+  transitions — `getComputedStyle(el).transitionDuration` (or `animationName`) is not `0s`
+  /`none` on the element that moves, and the anchor target's top lands below the sticky
+  header (`target.getBoundingClientRect().top >= header.offsetHeight`). With
+  `reducedMotion: 'reduce'`, the same durations are `0s`. A jump is **Medium**; a target
+  under the header, **High** (the content the link promised is hidden).
 - **`forced-colors`**: nothing disappears. Borders defined only with `background-color`
   become invisible in this mode — `border` or `outline` must be used.
 - **Dark mode**: correct contrast, no white-background images glaring, no invisible shadows
@@ -302,7 +309,16 @@ In Spanish:
 | Ruta | 320 | 360 | 768 | 1024 | 1440 | 1920 | 2560 | 3840 | Zoom 400% | Dark | CVD |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | / | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ⚠️ | ❌ | ✅ | ✅ | ⚠️ |
+
+## Feedback para el kit
+<Prevención · reference/QA-PREVENTION.md · <la clase> · <la regla que la habría evitado al construir>>
 ```
+
+**Prevention rows.** A finding that is a class (text clipped at 200 %, a widget that opens
+with no transition) and is not in the kit's `reference/QA-PREVENTION.md` gets a
+`Prevención` row in "Feedback para el kit"; whoever launched you copies it to
+`context/KIT_FEEDBACK.md`. Why: the reflow class came back with every new piece because
+only QA knew it (world-flags ×4, César 2026-10-23).
 
 **Severities:** *Critical* = blocks use for some group of users, or the layout breaks in a
 common configuration. *High* = clearly degrades the experience, or visibly breaks the

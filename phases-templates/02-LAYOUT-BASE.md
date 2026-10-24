@@ -11,7 +11,11 @@ global styles.
 - Container and max widths per breakpoint, per the handoff's §4.
 - Global grid: columns, gutters and side padding per breakpoint.
 - Vertical rhythm between sections.
-- Minimal global styles: reset, `scroll-behavior`, default `focus-visible`.
+- Minimal global styles: reset, default `focus-visible`, and **smooth scroll only with
+  motion allowed** (`motion-safe:scroll-smooth` on `<html>`, or `scroll-behavior: smooth`
+  inside `@media (prefers-reduced-motion: no-preference)`), plus `scroll-margin-top` on
+  anchor targets equal to the sticky header's height token, so a link does not land under
+  the header.
 - **Text selection:** `::selection` with the `selection` tokens (background and text) in light
   and dark — never the system blue on a site with its own identity.
 - **Scrollbar:** `scrollbar` tokens (thumb and track) in light and dark, with
@@ -33,6 +37,8 @@ global styles.
 - [ ] The container behaves the same at every breakpoint of the project.
 - [ ] Correct landmarks and a single `<main>`.
 - [ ] Working skip link, visible when focused.
+- [ ] An anchor link scrolls smoothly and lands below the sticky header; with reduced motion,
+      it jumps.
 - [ ] No horizontal scroll at 320px on the empty page.
 - [ ] Selected text with the system's color and ratio ≥ 4.5:1, in light and dark.
 - [ ] Scrollbar with the `scrollbar` tokens, thumb ≥ 3:1 against the track, in light and dark.

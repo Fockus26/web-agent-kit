@@ -219,7 +219,9 @@ code, order summary), the action and how it looks at 600 px, at 360 px, without 
 with inverted colors.
 
 **6. Motion** — what animates, with which duration and curve, and what turns off under
-`prefers-reduced-motion`.
+`prefers-reduced-motion`. At least, how each of these opens, closes or switches:
+accordion/FAQ, tabs and the active nav link indicator, select/dropdown, dialog/sheet, and
+the scroll of in-page anchor links (smooth, and how far below the sticky header it lands).
 
 **7. Implementation order** — the recommended sequence to build it, from tokens to base
 components to sections to pages, with the dependencies between steps marked.

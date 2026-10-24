@@ -144,8 +144,21 @@ The orchestrator (plans, groups, writes prompts, consolidates) justifies high ef
 workers that run a well-specified prompt do just as well at medium effort. It is set in the
 agent's definition (`effort:` in the frontmatter of `.claude/agents/*.md`).
 
-**Model per unit.** The frontmatter is the default; `orchestrate` overrides it per unit
-(`model`/`effort` in `Agent(...)`) with this table:
+**Model per task — any task, not only the workers.** The frontmatter is the default;
+`orchestrate` overrides it per unit (`model`/`effort` in `Agent(...)`), and the same table
+holds for everything else:
+
+- **Every subagent you launch** (`functional-qa`, `design-qa`, `Explore`, a one-off
+  `general-purpose`) carries `model` and `effort` from the table in its `Agent(...)`.
+- **The main session** cannot change its own model. Before starting a task, one line to
+  César: `Modelo recomendado: sonnet · low (mecánica)`. If it differs from the session's,
+  he switches with `/model` and `/effort` (or the app's selector) before you go on; if it
+  matches, the line is enough. A list of several tasks: one line per task, or the strongest
+  one when they go together.
+
+Why: the table only reached `orchestrate`'s workers; the work done by hand in the main
+session and the QA launched from `git-flow` 5b kept running on the big model at high effort
+whatever the task (César, 2026-10-23).
 
 | Unit | Model · effort | Examples |
 |---|---|---|
@@ -155,7 +168,8 @@ agent's definition (`effort:` in the frontmatter of `.claude/agents/*.md`).
 
 **Risk wins:** with any of those risks it is `opus`, however small the unit. QA agents:
 `wave-qa` `sonnet` when the scope (§8 of `orchestrate`) has no auth or cross-tab data,
-`opus` when it does; `design-qa` with a versioned measuring script, `sonnet`.
+`opus` when it does; `functional-qa` on a risk flow (5b), `opus` · medium; `design-qa`
+(version QA only) with a versioned measuring script, `sonnet`.
 
 Why: in world-flags every worker ran on the big model and mechanical units spent 100-280 k
 tokens a smaller one would have covered; the one that found a real race was a risk unit.
