@@ -31,7 +31,7 @@ findings wastes more time than it saves.
 
 ```bash
 bun add -d @playwright/test @axe-core/playwright   # if missing
-bunx playwright install chromium
+bun x playwright install chromium
 ```
 
 **César starts the dev server, not you.** Before starting, ask him and wait for

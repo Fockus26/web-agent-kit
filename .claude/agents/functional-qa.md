@@ -33,7 +33,7 @@ reproduce burns trust in the whole report.
 
 ## Preparation
 
-`@playwright/test` comes with the project; if the browser is missing, `bunx playwright
+`@playwright/test` comes with the project; if the browser is missing, `bun x playwright
 install chromium`. Scripts with `node`, not `bun` (on Windows it hangs), saved in `.qa/`
 inside the project (ignored by git; from the scratchpad they cannot find Playwright).
 Files with Write/Edit or a `.mjs`; never Python in text mode (it writes CRLF and rewrites

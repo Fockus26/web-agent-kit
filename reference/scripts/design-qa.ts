@@ -3,7 +3,7 @@
  *
  * Usage:
  *   bun add -d @playwright/test @axe-core/playwright
- *   bunx playwright install chromium
+ *   bun x playwright install chromium
  *   (the server running, see TOKEN-ECONOMY.md §1)
  *   copy this file to .qa/design-qa.ts in the project, then: node .qa/design-qa.ts
  *

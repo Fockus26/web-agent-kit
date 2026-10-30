@@ -43,7 +43,7 @@ These are not discussed or postponed "for later". Later never comes.
 - **The values live in Vercel; `.env.local` is pulled from there** (`reference/DEPLOY.md`
   §2c). A new variable: its name in `.env.example`, the values per environment as an
   **action for César** (`vercel env add`, Production/Preview secrets with `--sensitive`),
-  then `bunx vercel env pull .env.local --yes`. Never edit `.env.local` by hand (the next
+  then `vercel env pull .env.local --yes`. Never edit `.env.local` by hand (the next
   pull erases it: this machine's overrides go to `.env.development.local`) and never print
   a value — names only. GitHub Secrets only for a variable a workflow needs: it is
   write-only, it cannot be the source.
@@ -126,6 +126,9 @@ a database:
   the UI is not protection: the direct URL still works.
 
 ### Payments
+- **What each method needs** (client documents, costs, sandbox, how it integrates —
+  Cashea, PayPal, Bancolombia, Binance Pay, Pago Móvil): the kit's `reference/PAYMENTS.md`.
+  A method not listed, or data that changed, is added there through `KIT_FEEDBACK.md`.
 - **Never capture card data in your own form.** Always use the provider's hosted flow
   (Stripe Checkout or Elements, PayPal Buttons, Mercado Pago's equivalent). This keeps your
   client out of PCI scope. Only deviate if César understands and explicitly accepts that
@@ -181,7 +184,8 @@ a database:
 - **Data the client re-uploads** (caches, rankings, synced progress) is not cleaned on the
   server alone: the old, cached client re-uploads it. The new client must invalidate it (a
   version mark the merge respects) and new keys are needed where old clients do not write.
-- `bun` for everything: `bun add`, `bun run`, `bunx <cli>`.
+- `bun` for everything: `bun add`, `bun run`, `bun x <cli>` (never `bunx`); `vercel`,
+  `supabase` and `gh` are global and called by name (`reference/STACK-NEXTJS.md` › bun).
 
 ---
 

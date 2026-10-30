@@ -1,0 +1,30 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "kit",
+  "homepage": "https://github.com/Fockus26/web-agent-kit/tree/main/patterns",
+  "items": [
+    {
+      "name": "kit-fields",
+      "type": "registry:lib",
+      "title": "Form field schemas",
+      "description": "Zod field schemas with the QA-PREVENTION rules built in: trim, lowercased email, untrimmed password, 4-digit year, bounded quantity.",
+      "dependencies": ["zod"],
+      "files": [{ "path": "registry/kit/fields.ts", "type": "registry:lib", "target": "lib/validation/fields.ts" }]
+    },
+    {
+      "name": "kit-form",
+      "type": "registry:hook",
+      "title": "useKitForm",
+      "description": "react-hook-form + zod with the two validation modes: on submit, or live with a delay before errors show.",
+      "dependencies": ["react-hook-form", "@hookform/resolvers", "zod"],
+      "files": [{ "path": "registry/kit/use-kit-form.ts", "type": "registry:hook", "target": "hooks/use-kit-form.ts" }]
+    },
+    {
+      "name": "kit-submit-guard",
+      "type": "registry:hook",
+      "title": "useSubmitGuard",
+      "description": "Blocks double submit synchronously and carries one idempotency key per operation to the server.",
+      "files": [{ "path": "registry/kit/use-submit-guard.ts", "type": "registry:hook", "target": "hooks/use-submit-guard.ts" }]
+    }
+  ]
+}

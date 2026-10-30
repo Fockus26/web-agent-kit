@@ -151,7 +151,7 @@ A single command (PowerShell 7, `pwsh`) creates the app and leaves the whole kit
 & "$env:USERPROFILE\Desktop\agents\web-agent-kit\new-project.ps1" -Path C:\path\my-project
 ```
 
-- Creates the app with `bunx create-next-app@latest <name> --ts --tailwind --app --biome
+- Creates the app with `bun x create-next-app@latest <name> --ts --tailwind --app --biome
   --react-compiler --import-alias "@/*" --use-bun` (Biome, not ESLint; React Compiler on).
 - Copies `context/`, `phases/`, `CLAUDE.md` (keeping Next.js 16's `@AGENTS.md`), `scripts/`,
   `.github/`, `.changeset/` and creates `tests/unit/` and `design/`.
@@ -291,6 +291,7 @@ web-agent-kit/
 ├── sections-template/             content brief, one per section
 ├── github-templates/              → copied as .github/ (PR template, CI and release.yml)
 ├── changeset-templates/           → copied as .changeset/ (version and CHANGELOG without conflicts)
+├── patterns/                      shadcn registry: kit-fields, kit-form, kit-submit-guard (bun x shadcn add …/r/<item>.json)
 └── reference/
     ├── STACK-NEXTJS.md            Next.js + bun + Context7 + conventions
     ├── UI-LIBRARIES.md            shadcn/ui · Hero UI · MUI — criteria and what changes
@@ -300,6 +301,12 @@ web-agent-kit/
     ├── BRAND-ASSETS.md            logo, icon, favicon, touch icon, OG: what is asked and what is generated
     ├── EMAIL-TEMPLATES.md         the app's emails: catalog, design constraints, React Email, Supabase, Firebase, provider
     ├── DEPLOY.md                  GitHub repo, Vercel deployment (or adopting one) and where the environment variables live
+    ├── PATTERNS.md                solved patterns: validation modes, submit guard, fluid type, list states, auth criteria
+    ├── PAYMENTS.md                payment methods: what the client provides, costs, sandbox, integration
+    ├── STACK-WORDPRESS.md         WordPress projects: code in a site plugin in git, wp-env, deploy via staging
+    ├── VPS-POSTGRES.md            César's central Postgres on the VPS: setup once, kit-db, backups, no passwords typed
+    ├── MIGRATE-TO-VPS.md          moving a finished project off Supabase/Firebase: Drizzle + Better Auth + own emails
+    ├── vps/                       bootstrap.sh + kit-db (run on the VPS)
     ├── claude/settings.json       → .claude/settings.json: SessionStart hook that runs cloud-setup.sh
     └── scripts/
         ├── design-qa.ts           Playwright sweep (with node)
@@ -308,6 +315,7 @@ web-agent-kit/
         ├── publish-pr-shots.sh    → scripts/: uploads them to the pr-shots branch
         ├── qa-local.ts            → scripts/: QA server against local Supabase (Docker) or Firebase emulators, with test accounts
         ├── context-backup.sh      → scripts/: local context/ ↔ the context-state branch
+        ├── vps-env.ts             → scripts/ (only when migrating): DATABASE_URL/DIRECT_URL from the VPS into .env.local
         └── cloud-setup.sh         → scripts/: cloud session start (bun install + context:restore; local: nothing)
 ```
 
@@ -367,6 +375,16 @@ And the way back: each project logs in `context/KIT_FEEDBACK.md` what César had
 or repeat and what the kit did not cover. `/kit-feedback` uploads it to this repo as a PR
 (`feedback/`, `kit-feedback` label); in a session opened here, "revisa el feedback" triages
 all the PRs together (`CLAUDE.md` says how).
+
+### 3.15.0 (César's ideas)
+
+| Before | Now |
+|---|---|
+| Every form, submit guard, list and auth screen rebuilt per project | `reference/PATTERNS.md` (recipes) + `patterns/` registry installed with `bun x shadcn add` |
+| Supabase/Firebase forever | A finished project can move to César's VPS Postgres (`MIGRATE-TO-VPS.md`); the server is set up once with `reference/vps/` and no password is ever typed |
+| No WordPress path | `reference/STACK-WORDPRESS.md`: code in git, local copy with wp-env, staging first |
+| Payment requirements looked up again each project | `reference/PAYMENTS.md`, read at kickoff |
+| `bunx` everywhere (missing from the slots' PATH) | `bun x` for one-offs; global `vercel`/`supabase`/`gh` by name |
 
 ### 3.14.0 (César's feedback)
 

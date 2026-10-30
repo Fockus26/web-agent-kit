@@ -71,9 +71,9 @@ bun remove <package>
 bun dev
 bun run build
 bun run start
-bunx shadcn@latest add button card dialog
-bunx tsc --noEmit
-bunx playwright install chromium
+bun x shadcn@latest add button card dialog
+bun x tsc --noEmit
+bun x playwright install chromium
 ```
 
 Rules:
@@ -82,7 +82,13 @@ Rules:
   `pnpm-lock.yaml` shows up, delete it — two lockfiles produce different installs on
   different machines.
 - `package.json` scripts run with `bun run <script>`.
-- One-off CLIs with `bunx`, without installing globally.
+- **CLIs:** the global ones César has installed (`vercel`, `supabase`, `gh`) are called by
+  their name, never through `bun x`: it downloads a copy each time and may run a different
+  version from the one that has the session. The project's own (`biome`, `tsc`,
+  `playwright`) through `bun run` or `bun x`, which finds them in `node_modules`. `bun x`
+  only for what is installed nowhere (`bun x shadcn@latest`). Always `bun x`, never
+  `bunx`: `bunx` is not on the PATH of the worktree slots' Git Bash or of pwsh
+  (melao, inversiones-js). If a global CLI is missing (a cloud session), `bun x <cli>@latest`.
 - If a tool does not work under bun (an occasional bundler or native binary), use `npx`
   **only for that tool**, and note it in the project's README with the reason. Do not switch
   the whole project's manager for one exception.

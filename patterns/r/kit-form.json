@@ -1,0 +1,20 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "kit-form",
+  "title": "useKitForm",
+  "description": "react-hook-form + zod with the two validation modes: on submit, or live with a delay before errors show.",
+  "dependencies": [
+    "react-hook-form",
+    "@hookform/resolvers",
+    "zod"
+  ],
+  "files": [
+    {
+      "path": "registry/kit/use-kit-form.ts",
+      "content": "'use client'\n\nimport { zodResolver } from '@hookform/resolvers/zod'\nimport { type FieldValues, type Resolver, type UseFormProps, useForm } from 'react-hook-form'\nimport type { z } from 'zod'\n\n/**\n * The two validation modes every site uses, so no form decides it again:\n *\n * - `submit` (default): nothing is red until the first submit; from then on each field\n *   re-checks as it changes, so a fixed error disappears at once. Short forms (contact,\n *   login), where errors while typing feel like scolding.\n * - `live`: checks while typing, but an error waits `delay` ms after the last keystroke\n *   before it shows (a correction clears it immediately). Long forms or fields with a\n *   format (sign-up, password with rules, checkout), where finding out at the end costs.\n */\nexport type ValidationMode = 'submit' | 'live'\n\ntype Options<S extends z.ZodType<FieldValues, FieldValues>> = Omit<\n  UseFormProps<z.input<S>, unknown, z.output<S>>,\n  'resolver' | 'mode' | 'reValidateMode' | 'delayError'\n> & { validation?: ValidationMode; delay?: number }\n\nexport function useKitForm<S extends z.ZodType<FieldValues, FieldValues>>(\n  schema: S,\n  { validation = 'submit', delay = 600, ...options }: Options<S> = {},\n) {\n  return useForm<z.input<S>, unknown, z.output<S>>({\n    // The cast only narrows zodResolver's generic return to this schema's input/output: with a\n    // generic S, TypeScript cannot infer it (react-hook-form/resolvers, zod 4 overloads).\n    resolver: zodResolver(schema) as unknown as Resolver<z.input<S>, unknown, z.output<S>>,\n    ...(validation === 'live'\n      ? { mode: 'onChange', reValidateMode: 'onChange', delayError: delay }\n      : { mode: 'onSubmit', reValidateMode: 'onChange' }),\n    shouldFocusError: true, // the first invalid field gets focus: keyboard and screen readers land on it\n    ...options,\n  })\n}\n",
+      "type": "registry:hook",
+      "target": "hooks/use-kit-form.ts"
+    }
+  ],
+  "type": "registry:hook"
+}

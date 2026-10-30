@@ -148,7 +148,7 @@ In this order, and only what the wave touched (plus what depends on it):
 5. **Light regression:** the site's main routes load without console errors or a 500.
 
 With Playwright (`@playwright/test` comes with the project; if the browser is missing,
-`bunx playwright install chromium`, which does not touch the repo). Verify by measuring
+`bun x playwright install chromium`, which does not touch the repo). Verify by measuring
 (DOM, network responses, console), not by looking at screenshots. Redirects (guest →
 login): `curl -sI`, instantly (headers only).
 

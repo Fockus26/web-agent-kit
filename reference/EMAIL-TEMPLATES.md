@@ -155,6 +155,50 @@ designed email was left unusable for not checking first.
    points at the emulator with `FIREBASE_AUTH_EMULATOR_HOST`); the email shows in the test
    provider's inbox or in the log, not in Firebase's console.
 
+### Auth emails — Better Auth (projects moved to the VPS Postgres)
+
+After [`MIGRATE-TO-VPS.md`](./MIGRATE-TO-VPS.md) there is no provider sending auth emails:
+**every email is the app's**, and that is simpler. Better Auth calls a function of yours for
+each one (`emailVerification.sendVerificationEmail`, `emailAndPassword.sendResetPassword`,
+the magic-link and change-email plugins' equivalents) with the user and the URL; that
+function renders the React Email component and sends it through the same SMTP as the rest.
+Templates live only in the repo: nothing to paste in a dashboard, nothing that differs
+between local and production.
+
+```ts
+// lib/email/send.ts — the only place that talks to SMTP
+import nodemailer from 'nodemailer'
+import { render } from '@react-email/render'
+
+const transport = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,           // smtp-relay.brevo.com · localhost (Mailpit) in QA
+  port: Number(process.env.SMTP_PORT),   // 587 · 1025
+  auth: process.env.SMTP_USER ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } : undefined,
+})
+
+export async function sendEmail(to: string, subject: string, element: React.ReactElement) {
+  await transport.sendMail({
+    from: process.env.EMAIL_FROM,        // "Marca" <hola@dominio>
+    to, subject,
+    html: await render(element),
+    text: await render(element, { plainText: true }),
+  })
+}
+```
+
+- **Do not `await` the send inside the Better Auth callback** (`void sendEmail(…)`, or
+  `after()` from `next/server` on Vercel so the function is not frozen before it finishes).
+  Why: Better Auth's docs, an awaited send makes "this email exists" measurable by response
+  time.
+- **In QA**, `SMTP_HOST=localhost` / `SMTP_PORT=1025` with Mailpit
+  (`docker run -d -p 1025:1025 -p 8025:8025 axllent/mailpit`): the emails show at
+  `localhost:8025` with the real design, as Supabase's Mailpit did.
+- **The sender stays Brevo's SMTP (free, 300/day).** Not an SMTP server on the VPS: many
+  VPS providers block outgoing port 25, and a new IP's reputation is nil, so Gmail and
+  Outlook send its mail to spam or reject it, however well SPF/DKIM/DMARC are set. A relay
+  with a reputation is what gets the email to the inbox; Brevo's free plan is that relay at
+  no cost. Over 300/day: Brevo's paid tier or Amazon SES (≈ $0.10 per 1,000).
+
 With another auth provider the idea is the same: templates in the repo, design from the
 same `EmailLayout`, and applying them in the provider as a documented action, checking first
 that the provider lets you apply them.

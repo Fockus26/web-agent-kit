@@ -37,6 +37,52 @@ other, the agent shows them and asks before choosing.
 
 ---
 
+## 3.15.0 — 2026-10-29 · Solved patterns, VPS Postgres, WordPress, payment methods
+
+**What changed**
+
+- **`reference/PATTERNS.md` + the `patterns/` registry.** The pieces every site repeats,
+  built once: the logic fixed, the design the project's. Registry items (installed with
+  `bun x shadcn@latest add <kit>/patterns/r/<item>.json`, path relative to the project):
+  `kit-fields` (Zod fields with the QA-PREVENTION rules), `kit-form` (`useKitForm`: validate
+  on submit, or live with a delay before errors show), `kit-submit-guard` (no double
+  submit, one idempotency key per operation). Recipes: fluid headings with `clamp()`, the
+  four list states, the auth criteria checklist. `frontend-build` starts from them. Why:
+  each project rebuilt them slightly differently and QA found the same gaps (César).
+- **César's VPS as a central Postgres, for finished projects only.**
+  `reference/VPS-POSTGRES.md` (the server: Postgres on localhost + PgBouncer with TLS,
+  `kit-db` per project, daily backups + rclone, SSH key so nothing is typed),
+  `reference/vps/bootstrap.sh` + `kit-db`, `reference/scripts/vps-env.ts`, and
+  `reference/MIGRATE-TO-VPS.md` (Supabase/Firebase → Drizzle + Better Auth + the app's own
+  emails, cutover, 30-day rollback). Projects are still created on Supabase or Firebase:
+  the move is César's decision at the end.
+- **`EMAIL-TEMPLATES.md` § Better Auth**: after the move every email is the app's, sent
+  through Brevo's SMTP (free) with nodemailer, Mailpit in QA. Why not an SMTP server on
+  the VPS: a new IP has no reputation and lands in spam, and port 25 is often blocked.
+- **`reference/STACK-WORDPRESS.md`**: code in a site plugin + child theme in git (not in
+  WPCodeBox snippets), local copy with wp-env, the kit's rules translated (nonces,
+  capabilities, sanitize/escape), staging before production. `project-kickoff` offers it.
+- **`reference/PAYMENTS.md`**: Cashea, PayPal, Bancolombia, Binance Pay and Pago Móvil —
+  what the client provides, costs, sandbox and how each integrates. The kickoff asks the
+  client for the documents in phase 00 (approvals take weeks); `backend-build` cites it.
+- **`bun x`, never `bunx`, and global CLIs by name** (`vercel`, `supabase`, `gh`):
+  every skill, agent, script and guide. Why: `bunx` is not on the PATH of the slots' Git
+  Bash or of pwsh (melao, inversiones-js), and `bun x vercel` downloads another copy instead
+  of using the one with the session.
+
+**Steps for a project on 3.14.0**
+
+1. Global pieces: `install-kit.ps1 -Pull` and a new session (skipped in a cloud session).
+   Then refresh the kit copy (`install-kit --project .`): skills and agents changed.
+2. `scripts/cloud-setup.sh`, if the project has it: replace `bunx vercel@latest` with
+   `bun x vercel@latest` (or copy the kit's again: it has no project-specific lines).
+3. `package.json` scripts and the project's `CLAUDE.md`: `bunx <x>` → `bun x <x>`, and
+   `bunx vercel` / `bunx supabase` → `vercel` / `supabase`. No `bunx` anywhere: nothing to do.
+4. Nothing else. The patterns apply from the next form or list built; the VPS migration
+   only when César asks for it; WordPress and payments are read at the next kickoff.
+
+---
+
 ## 3.14.0 — 2026-10-23 · QA at the end of the version, prevention while building, model per task, widget motion
 
 **What changed**

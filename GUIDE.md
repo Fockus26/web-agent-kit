@@ -47,7 +47,8 @@ Then:
 4. Requirements: **bun**, **Node ≥ 23.6** (for the Playwright scripts), **git**, an
    authenticated **gh**, **PowerShell 7** (`pwsh`). If the project uses Supabase: **Docker
    Desktop** running and the **Supabase CLI**; if it uses Firebase: **Java (a JDK)** and
-   `firebase-tools`, no Docker (QA runs against a local database).
+   `firebase-tools`, no Docker (QA runs against a local database). The `vercel` and
+   `supabase` CLIs installed globally: the agents call them by name, not through `bun x`.
 
 ### Updating the kit
 
@@ -75,7 +76,7 @@ that followed an earlier kit version").
 
 It does, in this order:
 
-1. `bunx create-next-app@latest clinica-dental --ts --tailwind --app --biome --react-compiler --import-alias "@/*" --use-bun`
+1. `bun x create-next-app@latest clinica-dental --ts --tailwind --app --biome --react-compiler --import-alias "@/*" --use-bun`
    — **Biome** (not ESLint), **React Compiler** on, bun. Next already initializes git.
 2. Copies `context/`, `phases/`, `scripts/`, `.github/` (PR template, CI and `release.yml`)
    and `.changeset/`, creates `design/` and `tests/unit/`. If the project has no version or
@@ -97,7 +98,7 @@ only needs you to have a session:
 
 ```powershell
 gh auth login
-bunx vercel login
+vercel login
 ```
 
 If you prefer doing it by hand, or the agent could not (a 403, no session), this is what it
@@ -187,7 +188,7 @@ had created it right:
 bun remove eslint eslint-config-next
 bun add -d @biomejs/biome babel-plugin-react-compiler
 Remove-Item eslint.config.mjs
-bunx biome init                 # or copy the biome.json create-next-app --biome generates
+bun x biome init                 # or copy the biome.json create-next-app --biome generates
 ```
 
 - In `next.config.ts`: `reactCompiler: true` inside `nextConfig`.
@@ -468,8 +469,9 @@ agents in `.claude/` (the global `~/.claude/` does not exist there). What change
 | `bun run qa:local -- --port <p>` | Server against the local database (Supabase or Firebase emulators) with the test accounts (`--offline` without one, `--preview` for the build) |
 | `bun run context:backup` | Copies the local `context/` to the `context-state` branch |
 | `bun run context:restore` | Brings it back after losing the folder (never overwrites a local file) |
-| `bunx vercel env pull .env.local --yes` | Brings the environment variables from Vercel (Development) to `.env.local` |
-| `bunx playwright install chromium` | Once per machine, before the first screenshot or audit |
+| `vercel env pull .env.local --yes` | Brings the environment variables from Vercel (Development) to `.env.local` |
+| `bun x playwright install chromium` | Once per machine, before the first screenshot or audit |
+| `ssh kit-vps kit-db list` | The databases on your VPS (only once you set it up: `reference/VPS-POSTGRES.md`) |
 
 Normally you do not run them: the skills do. They are there for when you want to check
 something.
@@ -490,7 +492,7 @@ something.
   `.env.development.local`. GitHub Secrets only receives the variable a workflow needs: it
   cannot be read back, so it is never the source. Detail: `reference/DEPLOY.md` §2c.
 - **If you lose the folder:** clone the repo, run `bun run context:restore` and
-  `bunx vercel env pull .env.local --yes`. The local state comes back from the
+  `vercel env pull .env.local --yes`. The local state comes back from the
   `context-state` branch as of the last backup (the agents make one when closing each unit
   and each wave; only on private repos), and the variables from Vercel.
 - **`context/CURRENT_PHASE.md`** is a board (≤ 60 lines): what is open, what blocks, what is
