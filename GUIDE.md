@@ -35,7 +35,8 @@ powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\Desktop\agents\web-ag
 ```
 
 `install-kit.ps1` copies the skills and agents to `~\.claude\`, replacing whatever version
-was there (without leaving old files) and without touching what is not the kit's.
+was there (without leaving old files) and without touching what is not the kit's, and the
+kit's `reference\` to `~\.claude\kit-reference\`, where the skills read it.
 
 Then:
 
@@ -47,7 +48,8 @@ Then:
 4. Requirements: **bun**, **Node ≥ 23.6** (for the Playwright scripts), **git**, an
    authenticated **gh**, **PowerShell 7** (`pwsh`). If the project uses Supabase: **Docker
    Desktop** running and the **Supabase CLI**; if it uses Firebase: **Java (a JDK)** and
-   `firebase-tools`, no Docker (QA runs against a local database).
+   `firebase-tools`, no Docker (QA runs against a local database). The `vercel` and
+   `supabase` CLIs installed globally: the agents call them by name, not through `bunx`.
 
 ### Updating the kit
 
@@ -97,7 +99,7 @@ only needs you to have a session:
 
 ```powershell
 gh auth login
-bunx vercel login
+vercel login
 ```
 
 If you prefer doing it by hand, or the agent could not (a 403, no session), this is what it
@@ -468,8 +470,9 @@ agents in `.claude/` (the global `~/.claude/` does not exist there). What change
 | `bun run qa:local -- --port <p>` | Server against the local database (Supabase or Firebase emulators) with the test accounts (`--offline` without one, `--preview` for the build) |
 | `bun run context:backup` | Copies the local `context/` to the `context-state` branch |
 | `bun run context:restore` | Brings it back after losing the folder (never overwrites a local file) |
-| `bunx vercel env pull .env.local --yes` | Brings the environment variables from Vercel (Development) to `.env.local` |
+| `vercel env pull .env.local --yes` | Brings the environment variables from Vercel (Development) to `.env.local` |
 | `bunx playwright install chromium` | Once per machine, before the first screenshot or audit |
+| `ssh kit-vps kit-db list` | The databases on your VPS (only once you set it up: `reference/VPS-POSTGRES.md`) |
 
 Normally you do not run them: the skills do. They are there for when you want to check
 something.
@@ -490,7 +493,7 @@ something.
   `.env.development.local`. GitHub Secrets only receives the variable a workflow needs: it
   cannot be read back, so it is never the source. Detail: `reference/DEPLOY.md` §2c.
 - **If you lose the folder:** clone the repo, run `bun run context:restore` and
-  `bunx vercel env pull .env.local --yes`. The local state comes back from the
+  `vercel env pull .env.local --yes`. The local state comes back from the
   `context-state` branch as of the last backup (the agents make one when closing each unit
   and each wave; only on private repos), and the variables from Vercel.
 - **`context/CURRENT_PHASE.md`** is a board (≤ 60 lines): what is open, what blocks, what is

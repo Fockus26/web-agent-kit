@@ -54,6 +54,8 @@ Each row: the defect, the rule that prevents it, and where it came from.
 | A row of buttons or chips overflows | `flex-wrap`, and the button allows its text to wrap | world-flags ×4 rounds |
 | A long name is clipped with no way to read it | Never `truncate` alone: tooltip or a second line; headings with `wrap-anywhere`/`break-words` | world-flags |
 | A `fixed` toast/banner/sheet covers the screen at 200 % | `max-height` in `dvh` + its own scroll | world-flags |
+| A table or strip with horizontal scroll still scrolls the page at 320 px | The scroll container is `relative overflow-x-auto`: without `position`, it does not clip its `absolute` descendants (a `caption.sr-only`) and they stretch the page | melao |
+| A grid column overflows at 320 px | `grid-cols-1` as the base (not only `md:grid-cols-2`), and `min-w-0` on items holding buttons or a `fieldset` (their `min-content` widens the track) | melao |
 
 (The detail is in `frontend-build` › Conventions; if the project has a versioned reflow
 script, it runs on the new piece.)

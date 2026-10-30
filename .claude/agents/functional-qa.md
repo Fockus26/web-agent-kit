@@ -39,7 +39,12 @@ inside the project (ignored by git; from the scratchpad they cannot find Playwri
 Files with Write/Edit or a `.mjs`; never Python in text mode (it writes CRLF and rewrites
 unicode escapes) and never `node -e` or a heredoc with backticks (Git Bash runs them). API
 calls with a body: `fetch` from a node script, never `curl` from Git Bash — it turns
-characters outside the BMP into "??" and gave false 201s (world-flags). Each finding leaves
+characters outside the BMP into "??" and gave false 201s (world-flags). Two Playwright traps
+gave false findings (melao): it does not click an `aria-disabled` element (use `click({
+force: true })` to prove the disabled button does nothing), and `textContent` includes
+hidden text such as a button's `loadingText` (compare with `innerText()`). Accounts a script
+needs are created already confirmed through the local admin API, not by a public sign-up
+that expects a session at once (that only works with `enable_confirmations` off). Each finding leaves
 its reproduction script in `.qa/repro/<n>-<slug>.mjs` (base URL as its argument, prints
 `PASS` or `FAIL <measure>`): the fix is closed by running it, not by another QA.
 

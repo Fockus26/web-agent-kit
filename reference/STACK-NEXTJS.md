@@ -34,7 +34,7 @@ overrides this one**.
 Supported, with these differences (world-flags, Astro 7 + a React island):
 
 - Client variables are `PUBLIC_*` (`qa-local.ts` already maps them). Typecheck:
-  `bun x astro check` (`new-project.ps1` does not add `typecheck` there; CI's comment says it).
+  `bunx astro check` (`new-project.ps1` does not add `typecheck` there; CI's comment says it).
 - **Astro ≥ 7 detaches `astro dev` and `astro preview` into the background** when it detects
   an agent: the command exits with 0 and the server stays. `qa:local` starts it with
   `ASTRO_DEV_BACKGROUND=0` / `ASTRO_PREVIEW_BACKGROUND=0` and runs `astro dev stop` on exit;
@@ -82,7 +82,14 @@ Rules:
   `pnpm-lock.yaml` shows up, delete it — two lockfiles produce different installs on
   different machines.
 - `package.json` scripts run with `bun run <script>`.
-- One-off CLIs with `bunx`, without installing globally.
+- **CLIs:** the global ones César has installed (`vercel`, `supabase`, `gh`) are called by
+  their name, never through `bunx`: it downloads a copy each time and may run a different
+  version from the one that has the session. The project's own (`biome`, `tsc`,
+  `playwright`) through `bun run` or `bunx`, which finds them in `node_modules`. `bunx`
+  only for what is installed nowhere (`bunx shadcn@latest`). If a global CLI is missing
+  (a cloud session), `bunx <cli>@latest`. `bunx` and `bun x` are the same command; the
+  kit writes `bunx` (César, 2026-10-30, once `bunx` was on the PATH of pwsh and the slots'
+  Git Bash). If a shell answers `bunx: command not found`, `bun x` works the same.
 - If a tool does not work under bun (an occasional bundler or native binary), use `npx`
   **only for that tool**, and note it in the project's README with the reason. Do not switch
   the whole project's manager for one exception.

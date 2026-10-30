@@ -146,6 +146,13 @@ Me faltan estas para armar el plan:
     Confirm or adjust (Astro for a mostly static content site). If there are users or data:
     **Supabase or Firebase** — both supported; it decides whether local QA needs Docker or
     Java. See `reference/STACK-NEXTJS.md` ("Astro in the kit", "Backend").
+    **WordPress** if the client already has one, edits content in its admin, or the shop is
+    WooCommerce: `reference/STACK-WORDPRESS.md` (code in a site plugin in git, a local copy
+    with wp-env). The VPS Postgres is **not** a kickoff option: it is a migration César
+    decides when the project is finished (`reference/MIGRATE-TO-VPS.md`).
+    **Payments:** for each method the client wants, `reference/PAYMENTS.md` gives what the
+    client must provide (to `CONTENT_CHECKLIST.md`, owner: client, asked now because
+    approvals take weeks) and its costs (to `PROJECT_CONTEXT.md` § Payments).
 
 13b. **Component library — always ask, do not assume it.** It is César's decision, not
     yours, and it changes how the whole frontend is written. Offer him the three with
@@ -311,7 +318,7 @@ Follow `reference/DEPLOY.md`:
    of `main`). Each setting is read back to confirm it. `GIT_STATE.md` → `pr` mode.
 2. **Vercel**: `vercel link`, `vercel git connect` (preview per PR, production on merge to
    `main`), non-secret environment variables (`NEXT_PUBLIC_SITE_URL`), domain if there is one,
-   and `.env.local` pulled from Vercel (`bunx vercel env pull .env.local --yes`; if it was
+   and `.env.local` pulled from Vercel (`vercel env pull .env.local --yes`; if it was
    already written by hand, DEPLOY §2c "First pull" first: the pull overwrites it).
 3. `PROJECT_CONTEXT.md` › Repo and deployment with the real URLs.
 4. First `bun run context:backup` (private repo): from here on the local state survives

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "kit-submit-guard",
+  "title": "useSubmitGuard",
+  "description": "Blocks double submit synchronously and carries one idempotency key per operation to the server.",
+  "files": [
+    {
+      "path": "registry/kit/use-submit-guard.ts",
+      "content": "'use client'\n\nimport { useCallback, useRef, useState } from 'react'\n\n/**\n * One submit at a time, and the same idempotency key for retries of the same operation.\n *\n * Why each piece (reference/QA-PREVENTION.md §2, the most common and most expensive QA\n * finding): a `disabled` button alone is not enough, because a double click lands both\n * events before React re-renders the button; the ref blocks the second one synchronously.\n * And the client guard is not enough either: the key travels to the server, which refuses a\n * key it already processed (unique column or idempotency key on the payment). The key is\n * kept after a failure, so \"it failed, retry\" cannot create the record twice if the first\n * request did reach the server; it is renewed only after a success.\n *\n *   const guard = useSubmitGuard((key, data: Values) => createOrder({ ...data, key }))\n *   <form onSubmit={form.handleSubmit(guard.run)}>\n *   <Button type=\"submit\" {...guard.buttonProps}>{guard.pending ? 'Enviando…' : 'Enviar'}</Button>\n */\nexport function useSubmitGuard<A extends unknown[], R>(\n  action: (idempotencyKey: string, ...args: A) => Promise<R>,\n) {\n  const inFlight = useRef(false)\n  const key = useRef<string | null>(null)\n  const [pending, setPending] = useState(false)\n\n  const run = useCallback(\n    async (...args: A): Promise<R | undefined> => {\n      if (inFlight.current) return undefined\n      inFlight.current = true\n      setPending(true)\n      key.current ??= crypto.randomUUID()\n      try {\n        const result = await action(key.current, ...args)\n        key.current = null\n        return result\n      } finally {\n        inFlight.current = false\n        setPending(false)\n      }\n    },\n    [action],\n  )\n\n  return { run, pending, buttonProps: { disabled: pending, 'aria-busy': pending } as const }\n}\n",
+      "type": "registry:hook",
+      "target": "hooks/use-submit-guard.ts"
+    }
+  ],
+  "type": "registry:hook"
+}

@@ -49,7 +49,7 @@ if (-not $Existing) {
   try {
     # --biome and --react-compiler: the kit uses Biome (not ESLint) and React Compiler.
     # --typescript and --ts are the same. create-next-app already initializes git.
-    bun x create-next-app@latest $name --ts --tailwind --app --biome --react-compiler `
+    bunx create-next-app@latest $name --ts --tailwind --app --biome --react-compiler `
       --import-alias "@/*" --use-bun --yes
     if ($LASTEXITCODE -ne 0) { throw "create-next-app failed" }
   } finally { Pop-Location }
@@ -58,10 +58,24 @@ if (-not $Existing) {
 if (-not (Test-Path (Join-Path $Path 'package.json'))) { throw "There is no package.json in $Path" }
 Push-Location $Path
 try {
+  # What the kit copies is written with LF: the kit's working copy on Windows is CRLF, and
+  # with the project's `eol=lf` Biome failed on format and git status showed the files as
+  # modified with no diff (melao). $copied collects them for that pass at the end.
+  $copied = [System.Collections.Generic.List[string]]::new()
   function CopyIfMissing($from, $to) {
     if (Test-Path $to) { Write-Host "  = $to already exists, left as is" -ForegroundColor Yellow; return }
     Copy-Item $from $to -Recurse
+    $copied.Add($to)
     Write-Host "  + $to"
+  }
+  function ToLf($path) {
+    if (-not (Test-Path $path)) { return }
+    $files = if (Test-Path $path -PathType Container) { Get-ChildItem $path -Recurse -File -Force } else { Get-Item $path }
+    foreach ($f in $files) {
+      if ($f.Extension -notmatch '^\.(md|ts|tsx|js|mjs|json|sh|yml|yaml|toml|txt|css|template)$') { continue }
+      $text = [IO.File]::ReadAllText($f.FullName)
+      if ($text.Contains("`r`n")) { [IO.File]::WriteAllText($f.FullName, $text.Replace("`r`n", "`n")) }
+    }
   }
 
   Write-Host "Copying the kit into $Path"
@@ -76,14 +90,16 @@ try {
   New-Item -ItemType Directory -Force scripts, tests\unit | Out-Null
   # `bun test ./tests/unit` fails if the folder does not exist; empty + --pass-with-no-tests passes.
   if (-not (Get-ChildItem tests\unit -Force)) { New-Item tests\unit\.gitkeep | Out-Null }
-  foreach ($f in 'test-related.ts', 'pr-screenshots.ts', 'publish-pr-shots.sh', 'qa-local.ts', 'context-backup.sh', 'cloud-setup.sh') {
+  # qa-roles.ts is the project's part of qa:local: copied once, never replaced afterwards.
+  foreach ($f in 'test-related.ts', 'pr-screenshots.ts', 'publish-pr-shots.sh', 'qa-local.ts', 'qa-roles.ts', 'context-backup.sh', 'cloud-setup.sh') {
     CopyIfMissing "$kit\reference\scripts\$f" "scripts\$f"
   }
   # Cloud sessions (claude.ai/code) only load what is committed in the repo: the kit's skills
   # and agents go in the project's .claude/ (replaced on each run, like install-kit), and the
   # SessionStart hook runs scripts/cloud-setup.sh (bun install + context:restore; local: no-op).
   & "$kit\install-kit.ps1" -Project . *> $null
-  Write-Host "  + .claude\skills, .claude\agents (kit copy, for cloud sessions)"
+  foreach ($d in '.claude\skills', '.claude\agents', '.claude\kit-reference') { $copied.Add($d) }
+  Write-Host "  + .claude\skills, .claude\agents, .claude\kit-reference (kit copy, for cloud sessions)"
   if (Test-Path .claude\settings.json) {
     $settings = Get-Content .claude\settings.json -Raw
     if ($settings -notmatch 'cloud-setup\.sh') {
@@ -91,6 +107,7 @@ try {
     }
   } else {
     Copy-Item "$kit\reference\claude\settings.json" .claude\settings.json
+    $copied.Add('.claude\settings.json')
     Write-Host "  + .claude\settings.json (SessionStart -> scripts/cloud-setup.sh)"
   }
   if (-not $OnlyPieces) {
@@ -127,6 +144,7 @@ try {
   } else {
     $header = if (Test-Path AGENTS.md) { "@AGENTS.md`n`n" } else { '' }
     Set-Content CLAUDE.md ($header + $claude) -NoNewline
+    $copied.Add('CLAUDE.md')
     Write-Host "  + CLAUDE.md (kit template$(if ($header) { ' + @AGENTS.md' }))"
   }
 
@@ -236,7 +254,7 @@ try {
 
   # The scripts import 'bun' and '@playwright/test': without their types, `tsc` and
   # `next build` fail (tsconfig includes **/*.ts). Playwright's browsers are not downloaded
-  # here: `bun x playwright install chromium` when screenshots or audits are needed.
+  # here: `bunx playwright install chromium` when screenshots or audits are needed.
   # @axe-core/playwright: the a11y gate uses it on every unit, and a pool worker does not add
   # dependencies (it ended up injecting axe from a CDN).
   $deps = @('@types/bun', '@playwright/test', '@axe-core/playwright')
@@ -250,15 +268,17 @@ try {
     Write-Host "  + devDependencies: $($missing -join ', ')"
   }
 
-  # What was copied takes the project's format (quotes, semicolons, indentation).
+  foreach ($c in $copied) { ToLf $c }
+
+  # What was copied takes the project's format (quotes, semicolons, indentation), with the
+  # project's own Biome (bunx resolves node_modules/.bin first).
   if ($pkg.devDependencies -and $pkg.devDependencies.PSObject.Properties['@biomejs/biome']) {
     $paths = @('scripts')
     if ($added) { $paths += 'package.json' }
     if (Test-Path biome.json) { $paths += 'biome.json' }
     if (Test-Path .changeset) { $paths += '.changeset' }
     if (Test-Path .claude/settings.json) { $paths += '.claude/settings.json' }
-    # `bun x`, not `bunx`: bunx was not on pwsh's PATH and the format step failed (inversiones-js).
-    bun x biome check --write @paths | Out-Null
+    bunx biome check --write @paths | Out-Null
     Write-Host "  ~ formatted with the project's Biome: $($paths -join ', ')"
   }
 
@@ -270,5 +290,5 @@ try {
   Write-Host "  1. git status  -> review what was copied"
   Write-Host "  2. open Claude Code in $Path and type /project-kickoff"
   Write-Host "     (it asks whether to create the GitHub repo and the Vercel project, and with your yes it sets them up;"
-  Write-Host "      have 'gh auth login' and 'bun x vercel login' done if you will want them)"
+  Write-Host "      have 'gh auth login' and 'bunx vercel login' done if you will want them)"
 } finally { Pop-Location }

@@ -1,7 +1,7 @@
 # {{PROJECT_NAME}}
 
 > Copied to the project root as `CLAUDE.md`, `{{...}}` filled. Loaded every session: a
-> **map** ≤ 8 KB, not a manual; the long material lives in `context/`. Delete this box.
+> **map** ≤ 7 KB (the 1 KB left is for this project's lines), not a manual. Delete this box.
 
 {{ONE_LINE_DESCRIPTION}}
 
@@ -29,15 +29,12 @@ descriptions. Site copy in {{Spanish}}. Code and comments: like the code around 
 | opens or closes a unit | `git-flow` skill + `context/GIT_STATE.md` |
 | arrives with an orchestrator prompt | **only** what the prompt cites: it already brings paths, lines and decisions |
 
-**Search, don't read:** `decisions/` (one file per decision), `CONTENT_CHECKLIST.md`,
-inventories, `PHASE_LOG/`. `grep` for the word or the ID and open only what comes up:
+**Search, don't read:** `decisions/`, `CONTENT_CHECKLIST.md`, inventories, `PHASE_LOG/` —
+`grep` the word or ID (`grep -rhi "^# D.*modal" context/decisions/`: decided? don't
+re-litigate it) and open only what comes up.
 
-```bash
-grep -rhi "^# D.*modal\|^# D.*ranking" context/decisions/   # already decided? Don't re-litigate it
-grep -n "Button" context/COMPONENTS_INVENTORY.md            # does it exist already?
-```
-
-Size budgets: the kit's `reference/TOKEN-ECONOMY.md`.
+**The kit's `reference/…`** (cited by skills and agents) = `~/.claude/kit-reference/…`, or
+`.claude/kit-reference/…` when the kit is installed in the project. Not this repo's.
 
 ---
 
@@ -49,37 +46,27 @@ Size budgets: the kit's `reference/TOKEN-ECONOMY.md`.
 - {{Database / ORM}} · {{Auth}} · {{Payments}}
 
 ```bash
-bun run build
-bun run typecheck            # Next: next typegen && tsc --noEmit · Astro: astro check
-bun run lint
-bun run test:related         # while working: only the affected tests
-bun run test                 # before the PR: the whole suite
-bun run shots                # PR screenshots (node + Playwright, see scripts/)
-bun run shots:publish        # uploads them to the pr-shots branch; markdown in .pr-shots/README.md
-bun run context:backup       # local context/ → branch context-state (restore: context:restore)
+bun run build · typecheck · lint
+bun run test:related         # while working; `bun run test` (whole suite) before the PR
+bun run shots                # PR screenshots; then `shots:publish` → .pr-shots/README.md
+bun run context:backup       # local context/ → branch context-state (context:restore)
 ```
 
-**Dev server:** César starts it. Exceptions: the QA agents (`wave-qa`, `functional-qa`),
-and the workers if César authorizes it for a batch (each on its port). Build, typecheck, lint and tests run without asking.
+**Dev server:** César starts it, except the QA agents and workers he authorizes (each on its
+port). Build, typecheck, lint and tests run without asking.
 
-**QA against a local database:** `bun run qa:local -- --port <p>` starts {{Supabase in
-Docker | the Firebase emulators (Java, no Docker)}}, creates the `.env.test.local` accounts
-(`EMAIL_TEST`/`PASSWORD_TEST`, `ADMIN_…`, `<ROLE>_…`) and starts the server on it. Never the
-real database. Without it: `--offline` (guest only).
+**QA:** `bun run qa:local -- --port <p>` — {{Supabase in Docker | Firebase emulators (Java) |
+Postgres in Docker}} with the `.env.test.local` accounts; never the real database
+(`--offline`: guest only). Playwright scripts run with `node` (Bun hangs on Windows), in `.qa/`.
 
-**Playwright scripts run with `node`, not `bun`** (under Bun it hangs on Windows), saved in
-`.qa/` (ignored by git).
-
-**Documentation:** Context7 before using any library's API.
-
-**Model per task:** before each, `Modelo recomendado: <model · effort>` (kit
-`TOKEN-ECONOMY.md` §12; risk → `opus`); subagents get both in `Agent(...)`.
+**Docs:** Context7 before any library API. **Model per task:** `Modelo recomendado: <model ·
+effort>` before each (kit `TOKEN-ECONOMY.md` §12; risk → `opus`), both passed to `Agent(...)`.
 
 ---
 
 ## How work is done here
 
-One unit at a time (a component, a section, a screen, a flow, a bounded fix): something
+One unit at a time (a component, section, screen, flow or bounded fix), something
 reviewable in two minutes. One unit = one branch = {{one PR | one local merge}}.
 
 ```
@@ -88,41 +75,34 @@ reviewable in two minutes. One unit = one branch = {{one PR | one local merge}}.
    →  prune and back up context/  →  [git-flow: close → PR (or pause + local merge)]
 ```
 
-- **`pr` mode:** on your branch you may commit and push without asking — César's approval is
-  the PR review. **Never** push to `main`, never `gh pr merge`, never auto-merge.
-- **Cloud session** (`CLAUDE_CODE_REMOTE=true`): `cloud-session` skill at start and close.
-  It overrides both rules above: each unit ends merged into `main` (PR + green CI).
-- **`local` mode:** nothing gets committed without César's explicit approval (`git-flow` pause).
+- **`pr` mode:** commit and push your branch without asking — César approves in the PR
+  review. **Never** push to `main`, `gh pr merge` or auto-merge.
+- **Cloud session** (`CLAUDE_CODE_REMOTE=true`): `cloud-session` skill at start and close;
+  it overrides the rule above (each unit ends merged: PR + green CI).
+- **`local` mode:** no commit without César's explicit approval (`git-flow` pause).
 - **Version:** {{nobody touches `version` or `CHANGELOG.md`. Visible change →
   `.changeset/<desc>.md` (`git-flow` §2.1.3). The `chore(release): versión` PR is opened by
   the Action and merged by César. | **no versioning** (no `version`, CHANGELOG or
   Changesets, on purpose): no PR carries a changeset.}}
-- Nothing destructive: no `reset --hard`, no `push --force`, no history rewriting, no
-  deleting branches.
+- Nothing destructive: no `reset --hard`, `push --force`, history rewriting or deleting
+  branches.
 
 ### What goes in the repo and what is local
 
-In git: `.kit-version`, `supabase/` (migrations, seed, templates) and the fixed documents
-of `context/`: {{PROJECT_CONTEXT, DESIGN_RULES, COLORS, DESIGN_TOKENS, TYPOGRAPHY, decisions/}}.
-Local (gitignored): {{CURRENT_PHASE, CONTENT_CHECKLIST, KIT_FEEDBACK, inventories, PHASE_LOG/,
-plans/}} — backed up to `context-state` with `bun run context:backup`. `.env.local` is
-pulled from Vercel, never hand-edited (`vercel env pull`; kit `reference/DEPLOY.md` §2c).
-The worktree pool slots (`orchestrate`, `..\<repo>-wt\wtN`) get the `.env*` files copied,
-but **not** the local `context/`: it is read in the main folder (first line of
-`git worktree list`). From a worktree (pool slot or `.claude/worktrees/`) you may lack write
-permission there: return the `context/` changes in your report.
+In git: `.kit-version`, `supabase/`, and `context/` {{PROJECT_CONTEXT, DESIGN_RULES, COLORS,
+DESIGN_TOKENS, TYPOGRAPHY, decisions/}}. Local (gitignored, backed up with `context:backup`):
+{{CURRENT_PHASE, CONTENT_CHECKLIST, KIT_FEEDBACK, inventories, PHASE_LOG/, plans/}}.
+`.env.local` comes from `vercel env pull`, never hand-edited. Worktrees (pool slots,
+`.claude/worktrees/`) have the `.env*` but not the local `context/`: it lives in the main
+folder (first line of `git worktree list`); without write access there, return the changes
+in your report.
 
 ### Quality gates
 
-| Skill / agent | When |
-|---|---|
-| `a11y` | Whenever UI is touched, before asking for review |
-| `seo` | Repo init · closing a section with content · closing a page |
-| `git-flow` | When opening and closing each unit |
-| `orchestrate` | A list arrives, or a phase is done in waves (one wave per session) |
-| `wave-qa` | `orchestrate`, after a wave with risk flows |
-| `functional-qa` | A risk flow closes (auth, data, payments) · version QA |
-| `design-qa` | Only the version QA (phase 09 / release PR) |
+`a11y` whenever UI is touched · `seo` at init and when a section or page with content
+closes · `git-flow` opening and closing each unit · `orchestrate` for a list or a phase in
+waves · `wave-qa` after a wave with risk flows · `functional-qa` when a risk flow closes and
+at the version QA · `design-qa` only at the version QA (phase 09 / release PR).
 
 ---
 
@@ -140,18 +120,16 @@ permission there: return the `context/` changes in your report.
 ## When to stop and ask
 
 - A handoff value is missing → ask, do not estimate it from the mockup.
-- New visual decision → 3 options with real advantage and disadvantage, and wait.
-  (A background worker cannot wait: it picks the conservative one and explains it in the PR.)
-- Something breaks an accessibility rule → the rule wins, escalate.
-- A problem in already-closed code → report it, do not fix it inside the current unit.
-- Unused file → point it out, **do not delete it**.
+- New visual decision → 3 options with real pros and cons, and wait (a background worker
+  picks the conservative one and explains it in the PR).
+- Accessibility rule broken → the rule wins. Problem in closed code → report it, not fixed in
+  this unit. Unused file → point it out, **do not delete it**.
 
 ## Kit feedback
 
-When César corrects something you did following the kit, asks you for the same thing a
-second time, does by hand a step the kit could do, or the kit does not say what to do: a row
-in `context/KIT_FEEDBACK.md` (or +1 in "Times" if it exists). Without asking and announcing
-it in one line at most. It goes to the kit with `/kit-feedback` (opens a PR on its repo).
+César corrects what you did following the kit, asks for something twice, does by hand what
+the kit could do, or the kit is silent → a row in `context/KIT_FEEDBACK.md` (or +1 in
+"Times"), without asking, announced in one line. `/kit-feedback` sends it to the kit.
 
 ---
 

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "kit-fields",
+  "title": "Form field schemas",
+  "description": "Zod field schemas with the QA-PREVENTION rules built in: trim, lowercased email, untrimmed password, 4-digit year, bounded quantity.",
+  "dependencies": [
+    "zod"
+  ],
+  "files": [
+    {
+      "path": "registry/kit/fields.ts",
+      "content": "import { z } from 'zod'\n\n// Field schemas for forms, shared by client and server. Every rule here is a defect QA kept\n// finding (reference/QA-PREVENTION.md §1): \"only spaces\" passing as filled, \" ana@x.com\"\n// duplicating an account, a two-digit year saved as 1926, strings longer than the column.\n// Messages in Spanish: the kit's sites are. Change the copy, not the rules.\n\n/** Required text: trimmed BEFORE it is checked, and the trimmed value is the one saved. */\nexport const text = (max: number, required = 'Este campo es obligatorio') =>\n  z.string().trim().min(1, required).max(max, `Máximo ${max} caracteres`)\n\n/** Optional text: '' and spaces become undefined, so the database gets NULL, not ''. */\nexport const optionalText = (max: number) =>\n  z\n    .string()\n    .trim()\n    .max(max, `Máximo ${max} caracteres`)\n    .optional()\n    .transform((v) => (v ? v : undefined))\n\n/** Email: trimmed and lowercased before the format check and the uniqueness check. */\nexport const email = (invalid = 'Escribe un correo válido') =>\n  z.string().trim().toLowerCase().max(254, 'Correo demasiado largo').pipe(z.email(invalid))\n\n/**\n * Password: NEVER trimmed (a space is a valid character the user typed on purpose).\n * 8 minimum and a high maximum: length protects more than composition rules (NIST 800-63B).\n */\nexport const password = (min = 8) =>\n  z\n    .string()\n    .min(min, `Mínimo ${min} caracteres`)\n    .max(128, 'Máximo 128 caracteres')\n\n/** Four-digit year within a real range. Never `new Date(<free text>)`. */\nexport const year = (from = 1900, aheadYears = 0) =>\n  z.coerce\n    .number<string | number>()\n    .int('Escribe un año válido')\n    .min(from, `Escribe el año con 4 cifras (desde ${from})`)\n    .max(new Date().getFullYear() + aheadYears, 'Ese año aún no llegó')\n\n/** Whole positive quantity with a real ceiling (no 0, no -1, no 1e10). */\nexport const quantity = (max: number) =>\n  z.coerce\n    .number<string | number>()\n    .int('Solo números enteros')\n    .positive('Debe ser mayor que 0')\n    .max(max, `Máximo ${max}`)\n",
+      "type": "registry:lib",
+      "target": "lib/validation/fields.ts"
+    }
+  ],
+  "type": "registry:lib"
+}

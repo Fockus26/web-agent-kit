@@ -122,6 +122,11 @@ and flag that part of the code as "written without checking current docs".
   schema trims every text field, and a failed request ends in an error state with a retry,
   never an endless spinner. The full list, with what each prevents: the kit's
   `reference/QA-PREVENTION.md` — go through the sections your unit touches before closing.
+- **Solved patterns first** (the kit's `reference/PATTERNS.md`): a form, a submit, fluid
+  headings, a list or an auth screen starts from the registry items (`kit-fields`,
+  `kit-form`, `kit-submit-guard`) and the recipes, not from scratch. Only the design is
+  the project's; a better rule goes to `KIT_FEEDBACK.md`. Why: each project rebuilt them
+  slightly differently and QA found the same gaps every time (César, 2026-10-29).
 - **Names:** components in `PascalCase`, component files in `PascalCase.tsx`, utilities in
   `camelCase.ts`, routes in `kebab-case`.
 

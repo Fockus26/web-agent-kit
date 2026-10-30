@@ -13,33 +13,46 @@
  *   - neither → the normal server: there is no external database to replace.
  *
  * Supabase:
- *   1. `supabase start` (Docker Desktop running): the project's local stack. If the first
- *      start fails, it is retried once: the first one on a machine failed with
- *      `StatusDbNotRunningError` and the second worked, three times (world-flags).
+ *   1. `supabase start` (Docker Desktop running): the project's local stack, with Auth's
+ *      `site_url` = `http://localhost:<port>` and that origin (and 127.0.0.1's) added to the
+ *      redirect URLs. Why: config.toml says 127.0.0.1:3000 and the QA server is on another
+ *      port, so the confirmation, email-change and recovery links did not come back to it and
+ *      wave-qa followed them by hand (melao ×5). If the stack is already running with another
+ *      `site_url` (another port), it is stopped first, keeping its data. Up to 3 attempts with a
+ *      `supabase stop` between them, and the database container's log if the last one fails:
+ *      the first start on a machine failed with `StatusDbNotRunningError` (world-flags ×3) and
+ *      storage's "Starting database from backup" twice in a row (melao).
  *   2. `supabase db reset`: an empty database with the current tree's migrations and seed
- *      (in a pool slot, `main`'s), with its output live (it takes minutes). The local
- *      database is disposable: keep nothing in it.
- *   3. Creates the `.env.test.local` test accounts in that database (local stack's Auth):
+ *      (in a pool slot, `main`'s), with its output live (it takes minutes). If it fails
+ *      (`DbSetupError`, melao ×2), stop + start + reset once more. The local database is
+ *      disposable: keep nothing in it.
+ *   3. Creates the `.env.test.local` test accounts in that database (local stack's Auth admin
+ *      API, already confirmed):
  *        EMAIL_TEST / PASSWORD_TEST              → role "user"
  *        ADMIN_EMAIL_TEST / ADMIN_PASSWORD_TEST  → role "admin"
  *        <ROLE>_EMAIL_TEST / <ROLE>_PASSWORD_TEST → role "<role>"
  *      The role goes to `app_metadata.role`. If the project decides it some other way, that
- *      is the only project-specific part:
- *        - role in a table (`profiles`) or access through a subscription/plan → `assignRole`;
- *        - role by a list of emails in a variable (`ADMIN_EMAILS`) → `ROLE_BY_ENV`.
+ *      is the only project-specific part, and it lives in `scripts/qa-roles.ts` (the kit
+ *      never replaces it): a table or a subscription → `assignRole`; a list of emails in a
+ *      variable → `ROLE_BY_ENV`.
  *   4. Starts `bun run dev -- --port <port>` with the Supabase variables pointing at the
- *      local stack. They go through process.env, which beats the `.env*` files in both Next
- *      and Vite (Astro, SvelteKit…): no file is written and the slot stays clean.
+ *      local stack and `<prefix>SITE_URL` = `http://localhost:<port>` (it was the production
+ *      URL of `.env.local`, and `emailRedirectTo` took it: melao). They go through
+ *      process.env, which beats the `.env*` files in both Next and Vite (Astro, SvelteKit…):
+ *      no file is written and the slot stays clean.
+ *   It warns if `config.toml` has `enable_confirmations` or `double_confirm_changes` off:
+ *   then local sign-up skips a confirmation the hosted project asks for, and a repro that
+ *   passes here may not pass there (melao).
  *
  * Firebase (`firebase.json` with an `emulators` block):
  *   1. Starts the emulators (`bun run emulators` if the project has that script, otherwise
- *      `bun x firebase emulators:start`) with the project `FIREBASE_QA_PROJECT` (`demo-*`:
+ *      `bunx firebase emulators:start`) with the project `FIREBASE_QA_PROJECT` (`demo-*`:
  *      the emulators then cannot reach real resources) and waits up to 4 minutes: the first
  *      start on a machine took more than 90 s (inversiones-js). If they are already
  *      listening, it uses them. The emulators start empty and go down with this script.
  *   2. `scripts/seed-emulator.ts` if the project has it (skipped with `--no-reset`).
  *   3. The same `.env.test.local` accounts, in the Auth emulator, with the role as a custom
- *      claim (`role`). Role in a Firestore document (`admins/{uid}`) → `assignRoleFirebase`.
+ *      claim (`role`). Role in a Firestore document (`admins/{uid}`) → `assignRoleFirebase` in `scripts/qa-roles.ts`.
  *   4. The server with `FIREBASE_AUTH_EMULATOR_HOST`/`FIRESTORE_EMULATOR_HOST` (the Admin SDK
  *      reads them), `<prefix>USE_EMULATORS=true` and `<prefix>FIREBASE_PROJECT_ID` for the
  *      client. The client code has to honour that flag (`connectAuthEmulator`,
@@ -58,6 +71,12 @@
  * the next one without warning and could land on another pool slot's). To stop it on
  * Windows: `taskkill /PID <this script's pid> /T /F` (with /T the server goes down too; a
  * plain kill leaves the child orphaned on the port).
+ *
+ * Once the server answers it warms `/` and each `--warm <route,route>` (a first `GET /` in
+ * dev took 178 s and Playwright gives up at 30: melao) and then prints one line to wait for:
+ *   QA ready: http://localhost:<port>
+ * Wait for that line in the log (`.qa/dev.log`), not for a process: `pgrep` does not exist in
+ * Git Bash and `until … ! pgrep` returned at once (melao).
  *
  * Astro ≥ 7 detaches `astro dev`/`astro preview` into the background when it detects an
  * agent: the script exited with 0 and the server was left orphaned (world-flags). The server
@@ -95,6 +114,26 @@
 import { type ChildProcess, spawn, spawnSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { connect } from 'node:net'
+import { pathToFileURL } from 'node:url'
+
+// The project's part (scripts/qa-roles.ts). Without the file, the defaults: role in
+// app_metadata / the custom claim, nothing else. Typed here, not imported: a project without
+// the file must still typecheck.
+type Headers = Record<string, string>
+interface QaRoles {
+  ROLE_BY_ENV: Record<string, string>
+  EXTRA_ENV_MAP: Record<string, string>
+  assignRole(id: string, role: string, ctx: { api: string; headers: Headers }): Promise<void>
+  assignRoleFirebase(
+    uid: string,
+    email: string,
+    role: string,
+    ctx: { firestore: string; project: string; headers: Headers },
+  ): Promise<void>
+}
+const roles: Partial<QaRoles> = existsSync('scripts/qa-roles.ts')
+  ? await import(pathToFileURL('scripts/qa-roles.ts').href)
+  : {}
 
 // App variable ← field of `supabase status -o json`, for Next (NEXT_PUBLIC_*), Vite (VITE_*)
 // and Astro (PUBLIC_*). Add the one your project uses here if it has another name (the
@@ -110,14 +149,11 @@ Object.assign(ENV_MAP, {
   SUPABASE_SECRET_KEY: 'SECRET_KEY',
   DATABASE_URL: 'DB_URL',
   DIRECT_URL: 'DB_URL',
+  ...roles.EXTRA_ENV_MAP,
 })
 
-// Role decided by a list of emails in an environment variable (e.g. the app treats an email
-// in ADMIN_EMAILS as admin): role → variable. The script fills it with that role's test
-// emails when starting the server. Empty if the role lives in the database.
-const ROLE_BY_ENV: Record<string, string> = {
-  // admin: 'ADMIN_EMAILS',
-}
+// Role by a list of emails in a variable: in scripts/qa-roles.ts.
+const ROLE_BY_ENV: Record<string, string> = roles.ROLE_BY_ENV ?? {}
 
 const pkg = existsSync('package.json') ? JSON.parse(readFileSync('package.json', 'utf8')) : {}
 const pkgScripts: Record<string, string> = pkg.scripts ?? {}
@@ -131,12 +167,21 @@ const FIREBASE_QA_PROJECT =
 const args = process.argv.slice(2)
 const port = args[args.indexOf('--port') + 1]
 if (!args.includes('--port') || !/^\d+$/.test(port ?? '')) {
-  console.error('Usage: node scripts/qa-local.ts --port <port> [--no-reset] [--offline] [--preview]')
+  console.error(
+    'Usage: node scripts/qa-local.ts --port <port> [--no-reset] [--offline] [--preview] [--warm /a,/b]',
+  )
   process.exit(2)
 }
 const reset = !args.includes('--no-reset')
 const offline = args.includes('--offline')
 const preview = args.includes('--preview')
+// Git Bash turns `/login` into `C:/Program Files/Git/login` (melao ×4): undone here.
+const unMsys = (p: string) => p.replace(/^[A-Za-z]:[\\/]Program Files[\\/]Git(?=[\\/])/, '').replaceAll('\\', '/')
+const warm = args.includes('--warm')
+  ? (args[args.indexOf('--warm') + 1] ?? '').split(',').filter(Boolean).map(unMsys)
+  : []
+// localhost and not 127.0.0.1: it is what config.toml's redirects and the app's cookies get.
+const SITE = `http://localhost:${port}`
 
 // Processes this script starts (emulators, build, server): they go down with it.
 const children: ChildProcess[] = []
@@ -230,29 +275,88 @@ const SUPABASE_ENV = {
   SUPABASE_ANALYTICS_ENABLED: 'false',
   SUPABASE_DB_HEALTH_TIMEOUT: '5m',
   SUPABASE_AUTH_RATE_LIMIT_EMAIL_SENT: '1000',
+  // Email links back to this server, not to config.toml's 127.0.0.1:3000 (melao ×5).
+  SUPABASE_AUTH_SITE_URL: SITE,
+  SUPABASE_AUTH_ADDITIONAL_REDIRECT_URLS: `${SITE}/**,http://127.0.0.1:${port}/**`,
   ...process.env, // whatever César set wins
 }
 
-// `live`: output straight to the terminal (long steps), nothing returned.
-function supabase(a: string[], { retry = false, live = false } = {}): string {
-  const run = () =>
-    spawnSync('supabase', a, {
-      encoding: 'utf8',
-      stdio: live ? 'inherit' : 'pipe',
-      shell: process.platform === 'win32',
-      env: SUPABASE_ENV,
-    })
-  let r = run()
-  if (r.status !== 0 && retry) {
-    console.log(`… supabase ${a.join(' ')} failed; retrying once (the first start often does)`)
-    r = run()
+type Run = ReturnType<typeof spawnSync>
+// `live`: output straight to the terminal (long steps). Returns the result; never aborts.
+function supabaseRun(a: string[], live = false): Run {
+  return spawnSync('supabase', a, {
+    encoding: 'utf8',
+    stdio: live ? 'inherit' : 'pipe',
+    shell: process.platform === 'win32',
+    env: SUPABASE_ENV,
+  })
+}
+
+function supabaseFail(a: string[], r: Run, extra = ''): never {
+  const detail = String(r.stderr || r.stdout || '').trim()
+  const docker = /docker|daemon|pipe/i.test(detail) ? '\n→ Is Docker Desktop running?' : ''
+  abort(`supabase ${a.join(' ')} failed:\n${detail}${docker}${extra}`)
+}
+
+function supabase(a: string[]): string {
+  const r = supabaseRun(a)
+  if (r.status !== 0) supabaseFail(a, r)
+  return String(r.stdout ?? '')
+}
+
+// config.toml's project_id names the containers (supabase_db_<id>, supabase_auth_<id>).
+const configToml = existsSync('supabase/config.toml') ? readFileSync('supabase/config.toml', 'utf8') : ''
+const projectId = configToml.match(/^\s*project_id\s*=\s*"([^"]+)"/m)?.[1] ?? ''
+
+function dockerLogs(container: string): string {
+  const r = spawnSync('docker', ['logs', '--tail', '40', container], { encoding: 'utf8' })
+  const out = `${r.stdout ?? ''}${r.stderr ?? ''}`.trim()
+  return out ? `\n── docker logs --tail 40 ${container}\n${out}` : ''
+}
+
+// Auth reads site_url only when its container starts: a stack already up for another port
+// keeps sending links there.
+function runningSiteUrl(): string | null {
+  if (!projectId) return null
+  const r = spawnSync('docker', ['inspect', '-f', '{{range .Config.Env}}{{println .}}{{end}}', `supabase_auth_${projectId}`], {
+    encoding: 'utf8',
+  })
+  if (r.status !== 0) return null
+  return r.stdout.match(/^GOTRUE_SITE_URL=(.*)$/m)?.[1]?.trim() ?? null
+}
+
+function supabaseStart(): void {
+  const current = runningSiteUrl()
+  if (current && current !== SITE) {
+    console.log(`… the local stack sends links to ${current}: restarting it for ${SITE} (data kept)`)
+    supabaseRun(['stop'])
   }
-  if (r.status !== 0) {
-    const detail = (r.stderr || r.stdout || '').trim()
-    const docker = /docker|daemon|pipe/i.test(detail) ? '\n→ Is Docker Desktop running?' : ''
-    abort(`supabase ${a.join(' ')} failed:\n${detail}${docker}`)
+  const attempts = 3
+  for (let i = 1; i <= attempts; i++) {
+    const r = supabaseRun(['start'])
+    if (r.status === 0) return
+    if (i === attempts) supabaseFail(['start'], r, dockerLogs(`supabase_db_${projectId}`))
+    console.log(`… supabase start failed (attempt ${i}/${attempts}); supabase stop and again`)
+    supabaseRun(['stop'])
   }
-  return r.stdout ?? ''
+}
+
+function supabaseReset(): void {
+  let r = supabaseRun(['db', 'reset'], true)
+  if (r.status === 0) return
+  console.log('… supabase db reset failed; supabase stop + start and once more')
+  supabaseRun(['stop'])
+  supabaseStart()
+  r = supabaseRun(['db', 'reset'], true)
+  if (r.status !== 0) abort(`supabase db reset failed twice (output above).${dockerLogs(`supabase_db_${projectId}`)}`)
+}
+
+// Local sign-up without the confirmations the hosted project asks for: a repro passes here
+// and not there, and it hid the double confirmation of an email change (melao).
+for (const key of ['enable_confirmations', 'double_confirm_changes']) {
+  if (new RegExp(`^\\s*${key}\\s*=\\s*false`, 'm').test(configToml)) {
+    console.warn(`! supabase/config.toml: ${key} = false. If the hosted project has it on, local QA skips that step.`)
+  }
 }
 
 function launch(cmd: string, a: string[], env: NodeJS.ProcessEnv): ChildProcess {
@@ -261,9 +365,35 @@ function launch(cmd: string, a: string[], env: NodeJS.ProcessEnv): ChildProcess 
   return child
 }
 
+// Waits for the server to answer, then requests `/` and the --warm routes once each (a cold
+// first compile took 178 s: melao), and prints the line to wait for.
+async function warmUp(): Promise<void> {
+  const deadline = Date.now() + 10 * 60_000
+  while (Date.now() < deadline) {
+    if (await answers('127.0.0.1', Number(port))) break
+    await new Promise((r) => setTimeout(r, 1000))
+  }
+  for (const route of ['/', ...warm]) {
+    const started = Date.now()
+    try {
+      const r = await fetch(`${SITE}${route.startsWith('/') ? route : `/${route}`}`, {
+        redirect: 'manual',
+        signal: AbortSignal.timeout(5 * 60_000),
+      })
+      console.log(`  ~ warmed ${route} (${r.status}, ${Math.round((Date.now() - started) / 1000)} s)`)
+    } catch (e) {
+      console.warn(`! warming ${route} failed: ${(e as Error).message}`)
+    }
+  }
+  console.log(`QA ready: ${SITE}`)
+}
+
 // Never returns: the script lives as long as the server does.
 async function startServer(base: NodeJS.ProcessEnv): Promise<never> {
-  const env = { ...base, ASTRO_DEV_BACKGROUND: '0', ASTRO_PREVIEW_BACKGROUND: '0' }
+  const env: NodeJS.ProcessEnv = { ...base, ASTRO_DEV_BACKGROUND: '0', ASTRO_PREVIEW_BACKGROUND: '0' }
+  // The app's own URL (emailRedirectTo, absolute links) is this server, not production's.
+  for (const prefix of ['', 'NEXT_PUBLIC_', 'PUBLIC_', 'VITE_']) env[`${prefix}SITE_URL`] = SITE
+  env.BETTER_AUTH_URL = SITE
   let script = 'dev'
   if (preview) {
     script = pkgScripts.preview ? 'preview' : 'start'
@@ -279,6 +409,7 @@ async function startServer(base: NodeJS.ProcessEnv): Promise<never> {
     stopAll()
     process.exit(code ?? 0)
   })
+  await warmUp()
   return new Promise<never>(() => {})
 }
 
@@ -366,17 +497,6 @@ if (firebaseJson?.emulators && !existsSync('supabase/config.toml')) {
   const owner = { Authorization: 'Bearer owner', 'Content-Type': 'application/json' }
   const authApi = `http://${AUTH}/identitytoolkit.googleapis.com/v1/projects/${FIREBASE_QA_PROJECT}`
 
-  async function assignRoleFirebase(uid: string, email: string, role: string): Promise<void> {
-    // The role already goes as a custom claim (`role`). If your project keeps it in a
-    // Firestore document instead, write it here with the emulator's REST API, e.g.:
-    //   if (role === 'admin') await fetch(`http://${FIRESTORE}/v1/projects/${FIREBASE_QA_PROJECT}` +
-    //     `/databases/(default)/documents/admins/${uid}`, { method: 'PATCH', headers: owner,
-    //     body: JSON.stringify({ fields: { email: { stringValue: email } } }) })
-    void uid
-    void email
-    void role
-  }
-
   for (const a of accounts) {
     if (!a.email || !a.password) {
       console.warn(`! role ${a.role}: email or password missing in .env.test.local; skipped`)
@@ -394,7 +514,12 @@ if (firebaseJson?.emulators && !existsSync('supabase/config.toml')) {
         headers: owner,
         body: JSON.stringify({ localId: body.localId, customAttributes: JSON.stringify({ role: a.role }) }),
       })
-      await assignRoleFirebase(body.localId, a.email, a.role)
+      // The role already goes as a custom claim; a Firestore document → scripts/qa-roles.ts.
+      await roles.assignRoleFirebase?.(body.localId, a.email, a.role, {
+        firestore: FIRESTORE,
+        project: FIREBASE_QA_PROJECT,
+        headers: owner,
+      })
       console.log(`  + test account: role ${a.role}`)
     } else if (body.error?.message === 'EMAIL_EXISTS') {
       console.log(`  = test account: role ${a.role} (already existed)`)
@@ -437,31 +562,18 @@ if (uncovered.length) {
 
 // 2. Local stack and a clean database.
 console.log('… supabase start (the first time it downloads the images: minutes)')
-supabase(['start'], { retry: true })
+supabaseStart()
 if (reset) {
   console.log('… supabase db reset (migrations + seed; minutes)')
-  supabase(['db', 'reset'], { live: true })
+  supabaseReset()
 }
 const status = JSON.parse(supabase(['status', '-o', 'json'])) as Record<string, string>
 const api = status.API_URL
 const serviceKey = status.SERVICE_ROLE_KEY
 if (!api || !serviceKey) abort('supabase status did not return API_URL / SERVICE_ROLE_KEY')
 
-// 3. Test accounts.
-async function assignRole(id: string, role: string): Promise<void> {
-  // By default the role already goes into app_metadata when the account is created. If your
-  // project keeps it in a table, upsert it here with the local REST API, e.g.:
-  //   await fetch(`${api}/rest/v1/profiles`, { method: 'POST', headers: { ...headers,
-  //     Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify({ id, role }) })
-  // If access depends on a subscription or a plan (without it, the user only sees the
-  // paywall), give the test account of the role that needs it access here, e.g.:
-  //   if (role === 'user') await fetch(`${api}/rest/v1/subscriptions`, { method: 'POST',
-  //     headers, body: JSON.stringify({ user_id: id, plan: 'pro', status: 'active' }) })
-  // If the role is decided by a list of emails in a variable, it is not here: ROLE_BY_ENV.
-  void id
-  void role
-}
-
+// 3. Test accounts, through the admin API and already confirmed: a repro that signs up and
+// expects a session at once depends on enable_confirmations = false (melao).
 const headers = {
   apikey: serviceKey,
   Authorization: `Bearer ${serviceKey}`,
@@ -484,7 +596,8 @@ for (const a of accounts) {
   })
   if (r.ok) {
     const { id } = (await r.json()) as { id: string }
-    await assignRole(id, a.role)
+    // The role already goes in app_metadata; a table or a subscription → scripts/qa-roles.ts.
+    await roles.assignRole?.(id, a.role, { api, headers })
     console.log(`  + test account: role ${a.role}`)
   } else if (r.status === 422 && !reset) {
     console.log(`  = test account: role ${a.role} (already existed)`)

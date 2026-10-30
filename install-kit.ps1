@@ -15,6 +15,8 @@
   with it: a Claude Code cloud session only loads what is in the repo, never ~\.claude\.
   No web-agent-kit.json there: the project's .kit-version says which version its copy is.
 
+  In both cases the kit's reference\ goes to <target>\kit-reference\: the skills cite it.
+
   At the end it writes ~\.claude\web-agent-kit.json with this clone's path and the installed
   version: the kit-update skill reads it to compare with the kit's published version.
 
@@ -64,9 +66,17 @@ foreach ($agent in Get-ChildItem (Join-Path $kit '.claude\agents') -Filter '*.md
   Write-Host "  + agent  $($agent.BaseName)"
 }
 
+# The skills cite "the kit's reference/..."; without a copy next to them a project (or a
+# worker in a pool slot) could not open it and guessed (melao: models picked by eye because
+# TOKEN-ECONOMY.md was unreachable).
+$ref = Join-Path $target 'kit-reference'
+if (Test-Path $ref) { Remove-Item $ref -Recurse -Force }
+Copy-Item (Join-Path $kit 'reference') $ref -Recurse
+Write-Host "  + kit-reference (the kit's reference/)"
+
 if ($Project) {
   Write-Host ''
-  Write-Host "Done. Commit $target\skills and $target\agents with the project." -ForegroundColor Green
+  Write-Host "Done. Commit $target\skills, $target\agents and $target\kit-reference with the project." -ForegroundColor Green
   return
 }
 

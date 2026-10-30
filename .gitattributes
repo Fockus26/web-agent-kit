@@ -1,2 +1,3 @@
 * text=auto
 *.sh text eol=lf
+reference/vps/* text eol=lf

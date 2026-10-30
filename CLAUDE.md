@@ -46,7 +46,7 @@ It arrives in two ways, both from a project's `context/KIT_FEEDBACK.md`:
 
 ## Rules when editing the kit
 
-- What a project's agent **always** reads (`CLAUDE.md.template` ≤ 8 KB, `CURRENT_PHASE` ≤ 60
+- What a project's agent **always** reads (`CLAUDE.md.template` ≤ 7 KB, `CURRENT_PHASE` ≤ 60
   lines) is kept short: the long material goes to `reference/` and is cited.
 - Every change an existing project needs to apply **has** its entry in `UPDATES.md`;
   otherwise old projects fall behind without knowing.

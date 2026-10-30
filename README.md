@@ -267,8 +267,8 @@ web-agent-kit/
 ├── UPDATES.md                     what changed in each version and the steps to migrate a project
 ├── CLAUDE.md                      how the kit is maintained (processing feedback, versioning)
 ├── feedback/                      the projects' reports (kit-feedback PRs); goes to no project
-├── CLAUDE.md.template             goes to each project's root (≤ 8 KB: a map, not a manual)
-├── install-kit.ps1 / .sh          installs or reinstalls skills and agents in ~/.claude/ (-Pull: git pull first)
+├── CLAUDE.md.template             goes to each project's root (≤ 7 KB: a map, not a manual)
+├── install-kit.ps1 / .sh          installs or reinstalls skills, agents and reference/ (→ kit-reference/) in ~/.claude/ (-Pull: git pull first)
 │                                    and leaves ~/.claude/web-agent-kit.json (path + version) for kit-update;
 │                                    -Project <path>: into that project's .claude/ (cloud sessions)
 ├── new-project.ps1                creates the app and copies the kit (-Existing: adds what is missing;
@@ -291,6 +291,7 @@ web-agent-kit/
 ├── sections-template/             content brief, one per section
 ├── github-templates/              → copied as .github/ (PR template, CI and release.yml)
 ├── changeset-templates/           → copied as .changeset/ (version and CHANGELOG without conflicts)
+├── patterns/                      shadcn registry: kit-fields, kit-form, kit-submit-guard (bunx shadcn add …/r/<item>.json)
 └── reference/
     ├── STACK-NEXTJS.md            Next.js + bun + Context7 + conventions
     ├── UI-LIBRARIES.md            shadcn/ui · Hero UI · MUI — criteria and what changes
@@ -300,6 +301,12 @@ web-agent-kit/
     ├── BRAND-ASSETS.md            logo, icon, favicon, touch icon, OG: what is asked and what is generated
     ├── EMAIL-TEMPLATES.md         the app's emails: catalog, design constraints, React Email, Supabase, Firebase, provider
     ├── DEPLOY.md                  GitHub repo, Vercel deployment (or adopting one) and where the environment variables live
+    ├── PATTERNS.md                solved patterns: validation modes, submit guard, fluid type, list states, auth criteria
+    ├── PAYMENTS.md                payment methods: what the client provides, costs, sandbox, integration
+    ├── STACK-WORDPRESS.md         WordPress projects: code in a site plugin in git, wp-env, deploy via staging
+    ├── VPS-POSTGRES.md            César's central Postgres on the VPS: setup once, kit-db, backups, no passwords typed
+    ├── MIGRATE-TO-VPS.md          moving a finished project off Supabase/Firebase: Drizzle + Better Auth + own emails
+    ├── vps/                       bootstrap.sh + kit-db (run on the VPS)
     ├── claude/settings.json       → .claude/settings.json: SessionStart hook that runs cloud-setup.sh
     └── scripts/
         ├── design-qa.ts           Playwright sweep (with node)
@@ -307,7 +314,10 @@ web-agent-kit/
         ├── pr-screenshots.ts      → scripts/: PR screenshots (with node)
         ├── publish-pr-shots.sh    → scripts/: uploads them to the pr-shots branch
         ├── qa-local.ts            → scripts/: QA server against local Supabase (Docker) or Firebase emulators, with test accounts
+        ├── qa-roles.ts            → scripts/ (copied once, never replaced): the project's role logic for qa-local
+        ├── run-on-main.sh         → scripts/: runs a repro on a temporary worktree of origin/main (FAIL half of FAIL → PASS)
         ├── context-backup.sh      → scripts/: local context/ ↔ the context-state branch
+        ├── vps-env.ts             → scripts/ (only when migrating): DATABASE_URL/DIRECT_URL from the VPS into .env.local
         └── cloud-setup.sh         → scripts/: cloud session start (bun install + context:restore; local: nothing)
 ```
 
@@ -347,7 +357,7 @@ Details in `reference/TOKEN-ECONOMY.md`. What weighs most:
 | Rule | Why |
 |---|---|
 | **Reading by levels:** always `CLAUDE.md` + `CURRENT_PHASE.md`; the rest per task or with `grep` | "Read these 5 files before starting" cost ~20,000 tokens per session in the first real project |
-| **Caps:** `CLAUDE.md` ≤ 8 KB, `CURRENT_PHASE.md` ≤ 60 lines, indexes with one-line rows | What is always read is always paid for; what is closed goes to `PHASE_LOG/<branch>.md` |
+| **Caps:** `CLAUDE.md` ≤ 8 KB (template ≤ 7 KB), `CURRENT_PHASE.md` ≤ 60 lines, indexes with one-line rows | What is always read is always paid for; what is closed goes to `PHASE_LOG/<branch>.md` |
 | **Affected tests in the loop, all of them in CI** (`test:related`, `--dots`) | Less time and less output while iterating, without losing the safety net |
 | **Screenshots to disk, not to the context** | They are for whoever reviews the PR; the agent verifies by measuring the DOM |
 | **Subagents for what is noisy**, with prompts that bring paths and lines | Their noise stays in their context; they start cold, so the prompt gives the minimal sufficient context |
@@ -367,6 +377,27 @@ And the way back: each project logs in `context/KIT_FEEDBACK.md` what César had
 or repeat and what the kit did not cover. `/kit-feedback` uploads it to this repo as a PR
 (`feedback/`, `kit-feedback` label); in a session opened here, "revisa el feedback" triages
 all the PRs together (`CLAUDE.md` says how).
+
+### 3.15.0 (César's ideas)
+
+| Before | Now |
+|---|---|
+| Every form, submit guard, list and auth screen rebuilt per project | `reference/PATTERNS.md` (recipes) + `patterns/` registry installed with `bunx shadcn add` |
+| Supabase/Firebase forever | A finished project can move to César's VPS Postgres (`MIGRATE-TO-VPS.md`); the server is set up once with `reference/vps/` and no password is ever typed |
+| No WordPress path | `reference/STACK-WORDPRESS.md`: code in git, local copy with wp-env, staging first |
+| Payment requirements looked up again each project | `reference/PAYMENTS.md`, read at kickoff |
+| `bunx` for CLIs installed globally | `bunx` only for one-offs; global `vercel`/`supabase`/`gh` by name |
+
+### 3.15.0 (melao's feedback)
+
+| Before | Now |
+|---|---|
+| Email links from local Auth went to 127.0.0.1:3000 or production (×5) | `qa:local` sets `site_url`, redirects and `SITE_URL` to the QA server, warms the routes and prints `QA ready` |
+| Role logic inside `qa-local.ts`, lost on every update | `scripts/qa-roles.ts`, never replaced |
+| Skills cited the kit's `reference/`, which was not installed | `~/.claude/kit-reference/` (and `.claude/kit-reference/` in the project) |
+| `CLAUDE.md.template` at 8.35 KB, over its cap | ≤ 7 KB, 1 KB for the project; a step that adds a line says which one it replaces |
+| FAIL on `main` proven by patching the slot | `scripts/run-on-main.sh` |
+| Copied scripts in CRLF, Biome failing | `new-project` / `kit-update` write LF and format with the project's Biome |
 
 ### 3.14.0 (César's feedback)
 
