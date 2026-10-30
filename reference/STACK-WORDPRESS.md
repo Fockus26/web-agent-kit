@@ -64,9 +64,9 @@ prefers it, but an agent cannot drive it.
 }
 ```
 
-- `bun x @wordpress/env start` → `http://localhost:8888` (user `admin` / `password`, local
+- `bunx @wordpress/env start` → `http://localhost:8888` (user `admin` / `password`, local
   only). `--update` after changing the config. WP-CLI:
-  `bun x @wordpress/env run cli wp <command>`.
+  `bunx @wordpress/env run cli wp <command>`.
 - `core` and `phpVersion` match production (`wp core version` and the host's PHP): a local
   copy on another version hides the bugs that matter.
 - The third-party plugins production uses, at the same versions, in `plugins` (slug from

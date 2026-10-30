@@ -128,5 +128,17 @@ a planned operation with `pg_upgradecluster`, never automatic.
 Supabase: a local Postgres in Docker (`docker run -d --name <project>-pg -e
 POSTGRES_PASSWORD=postgres -p 54329:5432 postgres:17`), `drizzle-kit migrate` and the seed
 against it. `qa-local.ts` does not support this stack yet (it starts Supabase or the
-Firebase emulators): the first migrated project adapts it and reports it through
-`/kit-feedback`.
+Firebase emulators). **world-flags is the first project to migrate** (César, 2026-10-30): its
+migration adds a third backend to its `scripts/qa-local.ts` and sends it through
+`/kit-feedback` so it enters the kit. What it needs, so the migration does not improvise it:
+
+- Detection: `drizzle.config.*` and neither `supabase/config.toml` nor Firebase emulators.
+- A Postgres 17 container per project (`qa-<package name>-pg`, reused if running, a free
+  port), a database dropped and recreated on each run unless `--no-reset`, then the project's
+  migrate script (`db:migrate`) and seed with `DATABASE_URL`/`DIRECT_URL` pointing at it.
+- Safety: abort if any `.env*` URL points at the VPS host (`KIT_VPS_HOST`, or `:6432`) and is
+  not overridden — the same rule as `*.supabase.co`.
+- Accounts: after `QA ready`, Better Auth's sign-up endpoint for each `.env.test.local` pair,
+  then `email_verified = true` and the role by SQL in the container (`docker exec … psql`);
+  the role logic in `scripts/qa-roles.ts` like the other backends.
+- Emails to Mailpit (a second container), with the app's SMTP variables pointing at it.

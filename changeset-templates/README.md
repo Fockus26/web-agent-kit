@@ -19,4 +19,4 @@ Ahora puedes repetir una combinación desde el historial.
   "chore(release): versión" PR open that gathers the changesets, bumps the version and writes
   the CHANGELOG. A version is published when that PR is merged.
 
-`bun x changeset` does the same with questions; agents write the file by hand.
+`bunx changeset` does the same with questions; agents write the file by hand.

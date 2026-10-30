@@ -125,7 +125,7 @@ Before even mentioning a commit:
 2. **If the unit closed a section with content, a page, or initialized the repo:** the
    `seo` skill must already have run.
 3. `bun run build` (or the project's build command) passes with no errors.
-4. `bun x tsc --noEmit` and the linter pass, if the project has them configured.
+4. `bunx tsc --noEmit` and the linter pass, if the project has them configured.
 5. **Tests:** during the work `bun run test:related` was enough; here goes the full suite
    (`bun run test`, with `--dots`). CI runs it again on the PR.
 5b. **Closing QA — only for risk**, outside a wave of `orchestrate` (which has its own
@@ -207,7 +207,7 @@ not have the script yet, say so; `/kit-update` adds it.
 
 #### 2.1.3 Changesets: version and CHANGELOG without conflicts
 
-`bun x changeset` asks questions and is useless for an agent: the file is written by hand.
+`bunx changeset` asks questions and is useless for an agent: the file is written by hand.
 Kebab-case name, descriptive and unique (`.changeset/repeat-combination.md`):
 
 ```md
@@ -228,7 +228,7 @@ When it reaches `main`, the `release.yml` Action opens (or updates) the
 agent edits or merges it. **Before he merges it, the version QA** (`design-qa` +
 `functional-qa` over what changed since the last one, `phases-templates/09-QA-FINAL.md`):
 when the PR appears, remind him in one line if it has not run. In `local` mode there is no Action: when César asks to publish,
-`bun x --bun changeset version` on the base, and the `chore(release): version` commit goes
+`bunx --bun changeset version` on the base, and the `chore(release): version` commit goes
 through the approval pause like any other.
 
 #### Migrating an existing project to Changesets

@@ -150,17 +150,23 @@ happened: a project on 3.5.0 without `test:related` or `shots`, because it start
 
 | Piece | How |
 |---|---|
-| `package.json` scripts: `test`, `test:related`, `shots`, `shots:publish`, `qa:local`, `context:backup`, `context:restore`, and their files in `scripts/` | `package.json` and `ls scripts/` |
+| `package.json` scripts: `test`, `test:related`, `shots`, `shots:publish`, `qa:local`, `context:backup`, `context:restore`, and their files in `scripts/` (plus `scripts/qa-roles.ts`, the project's part of `qa:local`: added if missing, **never replaced**) | `package.json` and `ls scripts/` |
 | devDependencies: `@types/bun`, `@playwright/test`, `@axe-core/playwright` (and `@changesets/cli` if versioned) | `package.json` |
 | `.gitignore` with `.pr-shots`, `.env*.local` (or `.env*`) and `.claude/worktrees/` | `git check-ignore -q <path>` |
 | **`.gitignore` does NOT ignore** `supabase/` (except `.temp/`, `.branches/`) or the fixed documents of `context/` (`PROJECT_CONTEXT`, `DESIGN_RULES`, `COLORS`, `DESIGN_TOKENS`, `TYPOGRAPHY`, `decisions/`) | `git check-ignore -v supabase/migrations context/PROJECT_CONTEXT.md context/decisions` |
 | `biome.json` (if any) excludes `.claude/worktrees` | `files.includes` / `files.ignore` |
-| `CLAUDE.md` ≤ 8 KB | `wc -c CLAUDE.md` |
+| `CLAUDE.md` ≤ 8 KB (the template is ≤ 7 KB; the rest is the project's) | `wc -c CLAUDE.md` |
+| The kit's `reference/` next to the skills: `.claude/kit-reference/` in the project copy (and `~/.claude/kit-reference/` on the machine) | `ls .claude/kit-reference/TOKEN-ECONOMY.md` |
 | Kit copy for cloud sessions: `.claude/skills/<each kit skill>` and `.claude/agents/<each kit agent>`, equal to `<kit>`'s, not gitignored | `diff -rq "<kit>/.claude/skills/<name>" .claude/skills/<name>` per kit skill (and agents); `git check-ignore -q .claude/skills` |
 | `.claude/settings.json` with the `SessionStart` hook to `scripts/cloud-setup.sh`, and the script | `grep cloud-setup .claude/settings.json`; `ls scripts/cloud-setup.sh` |
 | Backup of the local `context/` on the remote | `git ls-remote --heads origin context-state` |
 | **Nested subprojects** (a `package.json` below the root: `bot/`, `functions/`) are installed and checked in CI | `git ls-files '*/package.json' \| grep -v node_modules`; for each: does `<dir>/node_modules` exist, does its typecheck pass, and does `.github/workflows/ci.yml` run its install + typecheck + tests (the commented job in `<kit>/github-templates/workflows/ci.yml`) |
 | Firebase project: `firebase.json` with `emulators`, an `emulators` script with `--project demo-*`, Java available | `grep -q emulators firebase.json`; `java -version` |
+
+A kit script replaced by a version's step (`scripts/qa-local.ts`, `pr-screenshots.ts`…) is
+copied, then converted to LF and formatted with the project's Biome (`bunx biome check
+--write <files>`), in the same commit: copied as is, it arrived in CRLF and with the kit's
+style, Biome failed and `git status` showed it modified with no diff (melao).
 
 What is missing is added with the kit's own script, which only adds what does not exist and
 overwrites nothing: `pwsh -File "<kit>/new-project.ps1" -Path . -OnlyPieces` (plus

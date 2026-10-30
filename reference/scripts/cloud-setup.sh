@@ -36,7 +36,7 @@ if [ -n "${VERCEL_TOKEN:-}" ] && [ -n "${VERCEL_PROJECT_ID:-}" ] && [ -n "${VERC
   env_file="${VERCEL_ENV_FILE:-.env.local}"
   if [ -e "$env_file" ]; then
     echo "cloud-setup: $env_file already exists, left as is"
-  elif bun x vercel@latest env pull "$env_file" --yes --environment=development \
+  elif bunx vercel@latest env pull "$env_file" --yes --environment=development \
       --token="$VERCEL_TOKEN" >/dev/null 2>&1; then
     echo "cloud-setup: env pull ok -> $env_file ($(grep -cE '^[A-Z0-9_]+=' "$env_file") variables)"
   else

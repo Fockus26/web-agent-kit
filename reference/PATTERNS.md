@@ -23,7 +23,7 @@ that, freezing it in code freezes a first guess.
 ## Installing from the registry
 
 ```bash
-bun x shadcn@latest add <kit>/patterns/r/kit-fields.json <kit>/patterns/r/kit-form.json <kit>/patterns/r/kit-submit-guard.json
+bunx shadcn@latest add <kit>/patterns/r/kit-fields.json <kit>/patterns/r/kit-form.json <kit>/patterns/r/kit-submit-guard.json
 ```
 
 - `<kit>` is the kit clone's path (`path` in `~/.claude/web-agent-kit.json`), **written as
@@ -44,7 +44,7 @@ bun x shadcn@latest add <kit>/patterns/r/kit-fields.json <kit>/patterns/r/kit-fo
 | `kit-submit-guard` | `hooks/use-submit-guard.ts` | `useSubmitGuard(action)`: one submit at a time (blocked synchronously, before React re-renders) and one idempotency key per operation, kept across retries |
 
 **Changing the registry (kit maintenance):** edit `patterns/registry/kit/`, rebuild with
-`bun x shadcn@latest build -o r` inside `patterns/`, install the items into a scratch
+`bunx shadcn@latest build -o r` inside `patterns/`, install the items into a scratch
 project and typecheck a usage before committing. `r/` is committed: projects install from
 it without building.
 

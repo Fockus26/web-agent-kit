@@ -66,7 +66,8 @@ svc() { # svc start|reload postgresql|pgbouncer
 
 echo "== Packages"
 apt-get update -qq
-apt-get install -y -qq curl ca-certificates gnupg lsb-release openssl postgresql-common procps >/dev/null
+# cron: minimal images (and some VPS templates) come without it; the daily backup is a cron.d file.
+apt-get install -y -qq curl ca-certificates gnupg lsb-release openssl postgresql-common procps cron >/dev/null
 # PGDG repo: the distro's Postgres/PgBouncer can be years old; auth_dbname and
 # max_prepared_statements need PgBouncer >= 1.21.
 [ -f /etc/apt/sources.list.d/pgdg.list ] || [ -f /etc/apt/sources.list.d/pgdg.sources ] ||
@@ -117,7 +118,6 @@ REVOKE ALL ON FUNCTION pgbouncer.get_auth(text) FROM PUBLIC;
 GRANT USAGE ON SCHEMA pgbouncer TO pgbouncer_auth;
 GRANT EXECUTE ON FUNCTION pgbouncer.get_auth(text) TO pgbouncer_auth;
 SQL
-AUTH_SECRET=$(psql_su "-d postgres -c \"SELECT rolpassword FROM pg_authid WHERE rolname = 'pgbouncer_auth'\"")
 
 echo "== TLS certificate"
 TLS=/etc/pgbouncer/tls
@@ -149,8 +149,12 @@ else
 fi
 
 echo "== PgBouncer :6432"
+# The auth role's password in clear (the file is postgres-only, 600): PgBouncer logs in to
+# Postgres as it to run auth_query, and with its SCRAM secret here instead the login failed
+# with "server login failed: wrong password type" (found in the Docker test, 2026-10-30). The
+# project roles' SCRAM secrets come from auth_query and only ever authenticate clients.
 cat > /etc/pgbouncer/userlist.txt <<EOF
-"pgbouncer_auth" "$AUTH_SECRET"
+"pgbouncer_auth" "$AUTH_PW"
 EOF
 chown postgres:postgres /etc/pgbouncer/userlist.txt; chmod 600 /etc/pgbouncer/userlist.txt
 cat > /etc/pgbouncer/pgbouncer.ini <<EOF

@@ -283,7 +283,7 @@ Leave the scripts and their configuration ready:
 .claude/worktrees/
 ```
 
-`shots` needs `@playwright/test` (`bun add -d @playwright/test && bun x playwright install
+`shots` needs `@playwright/test` (`bun add -d @playwright/test && bunx playwright install
 chromium`) and Node ≥ 23.6; it runs with `node` on purpose (Playwright under Bun hangs on
 Windows).
 

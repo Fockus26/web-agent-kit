@@ -52,8 +52,8 @@ bun add <package>
 bun add -d <dev-package>
 bun dev
 bun run build
-bun x tsc --noEmit
-bun x shadcn@latest add button card dialog   # only if the project uses shadcn/ui
+bunx tsc --noEmit
+bunx shadcn@latest add button card dialog   # only if the project uses shadcn/ui
 ```
 
 ### Context7 for documentation

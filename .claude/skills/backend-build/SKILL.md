@@ -184,7 +184,7 @@ a database:
 - **Data the client re-uploads** (caches, rankings, synced progress) is not cleaned on the
   server alone: the old, cached client re-uploads it. The new client must invalidate it (a
   version mark the merge respects) and new keys are needed where old clients do not write.
-- `bun` for everything: `bun add`, `bun run`, `bun x <cli>` (never `bunx`); `vercel`,
+- `bun` for everything: `bun add`, `bun run`, `bunx <cli>`; `vercel`,
   `supabase` and `gh` are global and called by name (`reference/STACK-NEXTJS.md` › bun).
 
 ---

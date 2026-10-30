@@ -8,7 +8,10 @@ description: Batch and phase orchestrator. Use it when César arrives with a lis
 You plan; the workers execute. Your expensive work (reading code, deciding groupings,
 writing precise prompts) happens **once**; each worker starts cold and reads only what its
 prompt points to. That is why you run at high effort and they at medium (see
-`reference/TOKEN-ECONOMY.md` §11-12).
+`reference/TOKEN-ECONOMY.md` §11-12). The kit's `reference/` is installed next to the skills:
+`~/.claude/kit-reference/` (or `.claude/kit-reference/` in the project). Open the §12 table
+there before assigning models; never assign them by eye (melao: a unit with an RLS migration
+ended on `sonnet` because the file was not found).
 
 **Language:** everything you say to César — questions, the closing summary, PR bodies,
 commit messages — is in Spanish. Projects created before kit 3.8.0 keep their `context/` in
@@ -94,6 +97,12 @@ are about to ask:
   classes that `cn` already resolves are not a bug).
 - **Is there an image involved?** Open it before proposing its `alt` or its text: an alt
   written without seeing it describes nothing.
+- **Does it change tokens?** Read the CSS the build generates (`.next/static/css`, `dist/`),
+  not the framework's documented default: a prompt said "spacing is already rem" from
+  Tailwind's default while the generated CSS emitted `--spacing: 4px` (melao).
+- **Does the test you will ask for run on that code?** A PGlite test cannot run a query
+  written with the Supabase client. Ask for a test of the equivalent SQL plus a code guard,
+  or move the query to an SQL function that PGlite can call (melao).
 
 Signs that a request is bigger than it looks:
 - It touches stored data or the database (merge, migrations, columns) → needs tests of the
@@ -137,15 +146,25 @@ So that parallel units do not collide, assign each one:
 |---|---|
 | Branch | `feat/ranking-top20` |
 | Range of decision IDs (one file per ID) | D075–D079 |
-| `CONTENT_CHECKLIST` rows | 26–27 |
+| `CONTENT_CHECKLIST` rows — only for a unit that brings new placeholder copy | 26–27 (or none) |
 | Changeset bump | `minor` (or `none`) |
-| Range of custom error codes, if the project uses them (SQLSTATE of `raise … using errcode`) | MS010–MS014 |
+| Range of custom error codes, if the project uses them (SQLSTATE of `raise … using errcode`): closed and disjoint per unit, never "F5+" (two units overlapped: melao) | MS010–MS014 |
 | Model · effort (`reference/TOKEN-ECONOMY.md` §12) | `sonnet` · medium |
 | Docker for this unit (local database, containers) | yes / no |
 
+**Two units sharing a shape** (the same table, column, type or event): fix its name and type
+in the brief's "Shared shapes" before launching. Otherwise the second one improvises its own
+(melao).
+
+**Handoff values without a token** (144/136 px, 140 ms): the prompt says beforehand which it
+is — "the nearest existing token" or "new tokens `--x`/`--y`, recorded in a decision". A worker
+cannot ask, and "zero magic values" with no token left it stuck (melao).
+
 **Docker yes/no is decided here**, not left to the worker: "Docker only if the other unit
 finished" could not be followed, since a worker cannot know that (world-flags). At most one
-unit per wave gets "yes" unless they use separate stacks.
+unit per wave gets "yes" unless they use separate stacks. Two local Supabase stacks of the
+same project collide on ports: a fix whose FAIL → PASS needs the local database runs after
+`wave-qa` releases Docker, not while it runs (melao).
 
 **IDs are reserved against `origin/main`**, not against the local folder, which may be
 behind (D186 was reserved by looking at `context/decisions/` without a pull and it already
@@ -304,13 +323,19 @@ With the report:
 - **Critical or High** → a fix unit **in this same wave** (same slots, no new wave or
   session), with the finding's reproduction script in its prompt: the worker runs it on
   `main` (FAIL) and on its branch (PASS) and attaches both to the PR. That closes the
-  finding: **no second QA of the fixes**. The wave closes when those PRs are merged. Why: in
+  finding: **no second QA of the fixes**. The wave closes when those PRs are merged. The FAIL
+  half runs with `bash scripts/run-on-main.sh -- node .qa/repro/<n>.mjs <url>` (a temporary
+  worktree of `origin/main`): proving it by patching the logic back in the slot risked the
+  patch reaching the PR (melao). Why: in
   world-flags each QA opened a wave and each fix got a QA that found more, a loop with no
   end; the owner fixed this rule on 2026-10-22.
 - **A finding that is a class** (several instances of the same defect) → the fix unit
   sweeps the **whole class**: the `grep` pattern from the report over `src/`, every instance
   fixed, and the measuring script left versioned in the repo (`tests/e2e/` or
-  `scripts/qa/`) so later workers run it before their PR. Its prompt says "every component
+  `scripts/qa/`) so later workers run it before their PR. **The measured guard decides, the
+  `grep` is only a hint:** a reflow prompt named the class by grep (`min-w-0`) while the real
+  cause was a grid without `grid-cols-1` and the `min-content` of a button and a fieldset
+  (melao); the worker runs the guard per route and fixes what it measures. Its prompt says "every component
   with this anatomy", never one folder. Why: four QAs in a row found more of the same
   reflow-at-200 % class, because each fix covered only the listed instances (world-flags ×4).
 - **Medium or Low** → `context/plans/backlog.md`.

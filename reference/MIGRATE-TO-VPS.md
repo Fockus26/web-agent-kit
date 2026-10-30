@@ -4,7 +4,9 @@
 production). Projects are built on Supabase or Firebase, as always: the migration is a
 separate, later decision per project, not a stack chosen at kickoff. Why: Supabase/Firebase
 give auth, emails and a local QA stack for free while the project changes every day; once
-it is stable, moving it off the paid tier is a one-time job (César, 2026-10-29).
+it is stable, moving it off the paid tier is a one-time job (César, 2026-10-29). The first
+one is **world-flags** (2026-10-30): it also builds `qa:local`'s Postgres backend
+([`VPS-POSTGRES.md`](./VPS-POSTGRES.md) › Local QA) and reports it with `/kit-feedback`.
 
 The server is [`VPS-POSTGRES.md`](./VPS-POSTGRES.md) (set up once). The result in the
 project: **Drizzle** on Postgres, **Better Auth** for auth (a library inside the app, its
@@ -58,7 +60,7 @@ César before starting**, with the estimate: maybe that project should stay.
 - Better Auth with `drizzleAdapter(db, { provider: 'pg' })` and
   `advanced.database.generateId: 'uuid'`, so the imported ids (Supabase's are UUIDs) stay
   the same and every FK keeps pointing at the same person. Its tables:
-  `bun x @better-auth/cli generate` into the Drizzle schema, then a migration.
+  `bunx @better-auth/cli generate` into the Drizzle schema, then a migration.
 - **Supabase users:** `auth.users` + `auth.identities` → `user` + `account`
   (`providerId: 'credential'`, `password` = `encrypted_password`). Supabase hashes with
   bcrypt and Better Auth with scrypt by default, so `emailAndPassword.password.verify` checks

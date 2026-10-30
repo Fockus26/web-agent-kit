@@ -3,7 +3,7 @@
  *
  * Usage:
  *   bun add -d @playwright/test @axe-core/playwright
- *   bun x playwright install chromium
+ *   bunx playwright install chromium
  *   (the server running, see TOKEN-ECONOMY.md §1)
  *   copy this file to .qa/design-qa.ts in the project, then: node .qa/design-qa.ts
  *
@@ -18,7 +18,9 @@
 
 import { chromium, type Page } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 
 // ── Configuration ────────────────────────────────────────────────────────────
 const BASE = process.env.BASE_URL ?? 'http://localhost:3000'
@@ -130,6 +132,20 @@ async function checkFocusOrder(page: Page, route: string) {
 
 /** Colors outside the palette are not detected here — that is grep on the code. */
 
+/**
+ * A browser whose default font size is `px` (the user's "font size" setting, 16 → 24 is
+ * 150 %): it tests rem-based layouts the way a low-vision user sets them, which zoom does
+ * not. `chromium.launch()` (headless shell) ignores the preference; a persistent context
+ * with the full Chromium (`channel: 'chromium'`) and the preference written to its profile
+ * does apply it (melao). Close it with `await context.close()`.
+ */
+async function browserWithFont(px: number) {
+  const dir = await mkdtemp(join(tmpdir(), 'kit-font-'))
+  await mkdir(join(dir, 'Default'), { recursive: true })
+  await writeFile(join(dir, 'Default', 'Preferences'), JSON.stringify({ webkit: { webprefs: { default_font_size: px } } }))
+  return chromium.launchPersistentContext(dir, { channel: 'chromium', viewport: { width: 1280, height: 900 } })
+}
+
 // ── Sweep ────────────────────────────────────────────────────────────────────
 async function run() {
   await mkdir(OUT, { recursive: true })
@@ -148,6 +164,20 @@ async function run() {
       await checkTapTargets(page, route, width)
       await checkLineLength(page, route, width)
       await ctx.close()
+    }
+
+    // 1b. Browser font at 150 % (24 px), at 1280
+    // Needs the full Chromium (`bunx playwright install chromium`); if it cannot start, the
+    // sweep goes on and the report says this check did not run.
+    try {
+      const big = await browserWithFont(24)
+      const bigPage = await big.newPage()
+      await bigPage.goto(BASE + route, { waitUntil: 'load' })
+      await bigPage.screenshot({ path: `${OUT}/${rs}-font150.png`, fullPage: true })
+      await checkOverflow(bigPage, route, 1280)
+      await big.close()
+    } catch (e) {
+      findings.push({ route, kind: 'font150-not-run', detail: (e as Error).message.split('\n')[0] })
     }
 
     // 2. Color blindness (at 1440)
@@ -229,7 +259,7 @@ async function run() {
   const byRoute = new Map<string, Finding[]>()
   for (const f of findings) {
     if (!byRoute.has(f.route)) byRoute.set(f.route, [])
-    byRoute.get(f.route)!.push(f)
+    byRoute.get(f.route)?.push(f)
   }
 
   let md = `# Design QA — automated evidence\n\n`

@@ -18,8 +18,8 @@ into your repo. Underneath it uses Radix UI (the accessible primitives) and Tail
 styles).
 
 ```bash
-bun x shadcn@latest init
-bun x shadcn@latest add button card dialog
+bunx shadcn@latest init
+bunx shadcn@latest add button card dialog
 # → components/ui/button.tsx appears in YOUR repo, yours to edit
 ```
 
@@ -96,7 +96,7 @@ where the catalog saves weeks and the Material look is not a problem.
 |---|---|---|---|
 | **Styles** | Tailwind | Tailwind | `sx` / `styled` — **no Tailwind** |
 | **Tokens live in** | `tailwind.config` / `@theme` | Hero UI's theme plugin + Tailwind | MUI's `createTheme()` |
-| **Installing a component** | `bun x shadcn@latest add <x>` | already in the package | already in the package |
+| **Installing a component** | `bunx shadcn@latest add <x>` | already in the package | already in the package |
 | **Customizing** | you edit the file, it is yours | `classNames` and theme variants | `sx`, `styled()`, the theme's `components` |
 | **Before creating your own** | check whether shadcn has it | check Hero UI's catalog | check MUI's catalog |
 | **Dark mode** | Tailwind's `dark` class | Hero UI's `ThemeProvider` | MUI's `colorSchemes` |

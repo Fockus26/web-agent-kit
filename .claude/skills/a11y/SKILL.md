@@ -86,8 +86,12 @@ axe is more precise for accessibility; Lighthouse adds the **Best Practices** ca
 a number you can compare over time. Run the production build, not `dev`.
 
 ```bash
-bun add -d lighthouse chrome-launcher   # if missing
+bun add -d lighthouse chrome-launcher   # if missing — not in a pool worker (below)
 ```
+
+A worker in a pool slot does not add dependencies: if `lighthouse` is not in
+`package.json`, skip this subsection and write "Lighthouse: not run, not installed" in the
+report (melao). `/kit-update` or César adds it.
 
 ```ts
 // .qa/lighthouse.ts — run with `node`, not `bun` (Lighthouse launches real Chrome)

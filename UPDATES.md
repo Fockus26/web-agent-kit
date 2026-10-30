@@ -37,13 +37,13 @@ other, the agent shows them and asks before choosing.
 
 ---
 
-## 3.15.0 — 2026-10-29 · Solved patterns, VPS Postgres, WordPress, payment methods
+## 3.15.0 — 2026-10-30 · Solved patterns, VPS Postgres, WordPress, payment methods, melao's feedback
 
 **What changed**
 
 - **`reference/PATTERNS.md` + the `patterns/` registry.** The pieces every site repeats,
   built once: the logic fixed, the design the project's. Registry items (installed with
-  `bun x shadcn@latest add <kit>/patterns/r/<item>.json`, path relative to the project):
+  `bunx shadcn@latest add <kit>/patterns/r/<item>.json`, path relative to the project):
   `kit-fields` (Zod fields with the QA-PREVENTION rules), `kit-form` (`useKitForm`: validate
   on submit, or live with a delay before errors show), `kit-submit-guard` (no double
   submit, one idempotency key per operation). Recipes: fluid headings with `clamp()`, the
@@ -65,20 +65,78 @@ other, the agent shows them and asks before choosing.
 - **`reference/PAYMENTS.md`**: Cashea, PayPal, Bancolombia, Binance Pay and Pago Móvil —
   what the client provides, costs, sandbox and how each integrates. The kickoff asks the
   client for the documents in phase 00 (approvals take weeks); `backend-build` cites it.
-- **`bun x`, never `bunx`, and global CLIs by name** (`vercel`, `supabase`, `gh`):
-  every skill, agent, script and guide. Why: `bunx` is not on the PATH of the slots' Git
-  Bash or of pwsh (melao, inversiones-js), and `bun x vercel` downloads another copy instead
-  of using the one with the session.
+- **Global CLIs by name** (`vercel`, `supabase`, `gh`), never through `bunx`: it downloads
+  another copy instead of using the one with the session. `bunx` stays for one-offs and the
+  project's own tools (César fixed `bunx` on the PATH of pwsh and the slots' Git Bash).
+- **VPS bootstrap tested in Docker** (Postgres 17 image, `--test`): create, duplicate and bad
+  names refused, TLS, isolation between databases, `postgres` and non-TLS refused, backup /
+  restore, rotate, `backup --all`, drop. Two fixes from it: `cron` is installed (minimal
+  images lack it), and PgBouncer's auth role goes in its userlist in clear (with its SCRAM
+  secret it could not log in to Postgres: "wrong password type").
+
+**melao's feedback (kit 3.13.0, 2026-10-29)**
+
+- **`qa:local`:** Auth's `site_url` and redirect URLs set to `http://localhost:<port>` and
+  `<prefix>SITE_URL` / `BETTER_AUTH_URL` injected, so email links come back to the QA server
+  (×5); a stack running for another port is restarted keeping its data; `supabase start` up to
+  3 times with `stop` between and the db container's log at the end, `db reset` retried once
+  after stop + start (×3); a warning if `config.toml` turns `enable_confirmations` or
+  `double_confirm_changes` off; `/` and `--warm` routes warmed, then the line `QA ready: …`
+  to wait for (first `GET /` took 178 s). The role logic moves to **`scripts/qa-roles.ts`**,
+  copied once and never replaced (it was re-ported by hand twice).
+- **`pr-screenshots.ts`:** `route` per state (faked responses instead of patching `fetch`),
+  3 attempts, paths warmed first, a warning if `.pr-shots.json` predates the branch's last
+  commit. **`publish-pr-shots.sh`:** its worktree inside `.git` (with `MSYS_NO_PATHCONV=1`
+  git could not resolve `/tmp`) and the push retried when two publishes collide.
+- **`scripts/run-on-main.sh`** (new): runs a repro on a temporary worktree of `origin/main`,
+  for the FAIL half of FAIL → PASS without patching the slot.
+- **`orchestrate`:** brief with the absolute `context/` path, the test runner, "Shared shapes",
+  closed number ranges and error codes per unit, checklist rows only for units with copy,
+  log in `.qa/dev.log`, wait for a log line (no `pgrep`), check the port after stopping,
+  Playwright guards on the production build, `MSYS_NO_PATHCONV=1`, load-only test timeouts,
+  shared media fixtures, `wip` commits + `.qa/progress.md`, `shots` and `shots:publish`
+  apart, missing tools skipped and said. The skill: read the generated CSS for token
+  changes, PGlite vs the Supabase client, tokens for handoff values decided in the prompt,
+  Docker FAIL → PASS after `wave-qa`, the measured guard decides over the grep.
+- **The kit's `reference/` is installed** (`install-kit` → `~/.claude/kit-reference/`, and
+  `.claude/kit-reference/` in the project copy). The skills cited it and a project could not
+  open it (models assigned by eye). `CLAUDE.md.template` says where it is.
+- **`CLAUDE.md.template` ≤ 7 KB** (it was 8.35 KB, over its own 8 KB): 1 KB left for the
+  project's lines. From now on a version step that adds a line to the project's `CLAUDE.md`
+  says which line it replaces or shortens (each version since 3.3.0 only added).
+- **`new-project.ps1`** writes what it copies with LF and formats it with the project's
+  Biome; `kit-update` does the same for scripts it replaces.
+- **QA agents:** `wave-qa` waits for `QA ready`, uses `localhost`, creates accounts through the
+  admin API, knows `kong:8000` signed URLs are a local artifact and the Playwright traps
+  (`aria-disabled` needs `force`, `textContent` includes hidden text); `functional-qa` the
+  same traps; `design-qa` measures with the browser font at 150 % (`browserWithFont`, full
+  Chromium; reported as not run if it cannot start).
+- **`QA-PREVENTION.md`:** `relative overflow-x-auto` for scroll containers, `grid-cols-1` +
+  `min-w-0` for grid columns. **`a11y`:** Lighthouse skipped (and said) when not installed.
+- Specific to melao and left there: the audio generator (only the rule "shared fixture"
+  came in), `tokens.test.ts` itself.
 
 **Steps for a project on 3.14.0**
 
 1. Global pieces: `install-kit.ps1 -Pull` and a new session (skipped in a cloud session).
-   Then refresh the kit copy (`install-kit --project .`): skills and agents changed.
-2. `scripts/cloud-setup.sh`, if the project has it: replace `bunx vercel@latest` with
-   `bun x vercel@latest` (or copy the kit's again: it has no project-specific lines).
-3. `package.json` scripts and the project's `CLAUDE.md`: `bunx <x>` → `bun x <x>`, and
-   `bunx vercel` / `bunx supabase` → `vercel` / `supabase`. No `bunx` anywhere: nothing to do.
-4. Nothing else. The patterns apply from the next form or list built; the VPS migration
+   Then refresh the kit copy (`install-kit --project .`): skills, agents and the new
+   `.claude/kit-reference/` — commit the three.
+2. `scripts/qa-roles.ts`: if missing, copy `<kit>/reference/scripts/qa-roles.ts`. If the
+   project's `qa-local.ts` has its own `assignRole`, `assignRoleFirebase`, `ROLE_BY_ENV` or
+   extra `ENV_MAP` entries, move their bodies into `qa-roles.ts` (same names; extra map
+   entries → `EXTRA_ENV_MAP`).
+3. Replace `scripts/qa-local.ts`, `scripts/pr-screenshots.ts` and
+   `scripts/publish-pr-shots.sh` with the kit's, and add `scripts/run-on-main.sh`; LF and the
+   project's Biome on them (`kit-update` › Piece check). Check: `bun run qa:local -- --port
+   <p> --offline` ends with `QA ready: http://localhost:<p>`.
+4. `.gitignore`: if a root-level `*.log` from QA (`.qa-dev.log`) is there, delete it; logs go
+   to `.qa/`.
+5. The project's `CLAUDE.md`, with no line added (rule above): replace the line `Size
+   budgets: the kit's reference/TOKEN-ECONOMY.md.` (or its Spanish equivalent) with
+   ``The kit's `reference/…` = `~/.claude/kit-reference/…` (or `.claude/kit-reference/…`).``
+   If it has `bun x`, it may stay: same command.
+6. `scripts/cloud-setup.sh`: nothing (it was 3.15.0's draft; the kit's copy is the same).
+7. Nothing else. The patterns apply from the next form or list built; the VPS migration
    only when César asks for it; WordPress and payments are read at the next kickoff.
 
 ---
@@ -778,7 +836,8 @@ Reading by levels, `CURRENT_PHASE.md` with a cap and `PHASE_LOG/`, `pr` mode, `o
 4. **The project's `CLAUDE.md` does not grow without a cap.** A step that adds text to it
    says which old paragraph it replaces; if it is truly new, it is one line that cites the
    detail in the kit. Two projects had to trim their own rules by hand after adding up
-   versions (8.8 KB and 8.1 KB).
+   versions (8.8 KB and 8.1 KB). `CLAUDE.md.template` stays ≤ 7 KB, so the project keeps
+   1 KB of its own (melao).
 5. If a step edits a `context/` file a project may not have (it started short), it says what
    to do if it is missing (usually: create it with only the step's sections).
 6. Steps are written for both kinds of project: new ones (English `context/`) and those

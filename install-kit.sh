@@ -14,6 +14,8 @@
 # session only loads what is in the repo, never ~/.claude/. No web-agent-kit.json there: the
 # project's .kit-version says which version its copy is.
 #
+# In both cases the kit's reference/ goes to <target>/kit-reference/: the skills cite it.
+#
 # Afterwards: a new Claude Code session (skills and agents load at startup).
 set -euo pipefail
 
@@ -50,9 +52,15 @@ for agent in "$kit"/.claude/agents/*.md; do
   echo "  + agent  $(basename "$agent" .md)"
 done
 
+# The skills cite "the kit's reference/..."; without a copy next to them a project (or a
+# worker in a pool slot) could not open it and guessed (melao).
+rm -rf "${target:?}/kit-reference"
+cp -r "$kit/reference" "$target/kit-reference"
+echo "  + kit-reference (the kit's reference/)"
+
 if [[ -n "$project" ]]; then
   echo
-  echo "Done. Commit $target/skills and $target/agents with the project."
+  echo "Done. Commit $target/skills, $target/agents and $target/kit-reference with the project."
   exit 0
 fi
 
