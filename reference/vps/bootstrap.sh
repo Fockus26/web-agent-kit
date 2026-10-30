@@ -78,6 +78,8 @@ if [ "$TEST" = 0 ]; then
 fi
 
 echo "== PostgreSQL $PG (localhost only)"
+# The package creates the `main` cluster; an image or a provider template may not.
+[ -d "/etc/postgresql/$PG/main" ] || pg_createcluster "$PG" main >/dev/null
 CONF_D="/etc/postgresql/$PG/main/conf.d"
 mkdir -p "$CONF_D"
 MEM_MB=$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo)
