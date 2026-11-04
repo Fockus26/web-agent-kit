@@ -26,8 +26,8 @@ It arrives in two ways, both from a project's `context/KIT_FEEDBACK.md`:
    project may be behind; its version is in the report's header), and the concrete change
    proposed. **Consolidated across reports:** the same problem in several projects is one
    row, with the "Times" added up and a "Projects" column. Order by "Times": most repeated
-   first. Flag what is **specific to one project** or to a stack the kit does not cover, and
-   must not be generalized.
+   first. Say where each point goes: a general piece, **one technology**
+   (`reference/tech/<name>.md`), or **specific to one project**, which must not be generalized.
 2. César chooses what goes in. If a point admits several reasonable solutions: 3 options
    with their real advantage and disadvantage.
 3. Implement what was chosen on a branch (`feat/…` or `fix/…`), changing the fewest pieces
@@ -51,6 +51,8 @@ It arrives in two ways, both from a project's `context/KIT_FEEDBACK.md`:
 - Every change an existing project needs to apply **has** its entry in `UPDATES.md`;
   otherwise old projects fall behind without knowing.
 - Every new rule says why it exists (the incident or the measurement that prompted it).
+- What only applies with one technology goes in `reference/tech/<name>.md`, not in a skill or
+  a general guide: a project that does not use it must never read it (`reference/tech/README.md`).
 - Check Context7 before writing code or library APIs in the guides.
 - `new-project.ps1`: test it in a temporary folder (`-Existing` on a minimal `package.json`)
   before calling the change good. Same with the scripts in `reference/scripts/` and

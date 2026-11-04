@@ -33,8 +33,8 @@ descriptions. Site copy in {{Spanish}}. Code and comments: like the code around 
 `grep` the word or ID (`grep -rhi "^# D.*modal" context/decisions/`: decided? don't
 re-litigate it) and open only what comes up.
 
-**The kit's `reference/…`** (cited by skills and agents) = `~/.claude/kit-reference/…`, or
-`.claude/kit-reference/…` when the kit is installed in the project. Not this repo's.
+**The kit's `reference/…`** = `~/.claude/kit-reference/…` (or `.claude/kit-reference/…`).
+**Tech refs:** {{astro, vps-postgres}} → its `tech/<name>.md` when the task touches it; only these.
 
 ---
 
@@ -89,7 +89,7 @@ reviewable in two minutes. One unit = one branch = {{one PR | one local merge}}.
 
 ### What goes in the repo and what is local
 
-In git: `.kit-version`, `supabase/`, and `context/` {{PROJECT_CONTEXT, DESIGN_RULES, COLORS,
+In git: `.kit-version`, {{`supabase/` | `drizzle/`}}, and `context/` {{PROJECT_CONTEXT, DESIGN_RULES, COLORS,
 DESIGN_TOKENS, TYPOGRAPHY, decisions/}}. Local (gitignored, backed up with `context:backup`):
 {{CURRENT_PHASE, CONTENT_CHECKLIST, KIT_FEEDBACK, inventories, PHASE_LOG/, plans/}}.
 `.env.local` comes from `vercel env pull`, never hand-edited. Worktrees (pool slots,

@@ -48,7 +48,8 @@ Then:
 4. Requirements: **bun**, **Node ≥ 23.6** (for the Playwright scripts), **git**, an
    authenticated **gh**, **PowerShell 7** (`pwsh`). If the project uses Supabase: **Docker
    Desktop** running and the **Supabase CLI**; if it uses Firebase: **Java (a JDK)** and
-   `firebase-tools`, no Docker (QA runs against a local database). The `vercel` and
+   `firebase-tools`, no Docker; if it uses Postgres on your VPS: **Docker Desktop** and the
+   `kit-vps` SSH alias (QA runs against a local database). The `vercel` and
    `supabase` CLIs installed globally: the agents call them by name, not through `bunx`.
 
 ### Updating the kit
@@ -357,7 +358,7 @@ Each closing tells you "Fase 04 · ola 2 de 3 cerrada · sigue ola 3"; after the
 next phase follows.
 
 **QA against a local database.** QA never touches the real database. `bun run qa:local`
-starts Supabase in **Docker Desktop** (keep it running), applies `main`'s migrations and seed,
+starts Supabase or Postgres in **Docker Desktop** (keep it running), applies `main`'s migrations and seed,
 creates the test accounts and starts the server pointing at that database. There QA can
 create, break and change whatever it wants: each run starts from scratch, and the emails the
 app sends stay in Mailpit. That is why the local database is **disposable**: keep nothing of
@@ -467,12 +468,13 @@ agents in `.claude/` (the global `~/.claude/` does not exist there). What change
 | `bun run lint` / `bun run format` | Biome |
 | `bun run shots` | Screenshots of the states defined in `.pr-shots.json` (uses node + Playwright) |
 | `bun run shots:publish` | Uploads the screenshots to the `pr-shots` branch; markdown in `.pr-shots/README.md` |
-| `bun run qa:local -- --port <p>` | Server against the local database (Supabase or Firebase emulators) with the test accounts (`--offline` without one, `--preview` for the build) |
+| `bun run qa:local -- --port <p>` | Server against the local database (Supabase, Postgres or Firebase emulators) with the test accounts (`--offline` without one, `--preview` for the build) |
 | `bun run context:backup` | Copies the local `context/` to the `context-state` branch |
 | `bun run context:restore` | Brings it back after losing the folder (never overwrites a local file) |
 | `vercel env pull .env.local --yes` | Brings the environment variables from Vercel (Development) to `.env.local` |
 | `bunx playwright install chromium` | Once per machine, before the first screenshot or audit |
 | `ssh kit-vps kit-db list` | The databases on your VPS (only once you set it up: `reference/VPS-POSTGRES.md`) |
+| `ssh kit-vps kit-db status` | Each database's last backup and the last failures |
 
 Normally you do not run them: the skills do. They are there for when you want to check
 something.
