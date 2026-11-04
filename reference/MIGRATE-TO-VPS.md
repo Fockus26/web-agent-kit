@@ -1,12 +1,9 @@
 # Migrate a finished project to the VPS Postgres
 
-**Only when César asks for it**, and only for a finished project (version QA passed, in
-production). Projects are built on Supabase or Firebase, as always: the migration is a
-separate, later decision per project, not a stack chosen at kickoff. Why: Supabase/Firebase
-give auth, emails and a local QA stack for free while the project changes every day; once
-it is stable, moving it off the paid tier is a one-time job (César, 2026-10-29). The first
-one is **world-flags** (2026-10-30): it also builds `qa:local`'s Postgres backend
-([`VPS-POSTGRES.md`](./VPS-POSTGRES.md) › Local QA) and reports it with `/kit-feedback`.
+**Only when César asks for it.** For a project already on Supabase or Firebase, in production.
+A new project does not migrate: it starts on the VPS (`tech/vps-postgres.md`, which also has the
+environments, migrations and code rules that apply after this move). The first one was
+**world-flags** (2026-11-04).
 
 The server is [`VPS-POSTGRES.md`](./VPS-POSTGRES.md) (set up once). The result in the
 project: **Drizzle** on Postgres, **Better Auth** for auth (a library inside the app, its
@@ -34,7 +31,7 @@ Before estimating, list each service the project touches (grep the code, the das
 | Storage | Cloudflare R2 (10 GB free, S3 API) or the VPS disk behind a route handler. Decide in a decision | Medium |
 | Edge Functions / Cloud Functions | Next route handlers or server actions | Low–medium per function |
 | Realtime / `onSnapshot` | Polling with SWR/React Query, or SSE from a route handler | Medium; often polling is enough |
-| `pg_cron` / scheduled functions | Vercel Cron calling a route protected with `CRON_SECRET` | Low |
+| `pg_cron` / scheduled functions | A timer on the VPS calling a route protected with `CRON_SECRET` (`tech/vps-postgres.md`) | Low |
 | RPC (`supabase.rpc`) | The same SQL function (it moves with the schema) called through Drizzle `sql`, or rewritten as a query | Low |
 
 If the inventory shows Firestore with deep subcollections or heavy Realtime, **say so to
@@ -42,10 +39,9 @@ César before starting**, with the estimate: maybe that project should stay.
 
 ## 2. Database and connection
 
-1. `ssh kit-vps kit-db create <project>` and `bun run vps:env <project>` (copy
-   `reference/scripts/vps-env.ts` to `scripts/`, script `"vps:env"` in `package.json`).
+1. `tech/vps-postgres.md` › Setting it up: the databases, `vps:env`, `drizzle.config.ts`.
 2. Drizzle with `pg` (node-postgres): `DATABASE_URL` for the app (PgBouncer), `DIRECT_URL`
-   for `drizzle-kit` (`drizzle.config.ts` reads `DIRECT_URL`), with the tunnel open.
+   for `drizzle-kit`, with the tunnel open.
 3. **Supabase:** the schema comes from the repo's migrations (`supabase/migrations/`), not
    from a dump of the dashboard: drop what only exists in Supabase (`auth.uid()` in
    defaults and policies, grants to `anon`/`authenticated`, `storage.*`). FKs to
@@ -60,7 +56,7 @@ César before starting**, with the estimate: maybe that project should stay.
 - Better Auth with `drizzleAdapter(db, { provider: 'pg' })` and
   `advanced.database.generateId: 'uuid'`, so the imported ids (Supabase's are UUIDs) stay
   the same and every FK keeps pointing at the same person. Its tables:
-  `bunx @better-auth/cli generate` into the Drizzle schema, then a migration.
+  `bunx auth@latest generate` into the Drizzle schema, then a migration.
 - **Supabase users:** `auth.users` + `auth.identities` → `user` + `account`
   (`providerId: 'credential'`, `password` = `encrypted_password`). Supabase hashes with
   bcrypt and Better Auth with scrypt by default, so `emailAndPassword.password.verify` checks

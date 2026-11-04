@@ -303,9 +303,10 @@ web-agent-kit/
     ├── DEPLOY.md                  GitHub repo, Vercel deployment (or adopting one) and where the environment variables live
     ├── PATTERNS.md                solved patterns: validation modes, submit guard, fluid type, list states, auth criteria
     ├── PAYMENTS.md                payment methods: what the client provides, costs, sandbox, integration
-    ├── STACK-WORDPRESS.md         WordPress projects: code in a site plugin in git, wp-env, deploy via staging
+    ├── tech/                      one file per technology, read only by the projects that use it (README, astro, supabase, firebase, vps-postgres, wordpress)
+    ├── STACK-WORDPRESS.md         forwards to tech/wordpress.md
     ├── VPS-POSTGRES.md            César's central Postgres on the VPS: setup once, kit-db, backups, no passwords typed
-    ├── MIGRATE-TO-VPS.md          moving a finished project off Supabase/Firebase: Drizzle + Better Auth + own emails
+    ├── MIGRATE-TO-VPS.md          moving a project already in production off Supabase/Firebase: Drizzle + Better Auth + own emails
     ├── vps/                       bootstrap.sh + kit-db (run on the VPS)
     ├── claude/settings.json       → .claude/settings.json: SessionStart hook that runs cloud-setup.sh
     └── scripts/
@@ -317,7 +318,7 @@ web-agent-kit/
         ├── qa-roles.ts            → scripts/ (copied once, never replaced): the project's role logic for qa-local
         ├── run-on-main.sh         → scripts/: runs a repro on a temporary worktree of origin/main (FAIL half of FAIL → PASS)
         ├── context-backup.sh      → scripts/: local context/ ↔ the context-state branch
-        ├── vps-env.ts             → scripts/ (only when migrating): DATABASE_URL/DIRECT_URL from the VPS into .env.local
+        ├── vps-env.ts             → scripts/ (projects on the VPS): DATABASE_URL/DIRECT_URL from the VPS into .env.development.local
         └── cloud-setup.sh         → scripts/: cloud session start (bun install + context:restore; local: nothing)
 ```
 
@@ -368,7 +369,7 @@ Details in `reference/TOKEN-ECONOMY.md`. What weighs most:
 
 ## Versions and updating projects
 
-The kit is versioned (`VERSION`, now **3.13.0**) and each project keeps in `.kit-version`
+The kit is versioned (`VERSION`, now **3.16.0**) and each project keeps in `.kit-version`
 which one it is aligned with. To bring it up to date: `/kit-update` in a project session. It
 compares with the published version (`origin/main` of the kit's clone); if behind, it
 computes the path with `UPDATES.md` and applies each version in order, in a PR.
@@ -377,6 +378,16 @@ And the way back: each project logs in `context/KIT_FEEDBACK.md` what César had
 or repeat and what the kit did not cover. `/kit-feedback` uploads it to this repo as a PR
 (`feedback/`, `kit-feedback` label); in a session opened here, "revisa el feedback" triages
 all the PRs together (`CLAUDE.md` says how).
+
+### 3.16.0 (César's ideas)
+
+| Before | Now |
+|---|---|
+| What only applies with one technology, mixed into skills and guides every project reads | `reference/tech/<name>.md`: each project's `CLAUDE.md` names its own in `Tech refs`, and reads only those |
+| The VPS Postgres only for finished projects, through a migration | A backend you choose at kickoff: you develop against it as with Supabase, QA runs in Docker |
+| `qa:local` without Postgres, and able to start against the VPS | Postgres + Mailpit in Docker; it aborts if a variable it does not override points at the VPS |
+| A failed upload stopped the night's backups; nobody knew | Every database is backed up anyway; `kit-db status` shows failures |
+| `--harden-ssh` said "off" with password login still on | `00-kit.conf`, and it reports what `sshd` says |
 
 ### 3.15.0 (César's ideas)
 

@@ -143,13 +143,15 @@ Me faltan estas para armar el plan:
 ### Block D — Technical
 
 13. **Stack** — Next.js (App Router) + TypeScript and **bun** are the kit's default.
-    Confirm or adjust (Astro for a mostly static content site). If there are users or data:
-    **Supabase or Firebase** — both supported; it decides whether local QA needs Docker or
-    Java. See `reference/STACK-NEXTJS.md` ("Astro in the kit", "Backend").
+    Confirm or adjust (Astro for a mostly static content site). If there are users or data,
+    **ask César which backend**: **Postgres on his VPS** (no monthly cost; Drizzle + Better
+    Auth, no dashboard, Storage or Realtime included), **Supabase** or **Firebase**. It
+    decides whether local QA needs Docker or Java. See `reference/STACK-NEXTJS.md` ("Backend").
     **WordPress** if the client already has one, edits content in its admin, or the shop is
-    WooCommerce: `reference/STACK-WORDPRESS.md` (code in a site plugin in git, a local copy
-    with wp-env). The VPS Postgres is **not** a kickoff option: it is a migration César
-    decides when the project is finished (`reference/MIGRATE-TO-VPS.md`).
+    WooCommerce: `reference/tech/wordpress.md` (code in a site plugin in git, a local copy
+    with wp-env).
+    **Tech refs:** what is chosen here goes in `CLAUDE.md`'s `Tech refs` line
+    (`reference/tech/README.md`), so the project only ever reads those.
     **Payments:** for each method the client wants, `reference/PAYMENTS.md` gives what the
     client must provide (to `CONTENT_CHECKLIST.md`, owner: client, asked now because
     approvals take weeks) and its costs (to `PROJECT_CONTEXT.md` § Payments).
@@ -252,7 +254,7 @@ documents and `decisions/` go in git — they are what a new session needs to kn
 decided and how the site looks, and losing the local folder must not lose them. The working
 state is local (parallel workers would collide on it in every PR) and is backed up to the
 `context-state` branch with `bun run context:backup` (`git-flow` §2.1.2). Never ignore the
-whole of `context/`, nor `supabase/` (`backend-build` §2).
+whole of `context/`, nor the schema's folder (`supabase/`, `drizzle/`).
 
 `new-project.ps1` already writes `.kit-version`; if it was not used, create it with the
 content of the kit's `VERSION`. It is what allows updating the project later (`kit-update`

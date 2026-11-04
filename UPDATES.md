@@ -37,6 +37,67 @@ other, the agent shows them and asks before choosing.
 
 ---
 
+## 3.16.0 — 2026-11-04 · Technology references, a project can start on the VPS, VPS fixes
+
+**What changed**
+
+- **`reference/tech/`: one file per technology** (`astro`, `supabase`, `firebase`,
+  `vps-postgres`, `wordpress`), and a `Tech refs` line in the project's `CLAUDE.md` naming its
+  own. What only applied with one technology was spread through skills and guides every project
+  reads (César). This round moves `STACK-NEXTJS`'s Astro section and `backend-build`'s
+  Supabase and Firebase blocks; short mentions remain in the QA agents. `STACK-WORDPRESS.md`
+  forwards to `tech/wordpress.md`.
+- **The VPS Postgres is a kickoff option** (`tech/vps-postgres.md`): you develop against it as
+  with Supabase. It was only a migration for finished projects (César; also world-flags'
+  feedback). `MIGRATE-TO-VPS.md` stays for projects already in production.
+- **`qa-local.ts`: Postgres backend** from world-flags (Postgres + Mailpit in Docker, a database
+  per port, `--postgres`, `--db-only`). It aborts if a variable it does not override points at
+  the VPS, also without `drizzle.config.*`: before this, a project on the VPS started the normal
+  server with the real URL. `warmUp` also looks at `[::1]` (Astro 7 waited 10 minutes), and a
+  failure creating accounts ends with a message instead of an orphaned server.
+- **`vps-env.ts` writes `.env.development.local`**, not `.env.local`, which `vercel env pull`
+  overwrites. Previews get their own database (`<project>_preview`): with the same URL, a PR's
+  preview wrote real data (world-flags).
+- **`kit-db`** (tested in Docker, 2026-11-04): a failed upload stopped the whole nightly run and
+  later databases got no backup; `rclone` missing with a remote set passed in silence; a failed
+  final backup did not stop `drop`; a failed `create` left a role that blocked every retry. New
+  `kit-db status`, the only place a failure shows.
+- **`bootstrap.sh`:** `--harden-ssh` wrote `60-kit.conf`, which loses to cloud images'
+  `50-cloud-init.conf`: password login stayed on while it said "off" (César's VPS). Now
+  `00-kit.conf`, and it reports what `sshd -T` says. Project roles can no longer enter `postgres`
+  or `template1` (a session there blocked `CREATE DATABASE`). A re-run without `--domain` keeps
+  the domain instead of dropping every new URL to `sslmode=no-verify`.
+- `MIGRATE-TO-VPS.md`: Better Auth's CLI is `auth@latest` now (`@better-auth/cli` is being
+  deprecated); a timer on the VPS instead of Vercel Cron.
+
+**Steps for a project on 3.15.0**
+
+1. Global pieces: `install-kit.ps1 -Pull` and a new session (skipped in a cloud session). Then
+   refresh the kit copy (`install-kit --project .`) and commit it.
+2. The project's `CLAUDE.md`, with no line added: replace the line ``The kit's `reference/…` =
+   `~/.claude/kit-reference/…` (or `.claude/kit-reference/…`).`` (or its Spanish equivalent) with
+   the two of `CLAUDE.md.template` (What to read). Fill `Tech refs` with the table's signals in
+   `reference/tech/README.md`. If the project is at its cap, shorten a project line and say which.
+3. Replace `scripts/qa-local.ts` with the kit's (LF and the project's Biome; `kit-update` ›
+   Piece check). In `scripts/qa-roles.ts`, nothing is required. A project on the VPS copies the
+   kit's `assignRolePostgres` there, if it has none. Check: `bun run qa:local -- --port <p>
+   --offline` ends with `QA ready: http://localhost:<p>`.
+4. Only a project on the VPS:
+   - Replace `scripts/vps-env.ts`, run it, and delete `DATABASE_URL` and `DIRECT_URL` from
+     `.env.local` if they were written there by hand.
+   - `drizzle.config.ts` as in `tech/vps-postgres.md`, if `bun run db:generate` needs a database.
+   - **Action for César:** `<project>_preview`, its migrations, and its URL in Vercel's Preview.
+5. Nothing else. A project on Supabase or Firebase does not move.
+
+**Steps for César's VPS (once, not per project)**
+
+From the kit's folder: `scp -r reference/vps kit-vps:/root/kit-vps`, then `ssh kit-vps "bash
+/root/kit-vps/bootstrap.sh --harden-ssh"`. It keeps the domain and every database. Check:
+`ssh kit-vps "sshd -T | grep -i ^passwordauthentication"` says `no`, and `ssh kit-vps kit-db
+status`.
+
+---
+
 ## 3.15.0 — 2026-10-30 · Solved patterns, VPS Postgres, WordPress, payment methods, melao's feedback
 
 **What changed**
