@@ -3,3 +3,5 @@ node_modules/
 Thumbs.db
 .pr-shots/
 .pr-shots.json
+.env*
+!.env.example
