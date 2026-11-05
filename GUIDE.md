@@ -444,7 +444,7 @@ agents in `.claude/` (the global `~/.claude/` does not exist there). What change
   `context-state` branch (public repo, never backed up) it starts without the phase state.
 - **What the cloud does not have:** PowerShell (so no worktree pool: `orchestrate` runs the
   wave's units one after another), Docker (`qa:local --offline`). `.env.local` comes from Vercel
-  if you set up the environment once (`reference/DEPLOY.md` §2d): `VERCEL_TOKEN`,
+  if you set up the environment once (`reference/tech/vercel.md` §2d): `VERCEL_TOKEN`,
   `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` in its settings and `api.vercel.com` allowed. Never
   paste keys into the chat.
 - **Requirement:** the project on kit 3.10.0 or later and the repo connected to Claude's
@@ -493,7 +493,7 @@ something.
   there (`vercel env pull`), not a file you edit: a new variable goes in Vercel (`vercel env
   add`, or the dashboard) and is pulled again. Your machine's overrides, in
   `.env.development.local`. GitHub Secrets only receives the variable a workflow needs: it
-  cannot be read back, so it is never the source. Detail: `reference/DEPLOY.md` §2c.
+  cannot be read back, so it is never the source. Detail: `reference/tech/vercel.md` §2c.
 - **If you lose the folder:** clone the repo, run `bun run context:restore` and
   `vercel env pull .env.local --yes`. The local state comes back from the
   `context-state` branch as of the last backup (the agents make one when closing each unit

@@ -170,7 +170,9 @@ Me faltan estas para armar el plan:
 
     If there is already code with one of the three, that one wins: migrating mid-project
     does not pay off.
-14. **Where it deploys** (Vercel, VPS, the client's hosting) and whether there is a domain.
+14. **Where it deploys** (Vercel, or another host: `reference/tech/other-hosting.md`, asked now
+    because a plan without Node changes the stack) and whether there is a domain. It goes in
+    `Tech refs` too.
 15. **External services** already decided: payment gateway, auth provider, database, CMS,
     email sending, analytics.
 
@@ -302,7 +304,7 @@ does not bump its version (and still consumes the changesets). How they are writ
 
 - What Step 4b could not do (no `gh`/`vercel` session, no permission, 403).
 - The domain's DNS and the secret values of the environment variables, in Vercel
-  (`reference/DEPLOY.md` §2c).
+  (`reference/tech/vercel.md` §2c).
 - If he will use `orchestrate`: exclude from Windows Defender the working folder, the pool
   folder (`..\<repo>-wt`) and `%USERPROFILE%\.bun\install\cache`.
 

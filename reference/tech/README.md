@@ -28,6 +28,13 @@ The project's `CLAUDE.md` has one line:
 | [`firebase`](./firebase.md) | Firebase Auth + Firestore | `firebase.json` |
 | [`vps-postgres`](./vps-postgres.md) | Postgres on César's VPS, from the start or migrated | `drizzle.config.*` and a `vps:env` script |
 | [`wordpress`](./wordpress.md) | The site is a WordPress | `.wp-env.json` |
+| [`vercel`](./vercel.md) | It deploys on Vercel | `.vercel/project.json` or `vercel.json` |
+| [`other-hosting`](./other-hosting.md) | It deploys on anything else. The first project on a host adds `tech/<host>.md` | `PROJECT_CONTEXT.md` › Repo and deployment |
+| [`migrate-supabase-vps`](./migrate-supabase-vps.md) | Only while moving from Supabase to the VPS, when César asks | César asked; `feat/migrate-vps` open |
+| [`migrate-firebase-vps`](./migrate-firebase-vps.md) | Only while moving from Firebase to the VPS, when César asks | César asked; `feat/migrate-vps` open |
+
+The two migration files repeat what they share on purpose, so each project reads only its own: a
+change to the cutover goes in both.
 
 ## Where a new rule goes (the kit's maintainer)
 

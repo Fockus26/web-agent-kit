@@ -28,5 +28,5 @@ Check before designing that the console's templates can do what the design asks:
 
 ## Leaving it
 
-To move a finished project to César's VPS: `MIGRATE-TO-VPS.md`. Firestore means redesigning the
-model, so check its estimate first.
+To move a project to César's VPS, when he asks: `migrate-firebase-vps.md`. Firestore means
+redesigning the model, so check its estimate first.
