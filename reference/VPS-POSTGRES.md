@@ -2,8 +2,7 @@
 
 **This file is the server**, set up once: how it is installed, and how an agent works with it
 without ever handling a password. What a project does on it, from its first unit or migrated
-later, is [`tech/vps-postgres.md`](./tech/vps-postgres.md) and
-[`MIGRATE-TO-VPS.md`](./MIGRATE-TO-VPS.md).
+later, is [`tech/vps-postgres.md`](./tech/vps-postgres.md) and the `tech/migrate-*-vps.md` files.
 
 Why one central Postgres (decided by César, 2026-10-29) and not Supabase self-hosted or one
 container per project: one Postgres with one database and one role per project isolates

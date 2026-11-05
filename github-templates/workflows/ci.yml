@@ -23,7 +23,7 @@ jobs:
     env:
       # Placeholder values if the build creates clients on import (Supabase, etc.).
       # Never real secrets here. If a step needs one: `gh secret set <NAME>` and
-      # `${{ secrets.<NAME> }}` (web-agent-kit reference/DEPLOY.md §2c).
+      # `${{ secrets.<NAME> }}` (web-agent-kit reference/tech/vercel.md §2c).
       NEXT_PUBLIC_EXAMPLE_URL: https://placeholder.example.com
     steps:
       - uses: actions/checkout@v4

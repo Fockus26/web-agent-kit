@@ -157,7 +157,7 @@ designed email was left unusable for not checking first.
 
 ### Auth emails — Better Auth (projects moved to the VPS Postgres)
 
-After [`MIGRATE-TO-VPS.md`](./MIGRATE-TO-VPS.md) there is no provider sending auth emails:
+On the VPS Postgres (`tech/vps-postgres.md`) there is no provider sending auth emails:
 **every email is the app's**, and that is simpler. Better Auth calls a function of yours for
 each one (`emailVerification.sendVerificationEmail`, `emailAndPassword.sendResetPassword`,
 the magic-link and change-email plugins' equivalents) with the user and the URL; that

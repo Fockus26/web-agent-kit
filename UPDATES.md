@@ -37,6 +37,33 @@ other, the agent shows them and asks before choosing.
 
 ---
 
+## 3.17.0 — 2026-11-04 · Hosting and migrations by case
+
+**What changed**
+
+- **`tech/vercel.md`:** `DEPLOY.md` §2, §2b, §2c and §2d moved with their numbers, plus the trap of
+  `vercel link` touching `.gitignore` (world-flags). `DEPLOY.md` keeps GitHub, the questions and the
+  post-deploy checks, and a citation of its §2c still leads there.
+- **`tech/other-hosting.md`:** a checklist for any other host, asked at kickoff because a plan
+  without Node changes the stack. No project has been through it: the first one on a host writes
+  `tech/<host>.md`. It also says that César's VPS only serves the database today.
+- **`tech/migrate-supabase-vps.md` and `tech/migrate-firebase-vps.md`:** `MIGRATE-TO-VPS.md` split by
+  origin, so a project reads only its own (César). The old name forwards.
+- **The cutover moved inside the merge:** a draft PR until the cutover, variables and data first,
+  merge last. The guide said "after the merge", which gave 500s for about 40 minutes (world-flags
+  #133). The old project stays without writes, not paused, while old clients may read from it.
+
+**Steps for a project on 3.16.0**
+
+1. Global pieces: `install-kit.ps1 -Pull` and a new session (skipped in a cloud session). Then
+   refresh the kit copy (`install-kit --project .`) and commit it.
+2. The project's `CLAUDE.md`, with no line added: add `vercel` (or `other-hosting`) to its `Tech
+   refs`, by the signals in `reference/tech/README.md`.
+3. Replace `scripts/cloud-setup.sh` with the kit's (only a comment changed; skip it if the project
+   changed that file). Nothing else.
+
+---
+
 ## 3.16.0 — 2026-11-04 · Technology references, a project can start on the VPS, VPS fixes
 
 **What changed**

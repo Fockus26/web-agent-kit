@@ -1,7 +1,7 @@
 # Postgres on César's VPS
 
 A project's database on the central server, instead of Supabase or Firebase: from the first
-unit, or migrated later ([`MIGRATE-TO-VPS.md`](../MIGRATE-TO-VPS.md)). You develop against it as
+unit, or migrated later ([from Supabase](./migrate-supabase-vps.md), [from Firebase](./migrate-firebase-vps.md)). You develop against it as
 you would against a Supabase project. The server itself and its operations are
 [`VPS-POSTGRES.md`](../VPS-POSTGRES.md): it is set up once, and a project only asks it for a
 database. Stack: **Drizzle** with `pg`, **Better Auth**, emails through **Brevo's SMTP**. Check

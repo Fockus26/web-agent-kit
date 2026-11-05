@@ -33,4 +33,4 @@ user. Templates and `config.toml`: `EMAIL-TEMPLATES.md`.
 
 ## Leaving it
 
-To move a finished project to César's VPS: `MIGRATE-TO-VPS.md`.
+To move a project to César's VPS, when he asks: `migrate-supabase-vps.md`.

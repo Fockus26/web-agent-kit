@@ -300,13 +300,13 @@ web-agent-kit/
     ├── STATUS-SCREENS.md          404 · 500 · offline · maintenance: catalog and implementation
     ├── BRAND-ASSETS.md            logo, icon, favicon, touch icon, OG: what is asked and what is generated
     ├── EMAIL-TEMPLATES.md         the app's emails: catalog, design constraints, React Email, Supabase, Firebase, provider
-    ├── DEPLOY.md                  GitHub repo, Vercel deployment (or adopting one) and where the environment variables live
+    ├── DEPLOY.md                  GitHub repo, the deployment questions and the post-deploy checks (Vercel: tech/vercel.md)
     ├── PATTERNS.md                solved patterns: validation modes, submit guard, fluid type, list states, auth criteria
     ├── PAYMENTS.md                payment methods: what the client provides, costs, sandbox, integration
-    ├── tech/                      one file per technology, read only by the projects that use it (README, astro, supabase, firebase, vps-postgres, wordpress)
+    ├── tech/                      one file per technology, read only by the projects that use it (README, astro, supabase, firebase, vps-postgres, wordpress, vercel, other-hosting, migrate-supabase-vps, migrate-firebase-vps)
     ├── STACK-WORDPRESS.md         forwards to tech/wordpress.md
     ├── VPS-POSTGRES.md            César's central Postgres on the VPS: setup once, kit-db, backups, no passwords typed
-    ├── MIGRATE-TO-VPS.md          moving a project already in production off Supabase/Firebase: Drizzle + Better Auth + own emails
+    ├── MIGRATE-TO-VPS.md          forwards to tech/migrate-supabase-vps.md and tech/migrate-firebase-vps.md
     ├── vps/                       bootstrap.sh + kit-db (run on the VPS)
     ├── claude/settings.json       → .claude/settings.json: SessionStart hook that runs cloud-setup.sh
     └── scripts/
@@ -369,7 +369,7 @@ Details in `reference/TOKEN-ECONOMY.md`. What weighs most:
 
 ## Versions and updating projects
 
-The kit is versioned (`VERSION`, now **3.16.0**) and each project keeps in `.kit-version`
+The kit is versioned (`VERSION`, now **3.17.0**) and each project keeps in `.kit-version`
 which one it is aligned with. To bring it up to date: `/kit-update` in a project session. It
 compares with the published version (`origin/main` of the kit's clone); if behind, it
 computes the path with `UPDATES.md` and applies each version in order, in a PR.
@@ -378,6 +378,14 @@ And the way back: each project logs in `context/KIT_FEEDBACK.md` what César had
 or repeat and what the kit did not cover. `/kit-feedback` uploads it to this repo as a PR
 (`feedback/`, `kit-feedback` label); in a session opened here, "revisa el feedback" triages
 all the PRs together (`CLAUDE.md` says how).
+
+### 3.17.0 (César's ideas)
+
+| Before | Now |
+|---|---|
+| Vercel's steps inside `DEPLOY.md`, and nothing for any other host | `tech/vercel.md`, and `tech/other-hosting.md` as a checklist; the first project on a host adds its file |
+| One migration guide for Supabase and Firebase together | `tech/migrate-supabase-vps.md` and `tech/migrate-firebase-vps.md`, each read only by its case |
+| The guide put the cutover after the merge (500s for 40 min on world-flags) | Draft PR, and the merge inside the cutover |
 
 ### 3.16.0 (César's ideas)
 

@@ -40,7 +40,7 @@ These are not discussed or postponed "for later". Later never comes.
   variable.
 - `.env.local` in `.gitignore` from the first commit. `.env.example` with every variable
   documented and **no real values**.
-- **The values live in Vercel; `.env.local` is pulled from there** (`reference/DEPLOY.md`
+- **The values live in Vercel; `.env.local` is pulled from there** (`reference/tech/vercel.md`
   §2c). A new variable: its name in `.env.example`, the values per environment as an
   **action for César** (`vercel env add`, Production/Preview secrets with `--sensitive`),
   then `vercel env pull .env.local --yes`. Never edit `.env.local` by hand (the next
