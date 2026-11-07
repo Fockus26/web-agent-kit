@@ -379,6 +379,15 @@ or repeat and what the kit did not cover. `/kit-feedback` uploads it to this rep
 (`feedback/`, `kit-feedback` label); in a session opened here, "revisa el feedback" triages
 all the PRs together (`CLAUDE.md` says how).
 
+### 3.18.0 (world-flags and InspecChile feedback)
+
+| Before | Now |
+|---|---|
+| QA found clock, date and tab defects no builder had checked | `QA-PREVENTION.md` §6 |
+| Update steps assumed a `CLAUDE.md` line every project had | Steps say what to do when it is missing; `kit-update` too for the old ones |
+| `qa:local --preview` impossible with `@astrojs/vercel` | The project's `qa:serve`, with `NODE_ENV=production` |
+| A `.claude/` rule kept the kit copy out of git | `-OnlyPieces` replaces it |
+
 ### 3.17.0 (César's ideas)
 
 | Before | Now |

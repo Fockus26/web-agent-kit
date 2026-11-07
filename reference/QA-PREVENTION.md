@@ -6,7 +6,8 @@ a fix unit, a class sweep. This list is what the builders (`frontend-build`,
 `backend-build`, the `feature-worker`s) check **while writing**, not what QA checks after.
 
 **How to use it:** before closing a unit, go through the sections that apply to what you
-touched (a form → §1 and §2; a list or a long name → §4). Do not read the rest.
+touched (a form → §1 and §2; a list or a long name → §4; a timer, client dates or state
+shared between tabs → §6). Do not read the rest.
 
 **How it grows:** when a QA (`wave-qa`, `functional-qa`, `design-qa`) reports a finding that
 is a class and is not here, its report proposes it in "Feedback para el kit" and it goes to
@@ -46,6 +47,9 @@ Each row: the defect, the rule that prevents it, and where it came from.
 |---|---|---|
 | A failed request leaves the spinner forever | Every request has its error state and a retry; a timeout, not an infinite wait | functional-qa §3 |
 | The error says nothing ("Algo salió mal") | Expected errors are results with a message the user can act on (`backend-build` › Conventions) | functional-qa §7 |
+| A cron or job hangs on a third party and the next run piles on | Every outbound call in a cron, webhook or job has a timeout (`AbortSignal.timeout(ms)`) and its failure is logged, not awaited forever | world-flags |
+| A date the client accepts fails in the database (or the reverse) | The server parses dates with the same strictness as the column: a strict format in the schema (`z.iso.datetime()`, `z.iso.date()`), never `Date.parse`, which accepts what Postgres rejects | world-flags |
+| A new service worker route is intercepted by the old one | A service worker never caches `/api/*` or other dynamic same-origin routes, and the change ships a new SW version (`tech/astro.md` › A static site that gains an API) | world-flags |
 
 ## 4. Layout under real content (200 % text, 320 px)
 
@@ -66,3 +70,19 @@ script, it runs on the new piece.)
 |---|---|---|
 | Accordions, tabs, selects open and close with a jump; anchor links teleport | Animated with the motion tokens and turned off under `prefers-reduced-motion` (`frontend-build` › Motion in interactive widgets) | César, 2026-10-23 |
 | An anchor link lands with the target under the sticky header | `scroll-margin-top` on the targets equal to the header's height token | César, 2026-10-23 |
+| A global notice about the last operation survives the next one and covers its controls | Cleared when the next operation starts, or rendered only inside its own view. Test: trigger it and start another without closing it | world-flags |
+| A count in a label ("Práctica diaria (3)") and the action it runs disagree | The label and the action call the same function on the same data (not one recomputed and one stored) | world-flags |
+
+## 6. Clocks, dates and tabs
+
+Why this section: in world-flags `functional-qa` found seven defects of these classes in one
+wave, none of which a builder had looked at (2026-11-06).
+
+| Defect | Prevention | Seen in |
+|---|---|---|
+| A clock change or the computer sleeping takes time off a timer | One clock per measurement: a duration from `Date.now()` is never subtracted from a `performance.now()` mark. Pauses are stamped with the timer's clock, with the start as the floor. Test: `page.clock.setSystemTime` mid-timer | world-flags |
+| A metric over a timer with pauses counts wall time (idleness counted while a modal was open) | Measure only the stretches in which the timer really ran. Test: leave the pausing modal open for the threshold's time | world-flags |
+| A client clock set ahead blocks a feature for months ("less than X ago", "the last N" by date) | Dates later than `now + tolerance` are ignored or clamped when reading, recording and merging (also when merging progress from another device) | world-flags |
+| Another tab merges a half-written state, or another account's data | Every `setItem` of a synced key writes a complete state (never a provisional one and then the corrected one), and the key that says whose data it is is written before the data | world-flags |
+| A notice ("just happened") shows in every open tab | Effects that announce tell a change made here from one adopted from another tab (`storage` event, `BroadcastChannel`) and announce only the first | world-flags |
+| Logging in or out in one tab leaves the others on the old session | A session change is announced to the other tabs (`BroadcastChannel`, or a `storage` key) and they reload their state; an httpOnly cookie changes nothing they can see by themselves | world-flags |

@@ -93,6 +93,17 @@ git checkout -b <type>/<kebab-case-description>
 In a **worktree pool slot** (a unit delegated by `orchestrate`), the branch already exists:
 `wt take` created it from `origin/main`. Do not create another one or switch branches.
 
+**Uncommitted work before opening** (`git status --short` is not empty and it is not from
+this unit): a worktree or a new branch from `origin/main` does not carry it, so the unit
+would start without that code. Do not stash, discard or carry it along silently. Show César
+the list (`git status --short`, grouped) and propose, in this order: (1) it is finished work
+→ commit it on its own branch and PR first, then open this unit from there or from `main`
+once merged; (2) it is work in progress the unit depends on → open the unit on top of that
+branch, in place, and say so in the PR; (3) it is unrelated → leave it in the main folder
+and do the unit in a pool slot. Why: in InspecChile a whole migration was uncommitted, the
+clean worktree from HEAD had no plugin, and the kit's adoption had to be done in the dirty
+tree (2026-11-07).
+
 **Valid types:** `feat`, `fix`, `refactor`, `style`, `docs`, `chore`, `perf`, `test`,
 `design`, `a11y`, `seo`.
 

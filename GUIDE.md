@@ -364,7 +364,7 @@ create, break and change whatever it wants: each run starts from scratch, and th
 app sends stay in Mailpit. That is why the local database is **disposable**: keep nothing of
 yours in it. With **Firebase** it is the same with the emulators (they need Java, not
 Docker; the emails stay in the emulator's UI). `--preview` serves the build instead of the
-dev server.
+dev server, in production mode (with the project's `qa:serve` if its adapter has no preview).
 
 **What happens with the QA's findings.** The Critical and High ones are fixed **in the same
 wave**: each fix closes when the finding's reproduction script goes from FAIL on `main` to

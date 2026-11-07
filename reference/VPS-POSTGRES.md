@@ -108,7 +108,7 @@ All from the PC, through the alias:
 
 | Need | Command |
 |---|---|
-| Database for a project | `ssh kit-vps kit-db create <project>` (lowercase, digits, `_`) |
+| Database for a project | `ssh kit-vps kit-db create <project> >/dev/null` (lowercase, digits, `_`; it prints the URLs with the password, so an agent never lets them reach the screen) |
 | Its URLs | `ssh kit-vps kit-db url <project>` · `--direct` for migrations |
 | Tunnel for migrations / `drizzle-kit studio` | `ssh -N -L 5433:127.0.0.1:5432 kit-vps` (leave it open) |
 | What is there and how big | `ssh kit-vps kit-db list` |

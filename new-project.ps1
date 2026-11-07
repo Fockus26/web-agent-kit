@@ -210,6 +210,15 @@ try {
 
   # Worktrees Claude Desktop creates inside the project: they bring their own root biome.json
   # and broke `bun run lint` in the main folder. Out of git and out of Biome.
+  # A rule that ignores all of `.claude/` also ignores the kit copy (`.claude/skills/`,
+  # `.claude/kit-reference/`), which goes in git: it is replaced by the two local paths, not
+  # appended under (world-flags: the copy stayed out of git and was fixed by hand).
+  if ($ignore -match '(?m)^/?\.claude/?\*?[ \t]*\r?$') {
+    # Re-read: the blocks above appended to the file after $ignore was read.
+    $ignore = (Get-Content .gitignore -Raw) -replace '(?m)^/?\.claude/?\*?[ \t]*(\r?)$', ".claude/worktrees/`$1`n.claude/settings.local.json`$1"
+    Set-Content .gitignore $ignore -NoNewline
+    Write-Host "  ~ .gitignore: .claude/ -> .claude/worktrees/ + .claude/settings.local.json"
+  }
   if ($ignore -notmatch '\.claude/worktrees') {
     Add-Content .gitignore "`n# Claude Desktop worktrees (web-agent-kit)`n.claude/worktrees/"
     Write-Host "  + .gitignore: .claude/worktrees/"
