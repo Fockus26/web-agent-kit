@@ -37,6 +37,49 @@ other, the agent shows them and asks before choosing.
 
 ---
 
+## 3.18.0 — 2026-11-07 · Clocks and tabs in QA prevention, steps for a missing line
+
+**What changed**
+
+- **`QA-PREVENTION.md` §6 "Clocks, dates and tabs"** and new rows in §3 and §5: one clock per
+  measurement, metrics only over the time a timer ran, client dates in the future, `storage`
+  writes that are complete states, announcing only changes made here, session changes told to
+  the other tabs, a notice that outlives its operation, a count and its action from the same
+  data, timeouts in crons, strict date parsing, a service worker that intercepts new routes.
+  They are the classes `functional-qa` found in world-flags and no builder had checked.
+- **Steps that replace a line the project lacks:** the rule for writing them (end of this
+  file) and, for old steps that do not say, what `kit-update` does: add it only if it is not
+  there in other words, and propose which line to shorten if it goes over 8 KB. 3.15.0 step 5
+  and 3.16.0 step 2 had no answer (world-flags). Size is measured with LF: on Windows the
+  working copy counts the CRs.
+- **3.16.0 step 4 corrected:** `vps-env.ts` is added if missing, and with real users it is
+  run with `<project>_dev`, never the production database (as written, it left world-flags'
+  dev on the real database).
+- **`kit-update`:** a clone on a branch already merged and clean switches to `main` and
+  installs, instead of stopping as if César were editing the kit.
+- **`new-project.ps1 -OnlyPieces`:** a `.gitignore` rule `.claude/` is replaced by
+  `.claude/worktrees/` + `.claude/settings.local.json`. Appended under it, the kit copy stayed
+  out of git (world-flags).
+- **`qa-local.ts --preview`** uses the project's `qa:serve` script if it has one, and runs with
+  `NODE_ENV=production`: `@astrojs/vercel` has no `astro preview` (`tech/astro.md`).
+- **`git-flow` §1.2:** what to do with uncommitted work before opening a unit (InspecChile).
+- `kit-db create` with `>/dev/null` in the guides: it prints the URLs with the password.
+
+**Steps for a project on 3.17.0**
+
+1. Global pieces: `install-kit.ps1 -Pull` and a new session (skipped in a cloud session). Then
+   refresh the kit copy (`install-kit --project .`) and commit it.
+2. Replace `scripts/qa-local.ts` with the kit's (LF and the project's Biome; `kit-update` ›
+   Piece check). An Astro project with `@astrojs/vercel` that wants `--preview` adds its own
+   `qa:serve` (`tech/astro.md`); it is not required.
+3. If `.gitignore` has a line `.claude/` (all of it): replace it with `.claude/worktrees/` and
+   `.claude/settings.local.json`, and `git add .claude/skills .claude/agents
+   .claude/kit-reference .claude/settings.json`. Check: `git check-ignore -q .claude/skills`
+   fails.
+4. Nothing in `CLAUDE.md` or `context/`.
+
+---
+
 ## 3.17.0 — 2026-11-04 · Hosting and migrations by case
 
 **What changed**
@@ -110,8 +153,13 @@ other, the agent shows them and asks before choosing.
    kit's `assignRolePostgres` there, if it has none. Check: `bun run qa:local -- --port <p>
    --offline` ends with `QA ready: http://localhost:<p>`.
 4. Only a project on the VPS:
-   - Replace `scripts/vps-env.ts`, run it, and delete `DATABASE_URL` and `DIRECT_URL` from
-     `.env.local` if they were written there by hand.
+   - Replace `scripts/vps-env.ts` (add it, with its `vps:env` script, if the project migrated
+     before it existed) and run it with the database of `tech/vps-postgres.md` › Environments:
+     **with real users, `<project>_dev`**, never `<project>` (that one is production). If
+     `_dev` does not exist yet, it is an action for César (`kit-db create <project>_dev
+     >/dev/null` and a copy without personal data); ask before running it. Then delete
+     `DATABASE_URL` and `DIRECT_URL` from `.env.local` if they were written there by hand.
+     (Fixed in 3.18.0: run as written, it left world-flags' dev on the real database.)
    - `drizzle.config.ts` as in `tech/vps-postgres.md`, if `bun run db:generate` needs a database.
    - **Action for César:** `<project>_preview`, its migrations, and its URL in Vercel's Preview.
 5. Nothing else. A project on Supabase or Firebase does not move.
@@ -926,6 +974,11 @@ Reading by levels, `CURRENT_PHASE.md` with a cap and `PHASE_LOG/`, `pr` mode, `o
    detail in the kit. Two projects had to trim their own rules by hand after adding up
    versions (8.8 KB and 8.1 KB). `CLAUDE.md.template` stays ≤ 7 KB, so the project keeps
    1 KB of its own (melao).
+   A step that replaces a line also says what to do **when the line is not there** (the
+   project is older than it, or trimmed it): add the new one or not, and, if the file is at
+   its cap (8 KB), which kind of line to shorten to make room. Without that, world-flags
+   skipped 3.15.0 step 5 and had to cut its own rules for 3.16.0 step 2. Measure with LF
+   (`git show HEAD:CLAUDE.md | wc -c`): on Windows the working copy counts the CRs.
 5. If a step edits a `context/` file a project may not have (it started short), it says what
    to do if it is missing (usually: create it with only the step's sections).
 6. Steps are written for both kinds of project: new ones (English `context/`) and those

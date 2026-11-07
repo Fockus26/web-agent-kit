@@ -81,8 +81,11 @@
  * whatever needs data fails instead of touching the real database.
  *
  * With `--preview`: the same backend, but `bun run build` with those variables and then the
- * project's `preview` script (Astro, Vite) or `start` (Next) on the port. For Playwright
- * against the build; it was done by hand (world-flags).
+ * project's `qa:serve` script if it has one, otherwise `preview` (Astro, Vite) or `start`
+ * (Next), on the port and with `NODE_ENV=production`. For Playwright against the build: the
+ * service worker and the rate limits only behave as in production there. `qa:serve` is for an
+ * adapter with no preview server (`@astrojs/vercel`: kit `tech/astro.md`); it gets
+ * `--port <port>` like the others. It was done by hand (world-flags).
  *
  * Before starting it checks the port is free: if not, it aborts (the server would jump to
  * the next one without warning and could land on another pool slot's). To stop it on
@@ -421,8 +424,9 @@ async function startServer(base: NodeJS.ProcessEnv, beforeReady?: () => Promise<
   env.BETTER_AUTH_URL = SITE
   let script = 'dev'
   if (preview) {
-    script = pkgScripts.preview ? 'preview' : 'start'
-    if (!pkgScripts[script]) abort('--preview: the project has neither a "preview" nor a "start" script.')
+    script = ['qa:serve', 'preview', 'start'].find((s) => pkgScripts[s]) ?? ''
+    if (!script) abort('--preview: the project has no "qa:serve", "preview" or "start" script.')
+    env.NODE_ENV = 'production'
     console.log('… bun run build (with the local backend\'s variables)')
     const build = launch('bun', ['run', 'build'], env)
     const code = await new Promise<number | null>((done) => build.on('exit', done))

@@ -93,8 +93,14 @@ migrations use them. Before migrating anything:
   the `status`): install from there, which does the `git pull --ff-only` first:
   `powershell -ExecutionPolicy Bypass -File "<clone>\install-kit.ps1" -Pull`
   (macOS/Linux: `bash "<clone>/install-kit.sh" --pull`).
-- If the clone is on another branch or has changes (César is editing the kit): do not touch
-  it. Tell him to go back to `main` in the kit or to run the installer when he is done.
+- If the clone is on another branch **already merged** and with no changes (`git -C
+  "<clone>" merge-base --is-ancestor HEAD origin/main` succeeds and the `status` shows
+  nothing else): it is a finished branch, not work in progress. `git -C "<clone>" switch
+  main` and install as above, saying so in one line. Why: world-flags' clone was left on a
+  merged feature branch and the skill stopped as if César were editing the kit (2026-11-06).
+- If the clone is on a branch not in `origin/main`, or has changes (César is editing the
+  kit): do not touch it. Tell him to go back to `main` in the kit or to run the installer
+  when he is done.
 
 Then stop: "Abre una sesión nueva en este proyecto y escribe `/kit-update` otra vez." Do
 not go on with the old skills loaded.
@@ -216,9 +222,17 @@ and agents; the project's own stay. Its own commit:
 without the cloud hook, merge the kit's `reference/claude/settings.json` `SessionStart`
 into it (keep what it had).
 
-The project's `CLAUDE.md` stays at 8 KB or less (`wc -c CLAUDE.md`). If a step pushes it
-over, replace the old paragraph that the step supersedes instead of adding, and if it still
-does not fit, ask which project-specific part moves to `context/`.
+The project's `CLAUDE.md` stays at 8 KB or less, measured with LF (`git show HEAD:CLAUDE.md |
+wc -c` after committing; on Windows `wc -c` of the working copy counts the CRs). If a step
+pushes it over, replace the old paragraph that the step supersedes instead of adding, and if it
+still does not fit, ask which project-specific part moves to `context/`.
+
+**A step that replaces a line the project does not have** (it is older than the line, or
+trimmed it) and does not say what to do: add the new line if what it says is not in the file
+in other words, and skip it if it is. If adding it goes over 8 KB, propose in the single round
+which project line to shorten, never cut one silently. Say what you did in the PR. Why:
+3.15.0 step 5 and 3.16.0 step 2 gave no answer for that case; world-flags skipped one and cut
+its own rules for the other (2026-11-06).
 
 ## 9. Verification and closing
 

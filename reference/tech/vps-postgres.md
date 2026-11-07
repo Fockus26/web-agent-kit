@@ -31,7 +31,9 @@ Project names on the VPS: lowercase, digits and `_` (`world_flags`, not `world-f
 
 ## Setting it up
 
-1. `ssh kit-vps kit-db create <project>` and the same for `<project>_preview`.
+1. `ssh kit-vps kit-db create <project> >/dev/null` and the same for `<project>_preview`.
+   `create` prints the URLs with the password: an agent that runs it without the redirect
+   leaves them in the transcript (world-flags). `vps:env` (step 2) writes them without showing them.
 2. Copy the kit's `reference/scripts/vps-env.ts` to `scripts/`, with `"vps:env": "bun
    scripts/vps-env.ts"`, `"db:generate": "drizzle-kit generate"` and `"db:migrate": "drizzle-kit
    migrate"` in `package.json`. Then `bun run vps:env <project>`.
