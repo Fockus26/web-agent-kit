@@ -164,7 +164,9 @@ A single command (PowerShell 7, `pwsh`) creates the app and leaves the whole kit
 - It overwrites nothing that exists and **does not commit**.
 
 Project already created with other options? `-Existing` adds only the kit's pieces (see
-GUIDE.md). Windows PowerShell 5.1 blocks the script?
+GUIDE.md). A **WordPress** site (an existing one or from scratch): `-Stack wordpress -Client
+<slug>` instead — no Next.js, its own `CLAUDE.md`, PR template and PHP CI, the local copy in
+Docker, `pull-site` to bring production down and the site plugin skeleton (GUIDE.md). Windows PowerShell 5.1 blocks the script?
 `powershell -ExecutionPolicy Bypass -File <kit>\new-project.ps1 -Path ...` (only for that run;
 it does not change the system configuration).
 
@@ -272,7 +274,8 @@ web-agent-kit/
 │                                    and leaves ~/.claude/web-agent-kit.json (path + version) for kit-update;
 │                                    -Project <path>: into that project's .claude/ (cloud sessions)
 ├── new-project.ps1                creates the app and copies the kit (-Existing: adds what is missing;
-│                                    -OnlyPieces: only scripts, dependencies, .gitignore and .claude/)
+│                                    -OnlyPieces: only scripts, dependencies, .gitignore and .claude/;
+│                                    -Stack wordpress: the WordPress variant, no Next.js)
 ├── instalar-kit.* / nuevo-proyecto.ps1   pre-3.8.0 names, forward to the ones above
 ├── .claude/
 │   ├── skills/                    the 10 skills → ~/.claude/skills/ and each project's .claude/skills/
@@ -303,7 +306,8 @@ web-agent-kit/
     ├── DEPLOY.md                  GitHub repo, the deployment questions and the post-deploy checks (Vercel: tech/vercel.md)
     ├── PATTERNS.md                solved patterns: validation modes, submit guard, fluid type, list states, auth criteria
     ├── PAYMENTS.md                payment methods: what the client provides, costs, sandbox, integration
-    ├── tech/                      one file per technology, read only by the projects that use it (README, astro, supabase, firebase, vps-postgres, wordpress, vercel, other-hosting, migrate-supabase-vps, migrate-firebase-vps)
+    ├── tech/                      one file per technology, read only by the projects that use it (README, astro, supabase, firebase, vps-postgres, wordpress, wordpress-adopt, vercel, other-hosting, migrate-supabase-vps, migrate-firebase-vps)
+    │   └── wordpress/             WordPress templates: pull-site.sh, php-lint.sh, docker-compose.yml, deploy-ssh/ftps.yml, ci.yml, CLAUDE.md and PR variants, the site plugin skeleton
     ├── STACK-WORDPRESS.md         forwards to tech/wordpress.md
     ├── VPS-POSTGRES.md            César's central Postgres on the VPS: setup once, kit-db, backups, no passwords typed
     ├── MIGRATE-TO-VPS.md          forwards to tech/migrate-supabase-vps.md and tech/migrate-firebase-vps.md
@@ -378,6 +382,17 @@ And the way back: each project logs in `context/KIT_FEEDBACK.md` what César had
 or repeat and what the kit did not cover. `/kit-feedback` uploads it to this repo as a PR
 (`feedback/`, `kit-feedback` label); in a session opened here, "revisa el feedback" triages
 all the PRs together (`CLAUDE.md` says how).
+
+### 3.19.0 (InspecChile feedback: WordPress)
+
+| Before | Now |
+|---|---|
+| WordPress translated from Next.js by the agent; WPCodeBox still allowed "for one-offs" | `tech/wordpress.md`: all the code in the site plugin, snippet plugins retired, skills and a11y translated (page builders) |
+| No order to adopt a site; the agent improvised access, inventory and checks | `tech/wordpress-adopt.md`: access by host, two entries (migrate snippets / from scratch), inventory, full walk-through before the first deploy |
+| Bringing the site down by hand; a backup transfer stayed partial; a dump with 4 databases | `pull-site.sh` (SSH, FTPS, backup archive): resumes, verifies, splits the dump and finds the live database, imports with escaped URLs |
+| wp-env could not run a site with premium plugins | Docker copy from the backup (compose + Mailpit); wp-env for the rest |
+| WP Pusher without SSH; data fixes needed SSH or a reactivation | `deploy-ssh.yml` / `deploy-ftps.yml` (never plain FTP); migrations by version in the plugin |
+| `-OnlyPieces` installed Next/bun pieces in WordPress; `/kit-update` found nothing | `new-project.ps1 -Stack wordpress`, and `kit-update` adopts a WordPress |
 
 ### 3.18.0 (world-flags and InspecChile feedback)
 

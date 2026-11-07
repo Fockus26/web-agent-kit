@@ -148,8 +148,9 @@ Me faltan estas para armar el plan:
     Auth, no dashboard, Storage or Realtime included), **Supabase** or **Firebase**. It
     decides whether local QA needs Docker or Java. See `reference/STACK-NEXTJS.md` ("Backend").
     **WordPress** if the client already has one, edits content in its admin, or the shop is
-    WooCommerce: `reference/tech/wordpress.md` (code in a site plugin in git, a local copy
-    with wp-env).
+    WooCommerce: `reference/tech/wordpress.md` (code in a site plugin in git, a local copy,
+    deploy by SSH or FTPS). The repo is set up with `new-project.ps1 -Stack wordpress` and the
+    order is `reference/tech/wordpress-adopt.md`, not the Next.js steps of this skill.
     **Tech refs:** what is chosen here goes in `CLAUDE.md`'s `Tech refs` line
     (`reference/tech/README.md`), so the project only ever reads those.
     **Payments:** for each method the client wants, `reference/PAYMENTS.md` gives what the

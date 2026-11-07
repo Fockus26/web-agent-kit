@@ -23,6 +23,7 @@ Projects before 3.3.0 do not have the file. It is deduced from signals, newest t
 
 | If the project… | It is on |
 |---|---|
+| is a WordPress with `scripts/pull-site.sh` | **3.19.0** |
 | has `scripts/cloud-setup.sh` and the kit's skills in `.claude/skills/` | **3.10.0** |
 | has `context/decisions/D0NN-*.md` (one file per decision) and no `context/DECISIONS_INDEX.md` | **3.2.0** |
 | its `CLAUDE.md` talks about the worktree pool (`..\<repo>-wt`, `wt take`) | **3.1.0** |
@@ -34,6 +35,69 @@ The signals do not depend on Changesets on purpose: a project **without versioni
 or `release.yml` and is not older because of it. In that project, the Changesets steps of
 any version are skipped: they are not a pending migration. If the signals contradict each
 other, the agent shows them and asks before choosing.
+
+---
+
+## 3.19.0 — 2026-11-07 · WordPress as an official stack (InspecChile)
+
+InspecChile (cPanel without SSH, deploy by FTPS, ACF Pro and Elementor Pro, adopted on 3.15.0)
+was the first WordPress on the kit, and showed it was Next.js-first: the agent translated or
+invented almost every step. Decisions by César, 2026-11-07.
+
+**What changed**
+
+- **`tech/wordpress.md` rewritten:** all the code in the site plugin, snippet plugins retired
+  with no "one-off" exception; ACF in the plugin's `acf-json/`; two local environments (Docker
+  copy from the backup for sites with premium plugins, wp-env for the rest) with versions
+  pinned; data changes as **migrations by version** in the plugin (they run with `wp
+  <client>-site migrate` over SSH, or on the first wp-admin visit without SSH — the activation
+  hook does not fire when a deploy replaces files); §4 extended with `frontend-build`,
+  `backend-build`, `git-flow`, CI and **page builders in `a11y`**; deploy **SSH first, then FTPS,
+  never plain FTP**, instead of WP Pusher; §6 traps: PHP versions, shared hosting (`zip`
+  dropped, `uploads` owned by root), Elementor (cloned popups, `add_error`, CSS after a
+  search-replace), email in the copy.
+- **`tech/wordpress-adopt.md`** (new): access by host type, the common base with two entries
+  (migrate snippets / from scratch), the inventory of what is code in the database, the
+  multi-database dump, the full walk-through before the first deploy, and the lines recorded in
+  `PROJECT_CONTEXT.md` § Stack.
+- **`tech/wordpress/`** (new templates): `pull-site.sh` (ssh, ftps, archive, dbs, import:
+  resumable, verified by a dry run, escaped URLs), `php-lint.sh`, `docker-compose.yml` with
+  Mailpit, `deploy-ssh.yml`, `deploy-ftps.yml` (upload aside and swap by rename), `ci.yml` (PHP
+  matrix and committed compiled CSS), WordPress variants of `CLAUDE.md.template` and the PR
+  template, and the site plugin skeleton (`filemtime()` asset versions, `acf-json`, migrations).
+- **`new-project.ps1 -Stack wordpress -Client <slug>`:** copies those pieces and none of the
+  Next/bun ones (`test:related`, `qa:local`, `@types/bun`, Changesets).
+- **`kit-update`:** case e) a WordPress with no kit is an adoption; a WordPress piece check;
+  version steps about Next.js, Biome, Changesets, `qa:local` or `test:related` are skipped there.
+- **`project-kickoff`** question 13 points WordPress to `-Stack wordpress` and the adoption order.
+
+**Steps for a project on 3.18.0**
+
+1. Global pieces: `install-kit.ps1 -Pull` and a new session (skipped in a cloud session). Then
+   refresh the kit copy (`install-kit --project .`) and commit it.
+2. **Not WordPress** (its `CLAUDE.md` has no `wordpress` in `Tech refs`): nothing else.
+3. **WordPress project:**
+   a. Pieces: `pwsh -File "<kit>/new-project.ps1" -Path . -Stack wordpress -OnlyPieces` (adds
+      the scripts, `docker-compose.yml`, `.env.example` and the `.gitignore` lines it lacks;
+      overwrites nothing). If `-OnlyPieces` of an earlier version added `test:related`,
+      `qa:local`, `scripts/test-related.ts`, `scripts/qa-local.ts`, `scripts/qa-roles.ts` or
+      `@types/bun`, propose removing them in the single round (they cannot run in WordPress).
+   b. CI: if `.github/workflows/ci.yml` is the kit's bun CI, replace it with
+      `<kit>/reference/tech/wordpress/ci.yml` (adjust the PHP matrix); the PR template with
+      `<kit>/reference/tech/wordpress/pull_request_template.md`.
+   c. Diagnosis for the single round, changing nothing: snippet plugins still active (they are
+      retired: a plan of moving them, `wordpress-adopt.md` § 4A), ACF groups outside
+      `acf-json/`, assets versioned with the plugin's constant instead of `filemtime()`, data
+      fixes in an activation hook or in `bin/` scripts a host without SSH cannot run (they move
+      to `migrations/`), a deploy by WP Pusher or plain FTP (it moves to `deploy-ssh.yml` /
+      `deploy-ftps.yml`). Each one César accepts goes to `context/plans/backlog.md`
+      (`pendientes.md` in older projects) as its own unit, not into this PR.
+   d. `context/PROJECT_CONTEXT.md` § Stack (Spanish `context/`: its "Stack"): add the lines of
+      `wordpress-adopt.md` § "Recorded in the project" that are missing (access type, PHP,
+      premium plugins, deploy). If the section is missing, create it with only those lines.
+   e. `CLAUDE.md`: if the project's says Next.js, `bun run typecheck` or `qa:local`, replace those
+      lines with the WordPress template's (`<kit>/reference/tech/wordpress/CLAUDE.md.template`,
+      § Stack and the commands block), not appended; ≤ 8 KB measured with LF.
 
 ---
 
