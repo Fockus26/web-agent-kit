@@ -173,6 +173,29 @@ does this:
 Projects created before 3.8.0 keep their `context/` in Spanish; nothing gets translated and
 everything keeps working.
 
+### A WordPress site
+
+```powershell
+& "...\web-agent-kit\new-project.ps1" -Path C:\path\to\site -Stack wordpress -Client <slug>
+```
+
+For a site the client already has, or one started from scratch. It creates the folder (and
+`git init`) if it does not exist and copies the WordPress pieces: its `CLAUDE.md`, PR template
+and PHP CI, `docker-compose.yml` for the local copy, `.env.example`, `scripts/pull-site.sh` and
+`php-lint.sh`, and the site plugin as `wp-content/plugins/<slug>-site/`. It does not copy
+anything that assumes Next.js. Then:
+
+1. Copy the deploy that matches the host (`reference/tech/wordpress/deploy-ssh.yml` if it has
+   SSH, `deploy-ftps.yml` if not) to `.github/workflows/deploy.yml`.
+2. `.env.example` → `.env.local` with the access (SSH or FTPS, never plain FTP).
+3. In Claude: "adopta el kit en este WordPress". It follows
+   `reference/tech/wordpress-adopt.md`: it brings the site down with `pull-site`, builds the
+   local copy, inventories what is code in the database, moves the snippets to the plugin
+   (one per commit) and walks every flow before the first deploy. It asks you for the access,
+   the database export when there is no SSH, and the GitHub secrets.
+
+A WordPress that already follows the kit is updated with `/kit-update`, like any project.
+
 ### Project you already created (or created with other options)
 
 ```powershell

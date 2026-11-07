@@ -110,6 +110,31 @@ Say so and ask; touch nothing.
 
 **d) Project < published and skills up to date:** go on with step 3.
 
+**e) No kit in the project at all** (no `.kit-version`, no `context/`) **and it is a WordPress**
+(`wp-content/`, `wp-config.php`, `.wp-env.json` or a compose with a `wordpress` image): it is
+not an update, it is an adoption. Say so, and with César's yes follow "WordPress projects"
+below. Why: in InspecChile `/kit-update` found nothing and there was no path (2026-11-07).
+
+## WordPress projects
+
+A project whose `CLAUDE.md` names `wordpress` in `Tech refs`, or case e). The Next/bun pieces
+do not apply: never run `new-project.ps1` without `-Stack wordpress` on it (`-OnlyPieces`
+installed `@types/bun`, `test:related` and `qa:local`, which cannot run there).
+
+- **Adoption** (case e): branch `chore/kit-adopt`, `pwsh -File "<kit>/new-project.ps1" -Path .
+  -Stack wordpress -Client <slug>` (the slug of the site plugin if there is one, else ask), one
+  commit `chore(kit): adopta el kit <published>`, then the order of
+  `<kit>/reference/tech/wordpress-adopt.md` from step 1, one unit at a time (each its own
+  branch and PR per `git-flow`). The PR says which access and secrets César has to provide.
+- **Piece check** for WordPress, instead of the table's first two rows: the scripts `shots`,
+  `shots:publish`, `context:backup`, `context:restore`, `lint:php`, `site:pull`, `local:up`,
+  `local:down`, `local:wp` and their files; devDependencies `@playwright/test` and
+  `@axe-core/playwright`; `.gitignore` with `.site-pull/` and `*.sql`; `.env.example`; the
+  plugin's `acf-json/` if the site uses ACF; `.github/workflows/ci.yml` running `php-lint.sh`; a
+  deploy workflow. What is missing: `new-project.ps1 -Path . -Stack wordpress -OnlyPieces`.
+- Versions' steps that touch Next.js, Biome, Changesets, `qa:local` or `test:related` are
+  skipped in a WordPress project: they are not pending.
+
 ## 3. Read copy of the kit
 
 The migration steps read and copy files from `<kit>`. `<kit>` is:

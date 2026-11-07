@@ -22,6 +22,23 @@
   The project has no version or CHANGELOG: Changesets is not installed (.changeset/,
   release.yml, @changesets/cli).
 
+.PARAMETER Stack
+  next (default) or wordpress. wordpress (implies -Existing and -NoVersion; creates the folder
+  and `git init` if it does not exist, and a minimal package.json if there is none): the
+  WordPress variants of CLAUDE.md, the PR template and CI, docker-compose.yml, .env.example,
+  scripts/pull-site.sh and php-lint.sh, the WordPress .gitignore lines. It skips
+  create-next-app, test:related, qa:local, @types/bun and Changesets, which assume Next/bun.
+  Why: InspecChile adopted the kit with -OnlyPieces and got pieces that cannot run on
+  WordPress (reference/tech/wordpress-adopt.md).
+
+.PARAMETER Client
+  With -Stack wordpress: the client's slug (lowercase, hyphens). Copies the plugin skeleton as
+  wp-content/plugins/<client>-site/ with its names, only if that folder does not exist.
+
+.EXAMPLE
+  # WordPress site (an existing repo or a new folder)
+  & "...\web-agent-kit\new-project.ps1" -Path C:\Users\Admin\Documents\Work\inspechile -Stack wordpress -Client inspechile
+
 .NOTES
   - It does not overwrite anything that exists (context/, scripts/, .github/...): it says so
     and skips it. That is why kit-update can run it on an old project to add what is missing.
@@ -33,12 +50,32 @@ param(
   [Parameter(Mandatory)] [string] $Path,
   [switch] $Existing,
   [switch] $NoVersion,
-  [switch] $OnlyPieces
+  [switch] $OnlyPieces,
+  [ValidateSet('next', 'wordpress')] [string] $Stack = 'next',
+  [ValidatePattern('^[a-z0-9]+(-[a-z0-9]+)*$')] [string] $Client
 )
 
 $ErrorActionPreference = 'Stop'
 $kit = $PSScriptRoot
+$wp = $Stack -eq 'wordpress'
+$wpKit = "$kit\reference\tech\wordpress"
 if ($OnlyPieces) { $Existing = $true }
+if ($wp) {
+  $Existing = $true
+  $NoVersion = $true
+  if (-not (Test-Path $Path)) { New-Item -ItemType Directory -Force $Path | Out-Null }
+  if (-not (Test-Path (Join-Path $Path '.git'))) {
+    git -C $Path init -q -b main
+    Write-Host "  + git init"
+  }
+  # bun is still the JS tooling (Playwright for shots and a11y, sass): a minimal package.json.
+  $pkgPath = Join-Path $Path 'package.json'
+  if (-not (Test-Path $pkgPath)) {
+    $pkgName = (Split-Path (Resolve-Path $Path) -Leaf).ToLower() -replace '[^a-z0-9-]', '-'
+    Set-Content $pkgPath "{`n  `"name`": `"$pkgName`",`n  `"private`": true,`n  `"scripts`": {}`n}`n" -NoNewline
+    Write-Host "  + package.json (minimal)"
+  }
+}
 
 if (-not $Existing) {
   if (Test-Path $Path) { throw "$Path already exists. Use -Existing to add the kit to a created project." }
@@ -72,7 +109,7 @@ try {
     if (-not (Test-Path $path)) { return }
     $files = if (Test-Path $path -PathType Container) { Get-ChildItem $path -Recurse -File -Force } else { Get-Item $path }
     foreach ($f in $files) {
-      if ($f.Extension -notmatch '^\.(md|ts|tsx|js|mjs|json|sh|yml|yaml|toml|txt|css|template)$') { continue }
+      if ($f.Extension -notmatch '^\.(md|ts|tsx|js|mjs|json|sh|yml|yaml|toml|txt|css|scss|php|cnf|example|template)$') { continue }
       $text = [IO.File]::ReadAllText($f.FullName)
       if ($text.Contains("`r`n")) { [IO.File]::WriteAllText($f.FullName, $text.Replace("`r`n", "`n")) }
     }
@@ -87,12 +124,51 @@ try {
     CopyIfMissing "$kit\phases-templates" 'phases'
     New-Item -ItemType Directory -Force design, .github\workflows | Out-Null
   }
-  New-Item -ItemType Directory -Force scripts, tests\unit | Out-Null
-  # `bun test ./tests/unit` fails if the folder does not exist; empty + --pass-with-no-tests passes.
-  if (-not (Get-ChildItem tests\unit -Force)) { New-Item tests\unit\.gitkeep | Out-Null }
-  # qa-roles.ts is the project's part of qa:local: copied once, never replaced afterwards.
-  foreach ($f in 'test-related.ts', 'pr-screenshots.ts', 'publish-pr-shots.sh', 'qa-local.ts', 'qa-roles.ts', 'context-backup.sh', 'cloud-setup.sh') {
-    CopyIfMissing "$kit\reference\scripts\$f" "scripts\$f"
+  New-Item -ItemType Directory -Force scripts | Out-Null
+  if ($wp) {
+    # test:related needs a TS import graph and qa:local Supabase/Firebase: not in WordPress.
+    foreach ($f in 'pr-screenshots.ts', 'publish-pr-shots.sh', 'context-backup.sh', 'cloud-setup.sh') {
+      CopyIfMissing "$kit\reference\scripts\$f" "scripts\$f"
+    }
+    foreach ($f in 'pull-site.sh', 'php-lint.sh') { CopyIfMissing "$wpKit\$f" "scripts\$f" }
+    CopyIfMissing "$wpKit\docker-compose.yml" 'docker-compose.yml'
+    CopyIfMissing "$wpKit\env.example" '.env.example'
+    New-Item -ItemType Directory -Force local | Out-Null
+    CopyIfMissing "$wpKit\local\mu-plugins" 'local\mu-plugins'
+    CopyIfMissing "$wpKit\local\mysql-client.cnf" 'local\mysql-client.cnf'
+    if ($Client) {
+      $plugin = "wp-content\plugins\$Client-site"
+      if (Test-Path $plugin) {
+        Write-Host "  = $plugin already exists, left as is (take from $wpKit\plugin what it lacks)" -ForegroundColor Yellow
+      } else {
+        New-Item -ItemType Directory -Force (Split-Path $plugin) | Out-Null
+        Copy-Item "$wpKit\plugin" $plugin -Recurse
+        Rename-Item "$plugin\acme-site.php" "$Client-site.php"
+        $snake = $Client -replace '-', '_'
+        $title = (($Client -split '-') | ForEach-Object { $_.Substring(0, 1).ToUpper() + $_.Substring(1) }) -join ' '
+        foreach ($f in Get-ChildItem $plugin -Recurse -File -Include *.php) {
+          $text = [IO.File]::ReadAllText($f.FullName)
+          $text = $text.Replace('ACME_SITE', "$($snake.ToUpper())_SITE").Replace('acme_site', "${snake}_site").
+            Replace('acme-site', "$Client-site").Replace('Acme Site', "$title Site")
+          [IO.File]::WriteAllText($f.FullName, $text)
+        }
+        $copied.Add($plugin)
+        Write-Host "  + $plugin (skeleton: assets by filemtime, acf-json, migrations)"
+      }
+      foreach ($f in 'docker-compose.yml', '.env.example') {
+        if ($copied.Contains($f)) { (Get-Content $f -Raw).Replace('acme-site', "$Client-site") | Set-Content $f -NoNewline }
+      }
+    } else {
+      Write-Host "  = no -Client: the plugin skeleton is not copied ($wpKit\plugin)" -ForegroundColor Yellow
+    }
+  } else {
+    New-Item -ItemType Directory -Force tests\unit | Out-Null
+    # `bun test ./tests/unit` fails if the folder does not exist; empty + --pass-with-no-tests passes.
+    if (-not (Get-ChildItem tests\unit -Force)) { New-Item tests\unit\.gitkeep | Out-Null }
+    # qa-roles.ts is the project's part of qa:local: copied once, never replaced afterwards.
+    foreach ($f in 'test-related.ts', 'pr-screenshots.ts', 'publish-pr-shots.sh', 'qa-local.ts', 'qa-roles.ts', 'context-backup.sh', 'cloud-setup.sh') {
+      CopyIfMissing "$kit\reference\scripts\$f" "scripts\$f"
+    }
   }
   # Cloud sessions (claude.ai/code) only load what is committed in the repo: the kit's skills
   # and agents go in the project's .claude/ (replaced on each run, like install-kit), and the
@@ -111,8 +187,10 @@ try {
     Write-Host "  + .claude\settings.json (SessionStart -> scripts/cloud-setup.sh)"
   }
   if (-not $OnlyPieces) {
-    CopyIfMissing "$kit\github-templates\pull_request_template.md" '.github\pull_request_template.md'
-    CopyIfMissing "$kit\github-templates\workflows\ci.yml" '.github\workflows\ci.yml'
+    $tpl = if ($wp) { $wpKit } else { "$kit\github-templates" }
+    $ci = if ($wp) { "$wpKit\ci.yml" } else { "$kit\github-templates\workflows\ci.yml" }
+    CopyIfMissing "$tpl\pull_request_template.md" '.github\pull_request_template.md'
+    CopyIfMissing $ci '.github\workflows\ci.yml'
   }
   # Version and CHANGELOG with Changesets: each PR brings its .changeset/*.md and the Action
   # keeps the version PR. That way two parallel PRs do not collide on `version` or CHANGELOG.md.
@@ -136,7 +214,7 @@ try {
   }
 
   # CLAUDE.md: the kit's, keeping the "@AGENTS.md" that Next.js 16 adds.
-  $claude = Get-Content "$kit\CLAUDE.md.template" -Raw
+  $claude = Get-Content $(if ($wp) { "$wpKit\CLAUDE.md.template" } else { "$kit\CLAUDE.md.template" }) -Raw
   $current = if (Test-Path CLAUDE.md) { Get-Content CLAUDE.md -Raw } else { '' }
   if ($OnlyPieces) {
   } elseif ($current -and $current.Trim() -ne '@AGENTS.md') {
@@ -164,7 +242,14 @@ try {
     'context:backup'  = 'bash scripts/context-backup.sh'
     'context:restore' = 'bash scripts/context-backup.sh --restore'
   }
-  if ($isNext) { $scripts['typecheck'] = 'next typegen && tsc --noEmit' }
+  if ($wp) {
+    foreach ($k in 'test', 'test:related', 'qa:local') { $scripts.Remove($k) }
+    $scripts['lint:php']   = 'bash scripts/php-lint.sh'
+    $scripts['site:pull']  = 'bash scripts/pull-site.sh'
+    $scripts['local:up']   = 'docker compose --env-file .env.local up -d'
+    $scripts['local:down'] = 'docker compose --env-file .env.local down'
+    $scripts['local:wp']   = 'docker compose --env-file .env.local --profile cli run --rm wpcli wp'
+  } elseif ($isNext) { $scripts['typecheck'] = 'next typegen && tsc --noEmit' }
   elseif (-not $pkg.scripts.PSObject.Properties['typecheck']) {
     Write-Host "  = script typecheck: not Next.js, add the project's own by hand (Astro: astro check)" -ForegroundColor Yellow
   }
@@ -206,6 +291,11 @@ try {
       'context/GIT_STATE.md', 'context/*_INVENTORY.md', 'context/PHASE_LOG/', 'context/plans/')
     Add-Content .gitignore ("`n# local working state of context/ - backup: bun run context:backup (web-agent-kit)`n" + ($local -join "`n"))
     Write-Host "  + .gitignore: local files of context/"
+  }
+  # WordPress: production's files and dumps carry customers' personal data, never in git.
+  if ($wp -and $ignore -notmatch '\.site-pull') {
+    Add-Content .gitignore "`n# WordPress: production's copy, dumps, JS tooling (web-agent-kit)`n.site-pull/`n*.sql`n*.sql.gz`n*.wpress`nnode_modules/`nwp-content/debug.log"
+    Write-Host "  + .gitignore: .site-pull/, dumps"
   }
 
   # Worktrees Claude Desktop creates inside the project: they bring their own root biome.json
@@ -266,7 +356,7 @@ try {
   # here: `bunx playwright install chromium` when screenshots or audits are needed.
   # @axe-core/playwright: the a11y gate uses it on every unit, and a pool worker does not add
   # dependencies (it ended up injecting axe from a CDN).
-  $deps = @('@types/bun', '@playwright/test', '@axe-core/playwright')
+  $deps = if ($wp) { @('@playwright/test', '@axe-core/playwright') } else { @('@types/bun', '@playwright/test', '@axe-core/playwright') }
   if (-not $NoVersion) { $deps += '@changesets/cli' }
   $missing = $deps | Where-Object {
     -not ($pkg.devDependencies -and $pkg.devDependencies.PSObject.Properties[$_])
@@ -293,6 +383,16 @@ try {
 
   if ($OnlyPieces) {
     Write-Host "`nDone (pieces only). Review with git status." -ForegroundColor Green
+    return
+  }
+  if ($wp) {
+    Write-Host "`nDone (WordPress). Next:" -ForegroundColor Green
+    Write-Host "  1. git status  -> review what was copied"
+    Write-Host "  2. the deploy that matches the host: copy $wpKit\deploy-ssh.yml or deploy-ftps.yml"
+    Write-Host "     to .github\workflows\deploy.yml and fill its env (SITE_PLUGIN, CHILD_THEME)"
+    Write-Host "  3. copy .env.example to .env.local and fill the access"
+    Write-Host "  4. open Claude Code in ${Path}: 'adopta el kit en este WordPress' -> it follows"
+    Write-Host "     reference/tech/wordpress-adopt.md (pull-site, local copy, inventory, walk-through)"
     return
   }
   Write-Host "`nDone. Next:" -ForegroundColor Green
