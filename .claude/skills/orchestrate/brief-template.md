@@ -121,12 +121,16 @@ Nothing from another slot's `.qa/`: it belongs to a previous unit and may be sta
    {{Tests on fixed-port services (Firebase emulators…): only in the unit with "Test
    services: yes"; the rest verify with `gh pr checks` if CI runs them. How: the kit's
    `reference/tech/<name>.md` (Firebase: § Emulators in parallel). | remove this line}}
-10. **Files:** created and changed with Write/Edit. No heredoc for long files (Git Bash
+10. **Files:** created and changed with Write/Edit. A file you will edit, open it with Read
+    from the start: what you saw with `cat` does not count as read and the first Edit fails
+    (KREA ×4). No heredoc for long files (Git Bash
     breaks the ones with quotes and backticks), no `node -e` with quotes, backticks or `\d`
     (two patches broke that way: melao) — a script you need goes to `.qa/<name>.mjs` with
     Write and runs with `node`; a short heredoc only quoted (`<<'EOF'`). Python only with
     `newline=""` in `open()` (text mode without it converts to CRLF on Windows and Biome
-    flags the whole file); for mechanical renames across many files, `sed -i` is fine. If
+    flags the whole file); for mechanical renames across many files, `sed -i` is fine, always
+    over the explicit list of your unit's files, never a glob (`components/layout/*.tsx`
+    reached a file of another unit: KREA). If
     you touched a file through the shell (`sed`, `biome --write`), read it before editing it
     — so format (`bunx biome check --write <files>`) once when a stage closes, not after
     every edit: each run invalidates the reads of every file it formats (KREA).
@@ -145,7 +149,9 @@ Nothing from another slot's `.qa/`: it belongs to a previous unit and may be sta
     (`wt take` removes another unit's `progress.md` and `pr-body.md`: the ones there are
     yours.)
 13. **Minimum verification before the PR:** typecheck, lint (no new errors in your code),
-    tests, build; if you touched UI, the `a11y` skill (axe light and dark, 320 px, keyboard).
+    tests; the build only if you touched `next.config`, dependencies or the build setup (CI
+    runs it on every PR: `git-flow` §2.1 gate 3); before each commit, `git diff --cached
+    --stat`; if you touched UI, the `a11y` skill (axe light and dark, 320 px, keyboard).
     Lint with `bun run lint` or `bunx biome`, never `npx biome`: it does not use the
     project's config and reformatted files the other way (KREA).
     A tool a skill asks for that the project does not have (Lighthouse, a CLI): skip it and

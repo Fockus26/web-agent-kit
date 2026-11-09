@@ -25,6 +25,11 @@ at 2560px, a focus ring that disappears on a dark background.
 verified" section, not mixed with the real findings. A report with assumptions disguised as
 findings wastes more time than it saves.
 
+**Write the report as you go**, in `.qa/design-qa/findings.md`: the header at the start, each
+finding when you verify it, and the summary at the end. Your final message is that file. Two
+runs in KREA were cut off when the session closed and, written only at the end, left
+nothing.
+
 ---
 
 ## Preparation
@@ -111,12 +116,12 @@ button out of view.
 - **400% zoom** ≈ 320px equivalent — content reflows into one column, without horizontal
   scroll (WCAG 1.4.10).
 - **Text only at 200%** (`text-size-adjust`) — nothing gets cut or overlaps.
-- **Browser font at 150 %** (default font size 24 px, the setting a low-vision user changes;
-  zoom does not test rem layouts the same way): `browserWithFont(24)` in `design-qa.ts`.
-  `chromium.launch()` (headless shell) ignores that preference; it needs a persistent
-  context with the full Chromium (`channel: 'chromium'`) and the preference in its profile
-  (melao). If the full Chromium cannot start, the sweep reports `font150-not-run`: that
-  check goes to "Not verified", it is not a pass.
+- **Browser font at 150 % and 200 %** (default font size 24 px at 1280 and 32 px at 390, the
+  setting a low-vision user changes; zoom does not test rem layouts the same way):
+  `fontContext()` in `design-qa.ts`, through CDP `Page.setFontSizes`, which the headless shell
+  honors. The preference written to a persistent profile (melao) is only its fallback: on
+  Windows it failed with `spawn UNKNOWN` (KREA). If neither starts, the sweep reports
+  `font150-not-run` / `font200-not-run`: that check goes to "Not verified", it is not a pass.
 
 ```ts
 await page.setViewportSize({ width: 1280, height: 800 })

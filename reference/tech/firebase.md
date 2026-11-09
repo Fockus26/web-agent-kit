@@ -14,6 +14,10 @@ The emulators, not Docker: they need Java (a JDK) and the `firebase-tools` CLI.
   `scripts/seed-emulator.ts` if it exists. A role kept in a document (`admins/{uid}`) →
   `assignRoleFirebase` in `scripts/qa-roles.ts`.
 - In git: `firestore.rules`, `firestore.indexes.json`, `firebase.json`.
+- `firebase-tools` as a pinned devDependency (`bun add -d firebase-tools@<version>`), not
+  whatever `bunx` finds: an old copy in a slot failed with `chalk.blue is not a function`
+  (KREA). `qa-local` sets `NO_UPDATE_NOTIFIER=1` (the update check hung it silently) and
+  retries once when a cold start passes the CLI's 60 s.
 
 ## Rules tests
 

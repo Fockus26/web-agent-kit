@@ -396,7 +396,9 @@ since the last one (and what was never tested). When you work without waves (a l
 a cloud session), closing a risk flow (auth, saved data, payments) launches `functional-qa`,
 or leaves "QA pendiente" in "Blocked" so it is never forgotten. `design-qa` runs only at
 the version QA: phase 09, and before you merge a later version's `chore(release)` PR. A
-wave of sections or styles gets no `wave-qa`.
+wave of sections or styles gets no `wave-qa`. If you want no QA at all until the project is
+finished, say it once and the agent writes `QA: al final` in the project's `CLAUDE.md`: no
+`wave-qa` and no workers' server in any wave, without asking again.
 
 Without Docker on the machine (or without a local database yet), the wave is not blocked: QA
 runs with `bun run qa:local -- --offline`, guest only, and the wave's closing tells you the
@@ -551,6 +553,7 @@ something.
 | `tsc` in CI: "Cannot find name LayoutProps" | Next 16 generates those types in `.next/` on dev/build | `bun run typecheck` = `next typegen && tsc --noEmit` (already in the kickoff script and CI) |
 | A 500 that survives restarts in dev | Turbopack left it cached in `.next/dev` after a subprocess timeout | Shut down, delete `.next/dev`, restart |
 | `typecheck` fails on routes that do not exist | Stale `.next/dev/types` / `.next/types` from another branch | Delete both (`wt take` does it when the branch changes) |
+| `bun run lint` fails locally and passes in CI | Files in CRLF in the working copy (`autocrlf=true` without `eol=lf`) | `* text=auto eol=lf` in `.gitattributes`, then on a clean tree `git rm -rq --cached . && git reset -q --hard` |
 | Biome or `tsc` complain about `.claude/kit-reference/*.ts` | The kit copy is not excluded (project before 3.20.0) | `new-project.ps1 -OnlyPieces` adds it to `biome.json` and `tsconfig.json` |
 | A worker could not write in the local `context/` | Sandboxed worktrees do not write in the main folder | It delivers it in its report and the orchestrator copies it |
 | `wt take`: "No free slots" | Every pool folder has an open unit | Wait for one to be merged (`wt free`) or grow it: `wt init -Count 6` |

@@ -135,7 +135,12 @@ Before even mentioning a commit:
    with its open findings explicitly accepted by César. Without that, it does not close.
 2. **If the unit closed a section with content, a page, or initialized the repo:** the
    `seo` skill must already have run.
-3. `bun run build` (or the project's build command) passes with no errors.
+3. **The build runs in CI, not here.** The PR is not merged until CI's `build` job is green;
+   locally, only if the unit touches `next.config`, the dependencies or the build setup, or
+   CI's build failed. With a deploy preview (Vercel), open its URL once: a route answers
+   200. Why: the local build took 109–309 s per unit on an HDD against 44 s in CI, and it
+   did not catch the production 500 (`require(esm)`) that only the real startup showed
+   (KREA; César, 2026-11-05). A project without CI keeps the local build.
 4. `bunx tsc --noEmit` and the linter pass, if the project has them configured.
 5. **Tests:** during the work `bun run test:related` was enough; here goes the full suite
    (`bun run test`, with `--dots`). CI runs it again on the PR.
@@ -269,6 +274,7 @@ of the PR.
 
 ```bash
 git add <the unit's specific files>                  # never -A blindly
+git diff --cached --stat                             # only the unit's files? (a staged `git rm` slipped in: KREA)
 git commit -m "<type>(<scope>): <descripción>"       # one or several, Conventional Commits
 git push -u origin <branch>
 gh pr create --base main --title "<type>(<scope>): <descripción>" --body-file <file>

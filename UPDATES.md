@@ -38,6 +38,67 @@ other, the agent shows them and asks before choosing.
 
 ---
 
+## 3.21.0 — 2026-11-08 · KREA's first report: prompts checked, Cache Components, build in CI
+
+KREA's report on kit 3.14.0 (feedback PR #25), merged without triage at the time and
+processed now; what 3.20.0 had already covered is left out. Decisions by César, 2026-11-08.
+
+**What changed**
+
+- **`orchestrate`:** everything the prompt cites is checked first (it exists, counts and
+  texts copied from the canvas, demo data that match, the API of components the unit may not
+  edit, a11y traps at the same breakpoint), and what was already verified is stated once;
+  the tests that watch the unit's files and all the state combinations go in the prompt;
+  the heading levels in the unit prompt; "Missing tokens" in the report and one PR at the
+  wave's close; one more decision ID for the phase's closing; `QA: al final` in the
+  project's `CLAUDE.md` skips `wave-qa` and the workers' server in every wave.
+- **Brief:** Read before Edit (`cat` does not count); `sed` only over the unit's file list;
+  `git diff --cached --stat` before each commit; the build only when the unit touches the
+  build setup.
+- **`git-flow` §2.1 gate 3: the build runs in CI**, not locally per unit (109–309 s locally
+  against 44 s in CI), plus opening the deploy preview once. A project without CI keeps it.
+- **`STACK-NEXTJS.md`:** Cache Components (`generateStaticParams` with one real param,
+  `[state]` instead of `?state=`, fonts in `opengraph-image`, a `loading.tsx` test and a
+  console-error pass), `server-only` vs `bun test`, custom utilities in `extendTailwindMerge`.
+- `UI-LIBRARIES.md`: `shadcn init` over own tokens. `seo`: a page's `openGraph` replaces the
+  layout's — spread a shared base. `STATUS-SCREENS.md`: 200 under `loading.tsx` is expected.
+- **`QA-PREVENTION.md`:** fields validated apart before joining, forms before hydration,
+  "no network" vs "the service failed", 200 % text at 390 px, `scroll-padding` for fixed bars,
+  `forced-colors` for the selected state and masked drawings.
+- **`a11y`:** live regions for changes of state, not progress values; axe without a server
+  over the build's HTML. **`design-qa.ts`:** browser font through CDP (it failed on Windows
+  with the profile), and also 200 % at 390. `design-qa` and `functional-qa` write their
+  report as they go; Server Action ids read from the manifest on every run.
+- **`cloud-session`:** after a squash with the remote branch alive, merge its old tip and a
+  normal push, never force; Chromium in `/opt/pw-browsers` via `executablePath`.
+- **`qa-local.ts` (Firebase):** `NO_UPDATE_NOTIFIER=1`, one retry when the CLI exits on a
+  cold start, a message with the real cause. `tech/firebase.md`: `firebase-tools` pinned.
+- **`backend-build`:** the agent writes `.env.test.local` itself; César is never asked to
+  log in for QA. `CURRENT_PHASE` template: check an install before repeating it.
+- **`new-project.ps1`:** `.gitattributes` with `* text=auto eol=lf` (with `autocrlf=true`,
+  Biome failed locally while CI passed).
+
+**Steps for a project on 3.20.0**
+
+1. Global pieces: `install-kit.ps1 -Pull` and a new session (skipped in a cloud session).
+   Then refresh the kit copy (`install-kit --project .`) and commit it.
+2. `new-project.ps1 -Path . -OnlyPieces`: it sets `* text=auto eol=lf` in `.gitattributes`
+   (left alone if a global rule already forces LF). Commit it, and then, **on a clean tree**,
+   rewrite the working copy: `git rm -rq --cached . && git reset -q --hard`. Check: `git
+   ls-files --eol | grep -c "w/crlf"` gives 0.
+3. Replace `scripts/qa-local.ts` with the kit's (LF and the project's Biome; `kit-update` ›
+   Piece check). A Firebase project adds `firebase-tools` as a pinned devDependency if it
+   is not there.
+4. `CLAUDE.md`, the **QA:** line: after "with the `.env.test.local` accounts" add "(you write
+   it; never ask César to log in for QA)". If the line is not there (a trimmed `CLAUDE.md`),
+   do not add it: `backend-build` already says it. At 8 KB, shorten the line itself
+   (`(--offline: guest only)` can go).
+5. If César wants no QA until the end of the project: a line `QA: al final` in `CLAUDE.md`
+   (`orchestrate` §8). Only if he says so.
+6. Nothing in `context/`.
+
+---
+
 ## 3.20.0 — 2026-11-08 · Slot hygiene, emulators in parallel, Better Auth (KREA)
 
 KREA's feedback (kit 3.17.0, three waves of ≈40 PRs in three days, mid-migration from

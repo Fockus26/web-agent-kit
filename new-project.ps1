@@ -353,18 +353,25 @@ try {
     }
   }
 
-  # bash fails with a .sh in CRLF: git would convert it when cloning on Windows.
-  # An existing file only gets the *.sh line, and not even that if a global rule already
-  # forces LF: appending `* text=auto` after `* text=auto eol=lf` overrode it (inversiones-js).
+  # Every text file with LF in the working copy too. With `* text=auto` alone and Windows'
+  # core.autocrlf=true, a branch switch left the files in CRLF and `bun run lint` (Biome, LF)
+  # failed locally while CI passed (KREA); bash also fails on a .sh in CRLF.
+  # An existing global rule without `eol` gets it; one that already forces LF is left alone:
+  # appending `* text=auto` after `* text=auto eol=lf` overrode it (inversiones-js).
   if (-not (Test-Path .gitattributes)) {
-    Set-Content .gitattributes "* text=auto`n*.sh text eol=lf`n" -NoNewline
-    Write-Host "  + .gitattributes: *.sh with LF"
+    Set-Content .gitattributes "* text=auto eol=lf`n" -NoNewline
+    Write-Host "  + .gitattributes: LF for every text file"
   } else {
     $attrs = Get-Content .gitattributes -Raw
-    if ($attrs -notmatch '\*\.sh' -and $attrs -notmatch '(?m)^\*\s.*eol=lf') {
-      $sep = if ($attrs -and -not $attrs.EndsWith("`n")) { "`n" } else { '' }
-      Add-Content .gitattributes "$sep*.sh text eol=lf`n" -NoNewline
-      Write-Host "  + .gitattributes: *.sh with LF"
+    if ($attrs -notmatch '(?m)^\*\s.*eol=lf') {
+      if ($attrs -match '(?m)^\*\s+text=auto[ \t]*\r?$') {
+        $attrs = $attrs -replace '(?m)^\*\s+text=auto[ \t]*(\r?)$', '* text=auto eol=lf$1'
+        Set-Content .gitattributes $attrs -NoNewline
+      } else {
+        $sep = if ($attrs -and -not $attrs.EndsWith("`n")) { "`n" } else { '' }
+        Add-Content .gitattributes "$sep* text=auto eol=lf`n" -NoNewline
+      }
+      Write-Host "  ~ .gitattributes: * text=auto eol=lf (LF for every text file)"
     }
   }
 

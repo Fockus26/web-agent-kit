@@ -56,6 +56,10 @@ changed between versions.
 - Next answers with status **404** and adds `noindex` on its own. Do not set `robots` by hand.
 - Dynamic routes call `notFound()` when the entity does not exist: that way they get this
   same screen and not an indexable empty page.
+- **Under a `loading.tsx` the status is 200**, with the 404 screen and `noindex`: the stream
+  already started when `notFound()` runs. It is expected and harmless for search engines
+  (KREA accepted it). A real 404 costs a check before rendering (in the proxy); do it only if
+  a client or an integration reads the status.
 - If there are route groups with different layouts, one `not-found.tsx` per group only if
   the design asks for it; otherwise, one at the root.
 
