@@ -264,11 +264,15 @@ try {
   # Rewritten only if a script was added: ConvertTo-Json reformats the whole file.
   if ($added) { ($pkg | ConvertTo-Json -Depth 20) + "`n" | Set-Content package.json -NoNewline }
 
-  # .gitignore: local PR screenshots.
+  # .gitignore: local PR screenshots. Each line on its own: a check for "\.pr-shots" was
+  # satisfied by `.pr-shots.json` alone and the folder stayed out (KREA).
   $ignore = if (Test-Path .gitignore) { Get-Content .gitignore -Raw } else { '' }
-  if ($ignore -notmatch '\.pr-shots') {
-    Add-Content .gitignore "`n# PR screenshots (web-agent-kit)`n.pr-shots/`n.pr-shots.json"
-    Write-Host "  + .gitignore: .pr-shots"
+  $shots = @('.pr-shots/', '.pr-shots.json') | Where-Object {
+    $ignore -notmatch "(?m)^/?$([regex]::Escape($_.TrimEnd('/')))/?[ \t]*\r?$"
+  }
+  if ($shots) {
+    Add-Content .gitignore "`n# PR screenshots (web-agent-kit)`n$($shots -join "`n")"
+    Write-Host "  + .gitignore: $($shots -join ', ')"
   }
   # .qa/: measuring scripts, logs and QA sweeps. Inside the project so they resolve
   # Playwright from node_modules (from a temp folder they cannot), never committed.
@@ -313,26 +317,39 @@ try {
     Add-Content .gitignore "`n# Claude Desktop worktrees (web-agent-kit)`n.claude/worktrees/"
     Write-Host "  + .gitignore: .claude/worktrees/"
   }
+  # Out of Biome and tsc too: the kit copy in `.claude/kit-reference/` brings `.ts` scripts in
+  # the kit's format, which Biome rejected and tsc included through `**/*.ts` (KREA, 3.15.0).
+  $outOfTools = @('.claude/worktrees', '.claude/kit-reference')
   if (Test-Path biome.json) {
     $biome = Get-Content biome.json -Raw | ConvertFrom-Json
     if (-not $biome.files) { $biome | Add-Member -NotePropertyName files -NotePropertyValue ([pscustomobject] @{}) }
     $before = $biome | ConvertTo-Json -Depth 20
     if ($biome.files.PSObject.Properties['ignore']) {
       # Biome 1.x
-      if ($biome.files.ignore -notcontains '.claude/worktrees') { $biome.files.ignore += '.claude/worktrees' }
+      foreach ($d in $outOfTools) { if ($biome.files.ignore -notcontains $d) { $biome.files.ignore += $d } }
     } else {
       # Biome 2.x: files.includes with negation; without includes, "**" is what it processed before.
       if (-not $biome.files.PSObject.Properties['includes']) {
         $biome.files | Add-Member -NotePropertyName includes -NotePropertyValue @('**')
       }
-      if ($biome.files.includes -notcontains '!**/.claude/worktrees') {
-        $biome.files.includes = @($biome.files.includes) + '!**/.claude/worktrees'
+      foreach ($d in $outOfTools) {
+        if ($biome.files.includes -notcontains "!**/$d") { $biome.files.includes = @($biome.files.includes) + "!**/$d" }
       }
     }
     $after = $biome | ConvertTo-Json -Depth 20
     if ($after -ne $before) {
       $after + "`n" | Set-Content biome.json -NoNewline
-      Write-Host "  + biome.json: .claude/worktrees excluded"
+      Write-Host "  + biome.json: $($outOfTools -join ', ') excluded"
+    }
+  }
+  if (Test-Path tsconfig.json) {
+    $ts = Get-Content tsconfig.json -Raw | ConvertFrom-Json
+    $exclude = @(if ($ts.PSObject.Properties['exclude']) { $ts.exclude } else { 'node_modules' })
+    $new = @($outOfTools | Where-Object { $exclude -notcontains $_ })
+    if ($new) {
+      $ts | Add-Member -NotePropertyName exclude -NotePropertyValue (@($exclude) + $new) -Force
+      ($ts | ConvertTo-Json -Depth 20) + "`n" | Set-Content tsconfig.json -NoNewline
+      Write-Host "  + tsconfig.json exclude: $($new -join ', ')"
     }
   }
 

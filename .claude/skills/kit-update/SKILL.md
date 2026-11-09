@@ -183,9 +183,9 @@ happened: a project on 3.5.0 without `test:related` or `shots`, because it start
 |---|---|
 | `package.json` scripts: `test`, `test:related`, `shots`, `shots:publish`, `qa:local`, `context:backup`, `context:restore`, and their files in `scripts/` (plus `scripts/qa-roles.ts`, the project's part of `qa:local`: added if missing, **never replaced**) | `package.json` and `ls scripts/` |
 | devDependencies: `@types/bun`, `@playwright/test`, `@axe-core/playwright` (and `@changesets/cli` if versioned) | `package.json` |
-| `.gitignore` with `.pr-shots`, `.env*.local` (or `.env*`) and `.claude/worktrees/` | `git check-ignore -q <path>` |
+| `.gitignore` with `.pr-shots/` **and** `.pr-shots.json`, `.env*.local` (or `.env*`) and `.claude/worktrees/` | `git check-ignore -q <path>` (each one: before 3.20.0, `.pr-shots.json` alone hid the missing folder) |
 | **`.gitignore` does NOT ignore** `supabase/` (except `.temp/`, `.branches/`) or the fixed documents of `context/` (`PROJECT_CONTEXT`, `DESIGN_RULES`, `COLORS`, `DESIGN_TOKENS`, `TYPOGRAPHY`, `decisions/`) | `git check-ignore -v supabase/migrations context/PROJECT_CONTEXT.md context/decisions` |
-| `biome.json` (if any) excludes `.claude/worktrees` | `files.includes` / `files.ignore` |
+| `biome.json` (if any) excludes `.claude/worktrees` and `.claude/kit-reference`; `tsconfig.json` (if any) has both in `exclude` | `files.includes` / `files.ignore`; `exclude` |
 | `CLAUDE.md` ≤ 8 KB (the template is ≤ 7 KB; the rest is the project's) | `wc -c CLAUDE.md` |
 | The kit's `reference/` next to the skills: `.claude/kit-reference/` in the project copy (and `~/.claude/kit-reference/` on the machine) | `ls .claude/kit-reference/TOKEN-ECONOMY.md` |
 | Kit copy for cloud sessions: `.claude/skills/<each kit skill>` and `.claude/agents/<each kit agent>`, equal to `<kit>`'s, not gitignored | `diff -rq "<kit>/.claude/skills/<name>" .claude/skills/<name>` per kit skill (and agents); `git check-ignore -q .claude/skills` |

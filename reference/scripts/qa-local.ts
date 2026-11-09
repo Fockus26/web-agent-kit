@@ -21,11 +21,13 @@
  *      (`qa-<package name>-mailpit`), reused if running, on free ports. They stay up afterwards.
  *   2. One database per QA port (`qa_<port>`, so slots do not collide), owned by a role that is
  *      not a superuser, like the real one. Dropped and recreated unless `--no-reset`. Then
- *      `bun run db:migrate` and `drizzle/seed.sql`.
+ *      `bun run db:migrate`, `drizzle/seed.sql` and `scripts/seed-db.ts` if the project has it.
  *   3. The server with `DATABASE_URL`/`DIRECT_URL` at the container and `SMTP_*` at Mailpit. Every
  *      Supabase variable goes to a dead address: code not yet migrated cannot reach the real one.
  *   4. Before printing `QA ready`, the `.env.test.local` accounts through Better Auth's sign-up
- *      endpoint, then `email_verified = true` by SQL; the role in `assignRolePostgres`.
+ *      endpoint, then `email_verified = true` by SQL; the role in `assignRolePostgres`. An app
+ *      with `disableSignUp` creates them in `scripts/seed-db.ts` and says so in
+ *      `existingAccount` (`scripts/qa-roles.ts`); that hook works for every backend.
  *   `--db-only` stops after step 2 and prints the URLs: for tests against the database, without
  *   a server.
  *
@@ -153,10 +155,20 @@ interface QaRoles {
     ctx: { firestore: string; project: string; headers: Headers },
   ): Promise<void>
   assignRolePostgres(id: string, role: string, ctx: { sql: (statement: string) => string }): Promise<void>
+  existingAccount(account: { email: string; role: string }): boolean | Promise<boolean>
 }
 const roles: Partial<QaRoles> = existsSync('scripts/qa-roles.ts')
   ? await import(pathToFileURL('scripts/qa-roles.ts').href)
   : {}
+
+// An account the project's own seed already creates (`existingAccount` in qa-roles.ts) is not
+// created again nor given its role here. Without the hook, KREA re-applied by hand a block
+// inside this file after every kit update.
+async function seeded(a: { email?: string; role: string }): Promise<boolean> {
+  if (!a.email || !(await roles.existingAccount?.({ email: a.email, role: a.role }))) return false
+  console.log(`  = test account: role ${a.role} (created by the project's seed)`)
+  return true
+}
 
 // App variable ← field of `supabase status -o json`, for Next (NEXT_PUBLIC_*), Vite (VITE_*)
 // and Astro (PUBLIC_*). Add the one your project uses here if it has another name (the
@@ -590,6 +602,17 @@ if (args.includes('--postgres') || (hasDrizzle && !usesSupabase && !existsSync('
     console.log('… drizzle/seed.sql')
     sqlIn(DB, readFileSync('drizzle/seed.sql', 'utf8'))
   }
+  // A seed that needs code (Better Auth's hashes, accounts in an app with `disableSignUp`,
+  // where the sign-up route below does not exist): the project's own, against this database.
+  if (reset && existsSync('scripts/seed-db.ts')) {
+    console.log('… scripts/seed-db.ts')
+    const seed = spawnSync('bun', ['scripts/seed-db.ts'], {
+      stdio: 'inherit',
+      shell: process.platform === 'win32',
+      env: { ...process.env, DATABASE_URL: databaseUrl, DIRECT_URL: databaseUrl },
+    })
+    if (seed.status !== 0) abort('scripts/seed-db.ts failed.')
+  }
 
   console.log(`Local database: ${databaseUrl} · emails at http://127.0.0.1:${mailUi}`)
   if (dbOnly) process.exit(0)
@@ -614,13 +637,14 @@ if (args.includes('--postgres') || (hasDrizzle && !usesSupabase && !existsSync('
         console.warn(`! role ${a.role}: email or password missing in .env.test.local; skipped`)
         continue
       }
+      if (await seeded(a)) continue
       const r = await fetch(`${SITE}/api/auth/sign-up/email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Origin: SITE },
         body: JSON.stringify({ email: a.email, password: a.password, name: a.role }),
       })
       if (r.status === 404) {
-        console.warn('! The app has no Better Auth sign-up route yet: test accounts skipped.')
+        console.warn('! The app has no Better Auth sign-up route (not yet, or `disableSignUp`): test accounts skipped. Create them in scripts/seed-db.ts and mark them in existingAccount (scripts/qa-roles.ts).')
         return
       }
       const email = a.email.replaceAll("'", "''")
@@ -683,6 +707,7 @@ if (firebaseJson?.emulators && !existsSync('supabase/config.toml')) {
       console.warn(`! role ${a.role}: email or password missing in .env.test.local; skipped`)
       continue
     }
+    if (await seeded(a)) continue
     const r = await fetch(`${authApi}/accounts`, {
       method: 'POST',
       headers: owner,
@@ -770,6 +795,7 @@ for (const a of accounts) {
     console.warn(`! role ${a.role}: email or password missing in .env.test.local; skipped`)
     continue
   }
+  if (await seeded(a)) continue
   const r = await fetch(`${api}/auth/v1/admin/users`, {
     method: 'POST',
     headers,

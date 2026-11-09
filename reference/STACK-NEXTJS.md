@@ -157,12 +157,25 @@ supabase/                   migrations, seed, auth templates (in git)
 - A `'use client'` module exports only components: a constant imported from it into a
   Server Component arrives as a client reference, not a value (`undefined`, 500). What is
   shared goes in `lib/`.
+- A Server Component passes a client one only serializable props: never a function (a
+  `href` builder, a formatter). It fails at render, not in `typecheck`. Pass the data
+  (a map of hrefs) or move the function into the client module (KREA).
 
 ### Dev server (Turbopack)
 
 - With several servers at once (pool workers), Turbopack may time out its subprocesses
   ("Node.js subprocess crashed … deadline has elapsed") and leave a 500 in the `.next/dev`
   cache. A restart is not enough: shut down, delete `.next/dev` and restart.
+- `typecheck` (`next typegen`) with errors about routes that no longer exist: stale types in
+  `.next/dev/types` or `.next/types` from another branch. Delete both and run it again;
+  `wt take` already does it when it puts a new branch in a slot (KREA ×5).
+
+### Biome
+
+- Two `// biome-ignore` in a row on one JSX node do not chain: only the first applies. For
+  several rules or lines, a range: `// biome-ignore-start lint/<group>/<rule>: <reason>` …
+  `// biome-ignore-end lint/<group>/<rule>: <reason>` (in JSX, inside `{/* */}`) (KREA,
+  Biome 2.4).
 
 ### TypeScript
 

@@ -38,6 +38,57 @@ other, the agent shows them and asks before choosing.
 
 ---
 
+## 3.20.0 — 2026-11-08 · Slot hygiene, emulators in parallel, Better Auth (KREA)
+
+KREA's feedback (kit 3.17.0, three waves of ≈40 PRs in three days, mid-migration from
+Firebase to the VPS). Decisions by César, 2026-11-08.
+
+**What changed**
+
+- **`wt take` clears what the previous unit left** when the slot gets a different branch
+  (`.qa/.branch` records whose they are): `.qa/pr-body.md`, `progress.md`, `*.log`, and
+  `.next/dev`, `.next/types`. The measuring and repro scripts stay. One PR went out with
+  another's body and the stale types gave false `typecheck` errors (KREA ×14 and ×5).
+- **`orchestrate`:** "Test services yes/no" reserved like Docker (at most one unit per wave
+  runs fixed-port emulators; the rest verify through CI); `CONTENT_CHECKLIST` rows reserved
+  against the file's real last row, with one spare per unit; the orchestrator checks a shape
+  or trap before stating it as exact; the scope of an ambiguous rule is asked in the single
+  round; with visual QA suppressed, a new color comes with its contrast pairs in light and
+  dark.
+- **Brief rules:** Python only with `newline=""`, `sed -i` for mechanical renames, format at
+  stage close; `git grep` to search; never `npx biome`.
+- **`tech/firebase.md` § Emulators in parallel:** start in the background and wait for the
+  ready line, one emulator per run, a port that does not collide with Docker/WSL, a
+  `rejects()` helper for the Admin SDK hang, `emulators:stop`.
+- **`tech/vps-postgres.md`:** allowlist in `/api/auth/[...all]`; rate limit by account that
+  counts only failures, on top of a loose one by IP (a classroom behind a NAT was locked out).
+- **`tech/migrate-firebase-vps.md`:** `runTransaction` → `SELECT … FOR UPDATE`; emulator tests
+  → PGlite with a `DocumentSnapshot` shim.
+- **`qa-local.ts` / `qa-roles.ts`:** `existingAccount` hook (any backend: an account the
+  project's seed creates is not created again) and `scripts/seed-db.ts` in the Postgres
+  backend (an app with `disableSignUp` has no sign-up route).
+- **`new-project.ps1`:** `.claude/kit-reference` (and `.claude/worktrees`) out of `biome.json`
+  and `tsconfig.json › exclude`; each `.pr-shots` line of `.gitignore` checked on its own.
+- `QA-PREVENTION.md` §3: the proxy only redirects `GET`/`HEAD`. `STACK-NEXTJS.md`: no
+  functions as props from a Server Component; stale `.next` types; Biome range suppressions.
+
+**Steps for a project on 3.19.0**
+
+1. Global pieces: `install-kit.ps1 -Pull` and a new session (skipped in a cloud session).
+   Then refresh the kit copy (`install-kit --project .`) and commit it.
+2. `new-project.ps1 -Path . -OnlyPieces`: it adds the `biome.json` / `tsconfig.json`
+   exclusions and the missing `.gitignore` lines. Check: `bun run lint` and `bun run
+   typecheck` do not mention `.claude/kit-reference`; `git check-ignore -q .pr-shots/x`
+   passes. (A WordPress project: skipped, it has neither file.)
+3. Replace `scripts/qa-local.ts` with the kit's (LF and the project's Biome; `kit-update` ›
+   Piece check). `scripts/qa-roles.ts` is **not** replaced: if the project creates test
+   accounts in its own seed, add the `existingAccount` function from the kit's
+   `qa-roles.ts`. If it had patched `qa-local.ts` to skip them, that patch moves there.
+4. A pool already initialized needs nothing: the next `wt take` of each slot clears it.
+5. Nothing in `CLAUDE.md` or `context/`.
+
+---
+
 ## 3.19.0 — 2026-11-07 · WordPress as an official stack (InspecChile)
 
 InspecChile (cPanel without SSH, deploy by FTPS, ACF Pro and Elementor Pro, adopted on 3.15.0)

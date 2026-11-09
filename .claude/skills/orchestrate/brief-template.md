@@ -118,15 +118,23 @@ Nothing from another slot's `.qa/`: it belongs to a previous unit and may be sta
    (melao: `tokens.test.ts` 8.8 s in the suite, 0.4 s alone). A test or sample that needs
    media (audio, image) without network uses a shared fixture in `tests/fixtures/`, never a
    generator written inside the component or the sample (melao).
+   {{Tests on fixed-port services (Firebase emulators…): only in the unit with "Test
+   services: yes"; the rest verify with `gh pr checks` if CI runs them. How: the kit's
+   `reference/tech/<name>.md` (Firebase: § Emulators in parallel). | remove this line}}
 10. **Files:** created and changed with Write/Edit. No heredoc for long files (Git Bash
     breaks the ones with quotes and backticks), no `node -e` with quotes, backticks or `\d`
     (two patches broke that way: melao) — a script you need goes to `.qa/<name>.mjs` with
-    Write and runs with `node`; a short heredoc only quoted (`<<'EOF'`). No Python in text
-    mode (on Windows it converts to CRLF and Biome flags the whole file). If you touched a
-    file through the shell (`sed`, `biome --write`), read it before editing it.
+    Write and runs with `node`; a short heredoc only quoted (`<<'EOF'`). Python only with
+    `newline=""` in `open()` (text mode without it converts to CRLF on Windows and Biome
+    flags the whole file); for mechanical renames across many files, `sed -i` is fine. If
+    you touched a file through the shell (`sed`, `biome --write`), read it before editing it
+    — so format (`bunx biome check --write <files>`) once when a stage closes, not after
+    every edit: each run invalidates the reads of every file it formats (KREA).
 11. **Waiting and searching:** `sleep` is blocked; anything that takes more than 2 min
-    (suite, build, typecheck) runs in the background and you wait for its notice. `grep`
-    always with scoped paths (`app/`, `lib/`, `components/`): at the root it walks
+    (suite, build, typecheck) runs in the background and you wait for its notice. Search
+    with `git grep -n <pattern> -- <paths>`: it only walks tracked files and answers in
+    seconds, while `grep -r` over several folders took > 2 min in a slot and `rg` timed out
+    (KREA). A plain `grep` always with scoped paths (`app/`, `lib/`): at the root it walks
     `node_modules` and `.next`.
 12. **Commit when each stage closes** (backend, UI, docs), not only at the end: an API cut
     (403/429) mid-unit does not take the work with it. Inside a long stage, a `wip: <what>`
@@ -134,8 +142,12 @@ Nothing from another slot's `.qa/`: it belongs to a previous unit and may be sta
     `.qa/progress.md` (done / next): two workers died mid-unit (watchdog at 600 s, a 403)
     with no report and their work uncommitted in the slot (melao). When resuming:
     `git status`, `.qa/progress.md`, and carry on; do not reread what you already wrote.
+    (`wt take` removes another unit's `progress.md` and `pr-body.md`: the ones there are
+    yours.)
 13. **Minimum verification before the PR:** typecheck, lint (no new errors in your code),
     tests, build; if you touched UI, the `a11y` skill (axe light and dark, 320 px, keyboard).
+    Lint with `bun run lint` or `bunx biome`, never `npx biome`: it does not use the
+    project's config and reformatted files the other way (KREA).
     A tool a skill asks for that the project does not have (Lighthouse, a CLI): skip it and
     say "not run: not installed" in the report — a worker does not add dependencies (melao).
 14. **Screenshots:** if something visible changed, rewrite `.pr-shots.json` with your states

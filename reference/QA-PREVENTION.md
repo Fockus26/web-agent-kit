@@ -49,6 +49,7 @@ Each row: the defect, the rule that prevents it, and where it came from.
 | The error says nothing ("Algo salió mal") | Expected errors are results with a message the user can act on (`backend-build` › Conventions) | functional-qa §7 |
 | A cron or job hangs on a third party and the next run piles on | Every outbound call in a cron, webhook or job has a timeout (`AbortSignal.timeout(ms)`) and its failure is logged, not awaited forever | world-flags |
 | A date the client accepts fails in the database (or the reverse) | The server parses dates with the same strictness as the column: a strict format in the schema (`z.iso.datetime()`, `z.iso.date()`), never `Date.parse`, which accepts what Postgres rejects | world-flags |
+| A form action right after login fails as a "network error" with the session open | The proxy/middleware that redirects by session only redirects `GET`/`HEAD`; a `POST` (a Server Action, a form, an API call) without the expected session gets a 401/403 the client handles, never a 307 it cannot follow | KREA |
 | A new service worker route is intercepted by the old one | A service worker never caches `/api/*` or other dynamic same-origin routes, and the change ships a new SW version (`tech/astro.md` › A static site that gains an API) | world-flags |
 
 ## 4. Layout under real content (200 % text, 320 px)

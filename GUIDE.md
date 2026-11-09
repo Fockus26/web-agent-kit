@@ -550,6 +550,8 @@ something.
 | `next dev` rewrites `AGENTS.md` again | Next.js 16 regenerates it | Normal: committed with the rest; `CLAUDE.md` imports it with `@AGENTS.md` |
 | `tsc` in CI: "Cannot find name LayoutProps" | Next 16 generates those types in `.next/` on dev/build | `bun run typecheck` = `next typegen && tsc --noEmit` (already in the kickoff script and CI) |
 | A 500 that survives restarts in dev | Turbopack left it cached in `.next/dev` after a subprocess timeout | Shut down, delete `.next/dev`, restart |
+| `typecheck` fails on routes that do not exist | Stale `.next/dev/types` / `.next/types` from another branch | Delete both (`wt take` does it when the branch changes) |
+| Biome or `tsc` complain about `.claude/kit-reference/*.ts` | The kit copy is not excluded (project before 3.20.0) | `new-project.ps1 -OnlyPieces` adds it to `biome.json` and `tsconfig.json` |
 | A worker could not write in the local `context/` | Sandboxed worktrees do not write in the main folder | It delivers it in its report and the orchestrator copies it |
 | `wt take`: "No free slots" | Every pool folder has an open unit | Wait for one to be merged (`wt free`) or grow it: `wt init -Count 6` |
 | `wt free` aborts | The slot has uncommitted changes | See what they are (`wt status`); they are never discarded on their own |
