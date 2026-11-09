@@ -94,7 +94,15 @@ are about to ask:
 - **Is there a way to verify it?** Before asking for a DOM test, check that the project has
   a DOM test environment (`happy-dom`/`jsdom` in `package.json`); if not, ask for "verify by
   measuring with Playwright". Before calling something a bug, measure it (e.g. two `font-*`
-  classes that `cn` already resolves are not a bug).
+  classes that `cn` already resolves are not a bug). If César suppressed visual QA (no
+  server, no `design-qa`) and the unit adds a color, the prompt asks for the contrast pairs
+  computed in light **and** dark in the report: a new color that did not show in dark
+  reached `main` because nobody saw it (KREA).
+- **Is what you will state as exact true?** A shared shape, a type change ("widening it to
+  `string` compiles the same") or a trap of a library: check it before writing it — a quick
+  `typecheck` with the change in a free slot, the version in `node_modules`. The worker
+  takes the brief as fact: that claim failed in 11 assignments (KREA), and a trap about
+  Radix was false for the installed version (KREA).
 - **Is there an image involved?** Open it before proposing its `alt` or its text: an alt
   written without seeing it describes nothing.
 - **Does it change tokens?** Read the CSS the build generates (`.next/static/css`, `dist/`),
@@ -122,6 +130,9 @@ asked now, in a single round (max. 4 questions, with a recommended option):
 - May they apply **additive** database changes (new columns) through the MCP, or leave them
   written for César?
 - Product decisions the request leaves open that change the unit's design.
+- **The scope of a rule when the request does not fix it** ("in this area" or "everywhere"):
+  a prompt narrowed a rule to one area by interpretation, it had to apply to all cases, and
+  César fixed it after the merge (KREA).
 
 Do not ask about the closing QA: the server and test accounts for `wave-qa` are already
 authorized (§8).
@@ -151,6 +162,7 @@ So that parallel units do not collide, assign each one:
 | Range of custom error codes, if the project uses them (SQLSTATE of `raise … using errcode`): closed and disjoint per unit, never "F5+" (two units overlapped: melao) | MS010–MS014 |
 | Model · effort (`reference/TOKEN-ECONOMY.md` §12) | `sonnet` · medium |
 | Docker for this unit (local database, containers) | yes / no |
+| Test services on fixed ports for this unit (emulators, a test database the suite starts) | yes / no |
 
 **Two units sharing a shape** (the same table, column, type or event): fix its name and type
 in the brief's "Shared shapes" before launching. Otherwise the second one improvises its own
@@ -176,6 +188,18 @@ git ls-tree --name-only origin/main context/decisions/ | sort | tail -3
 ```
 
 And above that, the ranges reserved in still-open PRs of another batch, if any.
+
+**`CONTENT_CHECKLIST` rows, the same way: against the file's real last row** (it is local:
+in the main folder) plus the ranges of still-open units, never against the plan. A row
+reserved as free for a later wave had already been used by another PR (KREA ×2). Reserve
+one extra row per unit: within its range the worker distributes them freely (5 copy bands
+with 4 rows forced a merge: KREA).
+
+**Test services on fixed ports yes/no is decided here too, like Docker:** at most one unit
+per wave runs them. Firebase's emulators with several slots did not start in 60 s, collided
+on the fixed ports and contaminated each other's runs (KREA ×8). The others verify through
+CI (`gh pr checks`) when it runs those tests; the technology's reference says how (e.g.
+`tech/firebase.md` § Emulators in parallel).
 
 The slot and its port are not reserved here: `wt take` assigns them at launch (wt2 → 4302, §6).
 

@@ -60,7 +60,33 @@ Project names on the VPS: lowercase, digits and `_` (`world_flags`, not `world-f
 4. Better Auth with `drizzleAdapter(db, { provider: 'pg' })`, its tables with `bunx auth@latest
    generate`, and a migration. `qa-local.ts` expects its `user` table with an `email_verified`
    column and the sign-up route at `/api/auth/sign-up/email`. Emails:
-   `EMAIL-TEMPLATES.md` § Better Auth. Also the kit's auth rules (`backend-build` §2).
+   `EMAIL-TEMPLATES.md` § Better Auth. Also the kit's auth rules (`backend-build` §2), and the
+   two below.
+   - **Only the endpoints the app uses.** `toNextJsHandler(auth)` exposes all of them
+     (update-user, change-password, list-sessions…) even if the app only signs in and out
+     (KREA). An allowlist, not `disabledPaths`: an endpoint a Better Auth update adds stays
+     closed. `auth.api.*` calls from the server do not go through the route and still work.
+
+     ```ts
+     // app/api/auth/[...all]/route.ts
+     import { toNextJsHandler } from 'better-auth/next-js'
+     import { auth } from '@/lib/auth'
+
+     const ALLOWED = new Set(['/sign-in/email', '/sign-out', '/get-session']) // + what the app calls
+     const h = toNextJsHandler(auth)
+     const only = (fn: (r: Request) => Promise<Response>) => (r: Request) =>
+       ALLOWED.has(new URL(r.url).pathname.replace(/^\/api\/auth/, '')) ? fn(r) : new Response(null, { status: 404 })
+     export const GET = only(h.GET)
+     export const POST = only(h.POST)
+     ```
+   - **Rate limit by account, not only by IP.** Better Auth's is per `ip|path` and counts the
+     successful sign-ins too: behind a NAT (a whole classroom on one IP) the 11th student in 5
+     minutes was locked out (KREA). A loose limit per IP (`rateLimit.customRules:
+     { '/sign-in/email': { window: 300, max: 200 } }`) plus one per account that only counts
+     failures: in `hooks.after`, when `ctx.path === '/sign-in/email'` and `ctx.context.returned`
+     is an `APIError`, add one to a counter for `ctx.body.email` in a table of yours (a success
+     resets it); in `hooks.before`, with ≥ 5 failures in 15 min, `throw new APIError(
+     'TOO_MANY_REQUESTS')` (both from `better-auth/api`, each hook one `createAuthMiddleware`).
 5. `vercel.json` with `"regions": ["fra1"]`: the VPS is in the EU, and Vercel's default region
    puts an ocean between each query and the database (world-flags).
 6. `drizzle/seed.sql` with the minimum to walk through the flows, no personal data. It only runs

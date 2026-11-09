@@ -373,7 +373,7 @@ Details in `reference/TOKEN-ECONOMY.md`. What weighs most:
 
 ## Versions and updating projects
 
-The kit is versioned (`VERSION`, now **3.17.0**) and each project keeps in `.kit-version`
+The kit is versioned (`VERSION`, now **3.20.0**) and each project keeps in `.kit-version`
 which one it is aligned with. To bring it up to date: `/kit-update` in a project session. It
 compares with the published version (`origin/main` of the kit's clone); if behind, it
 computes the path with `UPDATES.md` and applies each version in order, in a PR.
@@ -382,6 +382,17 @@ And the way back: each project logs in `context/KIT_FEEDBACK.md` what César had
 or repeat and what the kit did not cover. `/kit-feedback` uploads it to this repo as a PR
 (`feedback/`, `kit-feedback` label); in a session opened here, "revisa el feedback" triages
 all the PRs together (`CLAUDE.md` says how).
+
+### 3.20.0 (KREA feedback: slots, emulators, Better Auth)
+
+| Before | Now |
+|---|---|
+| A recycled slot kept the previous unit's `.qa/pr-body.md` and `progress.md`: one PR went out with another's body | `wt take` removes them (and `.next/dev`, `.next/types`) when the branch changes; the scripts stay |
+| Several slots ran the Firebase emulators at once and collided | One unit per wave with "Test services: yes"; the rest verify through CI (`tech/firebase.md`) |
+| `CONTENT_CHECKLIST` rows reserved against the plan, already used | Against the file's real last row, one spare per unit |
+| `.claude/kit-reference/*.ts` broke Biome and `tsc`; `.pr-shots/` not ignored | `new-project.ps1` excludes it from both and checks each `.gitignore` line |
+| Better Auth exposed every endpoint and its rate limit locked out a classroom behind a NAT | Allowlist route and a per-account limit that counts failures (`tech/vps-postgres.md`) |
+| Accounts the project's seed creates had to be patched into `qa-local.ts` by hand | `existingAccount` in `qa-roles.ts` and `scripts/seed-db.ts` |
 
 ### 3.19.0 (InspecChile feedback: WordPress)
 

@@ -60,6 +60,17 @@ export async function assignRole(id: string, role: string, { api, headers }: Sup
   void headers
 }
 
+// An account the project's own seed already creates (`scripts/seed-emulator.ts`,
+// `scripts/seed-db.ts`, `drizzle/seed.sql`): return true and qa-local neither creates it nor
+// assigns its role. Needed when the app has no sign-up (`disableSignUp`) or the seed gives the
+// accounts data the role alone does not (KREA). Any backend.
+export async function existingAccount({ email, role }: { email: string; role: string }): Promise<boolean> {
+  // e.g. return email.endsWith('@seed.test')
+  void email
+  void role
+  return false
+}
+
 /** The Postgres backend: `sql` runs a statement in the QA database and returns its output. */
 export async function assignRolePostgres(
   id: string,
