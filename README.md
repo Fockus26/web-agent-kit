@@ -373,7 +373,7 @@ Details in `reference/TOKEN-ECONOMY.md`. What weighs most:
 
 ## Versions and updating projects
 
-The kit is versioned (`VERSION`, now **3.20.0**) and each project keeps in `.kit-version`
+The kit is versioned (`VERSION`, now **3.21.0**) and each project keeps in `.kit-version`
 which one it is aligned with. To bring it up to date: `/kit-update` in a project session. It
 compares with the published version (`origin/main` of the kit's clone); if behind, it
 computes the path with `UPDATES.md` and applies each version in order, in a PR.
@@ -382,6 +382,17 @@ And the way back: each project logs in `context/KIT_FEEDBACK.md` what César had
 or repeat and what the kit did not cover. `/kit-feedback` uploads it to this repo as a PR
 (`feedback/`, `kit-feedback` label); in a session opened here, "revisa el feedback" triages
 all the PRs together (`CLAUDE.md` says how).
+
+### 3.21.0 (KREA's first report)
+
+| Before | Now |
+|---|---|
+| Prompts cited states that did not exist, counts that did not match the canvas, traps that were false | The orchestrator checks everything it cites first, and states once what it verified |
+| The build ran locally in every unit (up to 5 min on an HDD) | It runs in CI; locally only when the unit touches the build setup |
+| Cache Components broke builds late; `cn` did not know the project's utilities | `STACK-NEXTJS.md`: its traps, a `loading.tsx` test, `extendTailwindMerge` |
+| The QA agents lost their report when the session closed | They write it as they go |
+| "QA at the end" had to be repeated every wave | `QA: al final` in `CLAUDE.md`, asked once |
+| Biome failed locally and passed in CI (CRLF) | `.gitattributes` with `* text=auto eol=lf` |
 
 ### 3.20.0 (KREA feedback: slots, emulators, Better Auth)
 

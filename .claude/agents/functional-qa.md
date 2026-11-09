@@ -29,6 +29,11 @@ If you cannot reproduce it consistently, say so and describe the conditions in w
 it. An honest intermittent finding is useful; one presented as deterministic that does not
 reproduce burns trust in the whole report.
 
+**Write the report as you go**, in `.qa/functional-qa-<flow>.md` (format at the end): the
+header at the start, each finding when it reproduces, the summary last. Your final message is
+that file. Two runs in KREA were cut off when the session closed and, written only at the
+end, left nothing.
+
 ---
 
 ## Preparation
@@ -130,7 +135,12 @@ await context.setOffline(true)                                    // offline
 
 **What you look for:** does an understandable error appear, or does it spin forever? Can it
 be retried? Does the button stay disabled and lock the user out? Is typed data lost? Does a
-stack trace leak to the user?
+stack trace leak to the user? Does a service failure (5xx) say "check your connection"?
+
+**A repro that calls a Next.js Server Action directly** reads its id on every run from the
+running server (`.next/server/server-reference-manifest.json`, by the action's file and
+export name), never from a saved `ids.json`: ids change with each build, and the repros
+failed with "Server Action unavailable" on another server (KREA).
 
 ## 4. Authentication and session
 

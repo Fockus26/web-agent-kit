@@ -102,7 +102,26 @@ are about to ask:
   `string` compiles the same") or a trap of a library: check it before writing it — a quick
   `typecheck` with the change in a free slot, the version in `node_modules`. The worker
   takes the brief as fact: that claim failed in 11 assignments (KREA), and a trap about
-  Radix was false for the installed version (KREA).
+  Radix was false for the installed version (KREA). The same for everything the prompt
+  cites (KREA ×5):
+  - a state, a view or a text it points to **exists** (an "empty state of /secciones/evaluar"
+    that did not exist left the worker writing its own copy);
+  - counts and texts are **copied from the canvas** (`.dc.html`), not remembered ("4 samples"
+    where the canvas paints 5);
+  - demo data of earlier waves the unit combines **match** (ids of one list that are not in
+    the other);
+  - each requirement fits the **API of the components the unit may not edit** — if not, the
+    prompt authorizes the API change or says it from the start;
+  - an a11y trap (two `nav` with the same name) is real **at the same breakpoint**: two
+    elements that never coexist are not one.
+  What you already verified is stated once with path:line; do not also ask the worker to
+  re-check it (extra reads for something the brief had settled: KREA).
+- **Which tests watch these files?** A project test that guards them (`tokens.test.ts` that
+  forbids hex in `app/`, even in comments) goes in the prompt's traps: the worker found it
+  when it failed (KREA).
+- **States: all the combinations.** With two selectors on one view (role × tab), the prompt
+  lists the product, not each one apart: two states without a destination were missing
+  (KREA).
 - **Is there an image involved?** Open it before proposing its `alt` or its text: an alt
   written without seeing it describes nothing.
 - **Does it change tokens?** Read the CSS the build generates (`.next/static/css`, `dist/`),
@@ -171,6 +190,13 @@ in the brief's "Shared shapes" before launching. Otherwise the second one improv
 **Handoff values without a token** (144/136 px, 140 ms): the prompt says beforehand which it
 is — "the nearest existing token" or "new tokens `--x`/`--y`, recorded in a decision". A worker
 cannot ask, and "zero magic values" with no token left it stuck (melao).
+A token nobody foresaw, when the brief forbids touching the global stylesheet: the worker
+uses the nearest one, lists the missing token in its report ("Missing tokens"), and you add
+them in one PR when the wave closes (§9). "Do not touch `globals.css`" against "add the token
+you need" left values without a token in two units (KREA ×2).
+
+**The last unit of a phase reserves one more decision ID**, for the phase's closing
+decision: it had none and the number was improvised (KREA).
 
 **Docker yes/no is decided here**, not left to the worker: "Docker only if the other unit
 finished" could not be followed, since a worker cannot know that (world-flags). At most one
@@ -301,7 +327,10 @@ or two units share a page or a table. A wave of sections, copy or styles gets no
 the workers' gates (`a11y`, the versioned class scripts) cover it, and its visual review is
 the version QA's `design-qa` (phase 09). `wave-qa` is never a visual audit either. Why: the
 full audit per wave and per page was most of the QA tokens, and its visual findings were
-classes one end-of-version sweep fixes at once (César, 2026-10-23). Note it in the closing
+classes one end-of-version sweep fixes at once (César, 2026-10-23).
+**A project with `QA: al final` in its `CLAUDE.md`** gets no `wave-qa` at all, and its
+workers no server (verify by code and tests): it is asked once, not in every wave. César
+asked KREA for no QA until the end of the project and had to repeat it. Note it in the closing
 (§9): "QA: no aplica — ola sin flujos de riesgo".
 
 ```bash
@@ -377,6 +406,8 @@ tests what is public and flags it), and in the closing ask César to add them
 1. Phase plan: the wave's status, its "Closings" row, fixes added to the next wave, and the
    **start prompt** of the next one.
 2. `CURRENT_PHASE.md`: "Now" with the phase and the next wave; "Blocked" with the QA items.
+   If the reports listed "Missing tokens" (§4), one PR adds them and replaces the nearest
+   ones the workers used, before the next wave.
 3. **Back up the local state:** `bun run context:backup` (copies the local `context/` to the
    `context-state` branch; see `git-flow` §2.1.2). Without it, losing the main folder means
    the next session does not know where the project stood. If the project does not have

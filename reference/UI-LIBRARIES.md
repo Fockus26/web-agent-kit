@@ -33,6 +33,14 @@ bunx shadcn@latest add button card dialog
 **When:** projects where the design is custom and specific, and you want the design system
 to rule over the component.
 
+**`shadcn init` in a project that already has its tokens** (KREA, v4): it rewrites
+`--accent`, `--secondary`, `--input` in the global CSS, switches the fonts in `layout.tsx`
+to Geist, adds packages (`shadcn`, `tw-animate-css`, its own `cn`) and changes the `cn`
+import of every file. Run it on a clean tree and review its diff before committing: restore
+the tokens and fonts, keep the project's `cn` (with its `extendTailwindMerge`,
+`STACK-NEXTJS.md`) and point `components.json › aliases.utils` at it. After that, `add`
+only touches `components/ui/`.
+
 ### Hero UI (formerly NextUI)
 
 A real library, installed as a dependency. Built on React Aria (Adobe) for accessibility,

@@ -16,7 +16,7 @@
  * design-qa agent interprets it.
  */
 
-import { chromium, type Page } from '@playwright/test'
+import { type Browser, type BrowserContext, chromium, type Page } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 import { mkdir, mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -139,11 +139,25 @@ async function checkFocusOrder(page: Page, route: string) {
  * with the full Chromium (`channel: 'chromium'`) and the preference written to its profile
  * does apply it (melao). Close it with `await context.close()`.
  */
-async function browserWithFont(px: number) {
+async function browserWithFont(px: number, width = 1280) {
   const dir = await mkdtemp(join(tmpdir(), 'kit-font-'))
   await mkdir(join(dir, 'Default'), { recursive: true })
   await writeFile(join(dir, 'Default', 'Preferences'), JSON.stringify({ webkit: { webprefs: { default_font_size: px } } }))
-  return chromium.launchPersistentContext(dir, { channel: 'chromium', viewport: { width: 1280, height: 900 } })
+  return chromium.launchPersistentContext(dir, { channel: 'chromium', viewport: { width, height: 900 } })
+}
+
+/** The same setting through CDP, on a normal context; the profile above if CDP fails. */
+async function fontContext(browser: Browser, px: number, width: number): Promise<BrowserContext> {
+  const ctx = await browser.newContext({ viewport: { width, height: 900 } })
+  try {
+    const page = await ctx.newPage()
+    const cdp = await ctx.newCDPSession(page)
+    await cdp.send('Page.setFontSizes', { fontSizes: { standard: px, fixed: Math.round(px * 0.8125) } })
+    return ctx
+  } catch {
+    await ctx.close()
+    return browserWithFont(px, width)
+  }
 }
 
 // ── Sweep ────────────────────────────────────────────────────────────────────
@@ -166,18 +180,21 @@ async function run() {
       await ctx.close()
     }
 
-    // 1b. Browser font at 150 % (24 px), at 1280
-    // Needs the full Chromium (`bunx playwright install chromium`); if it cannot start, the
-    // sweep goes on and the report says this check did not run.
-    try {
-      const big = await browserWithFont(24)
-      const bigPage = await big.newPage()
-      await bigPage.goto(BASE + route, { waitUntil: 'load' })
-      await bigPage.screenshot({ path: `${OUT}/${rs}-font150.png`, fullPage: true })
-      await checkOverflow(bigPage, route, 1280)
-      await big.close()
-    } catch (e) {
-      findings.push({ route, kind: 'font150-not-run', detail: (e as Error).message.split('\n')[0] })
+    // 1b. Browser font at 150 % (24 px) at 1280, and 200 % (32 px) at 390: KREA's 200 % at
+    // 390 px scrolled every route sideways. CDP's Page.setFontSizes first (it works in the
+    // headless shell); the persistent profile only as a fallback — it failed on Windows with
+    // `spawn UNKNOWN` (KREA). If neither can start, the report says this check did not run.
+    for (const [px, width, label] of [[24, 1280, 'font150'], [32, 390, 'font200']] as const) {
+      try {
+        const big = await fontContext(browser, px, width)
+        const bigPage = big.pages()[0] ?? (await big.newPage())
+        await bigPage.goto(BASE + route, { waitUntil: 'load' })
+        await bigPage.screenshot({ path: `${OUT}/${rs}-${label}.png`, fullPage: true })
+        await checkOverflow(bigPage, route, width)
+        await big.close()
+      } catch (e) {
+        findings.push({ route, kind: `${label}-not-run`, detail: (e as Error).message.split('\n')[0] })
+      }
     }
 
     // 2. Color blindness (at 1440)

@@ -56,7 +56,8 @@ bun run context:backup       # local context/ → branch context-state (context:
 port). Build, typecheck, lint and tests run without asking.
 
 **QA:** `bun run qa:local -- --port <p>` — {{Supabase in Docker | Firebase emulators (Java) |
-Postgres in Docker}} with the `.env.test.local` accounts; never the real database
+Postgres in Docker}} with the `.env.test.local` accounts (you write it; never ask César to
+log in for QA); never the real database
 (`--offline`: guest only). Playwright scripts run with `node` (Bun hangs on Windows), in `.qa/`.
 
 **Docs:** Context7 before any library API. **Model per task:** `Modelo recomendado: <model ·

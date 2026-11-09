@@ -161,6 +161,27 @@ supabase/                   migrations, seed, auth templates (in git)
   `href` builder, a formatter). It fails at render, not in `typecheck`. Pass the data
   (a map of hrefs) or move the function into the client module (KREA).
 
+- A module with `import 'server-only'` does not load in `bun test` (KREA). Split it: the logic
+  in a pure module that takes its dependencies as arguments (tested), and a thin `server-only`
+  wrapper that injects them (not tested).
+
+### Cache Components (`cacheComponents: true`)
+
+What KREA hit (Next 16), each one a broken build or a 500 found late:
+
+- **A dynamic route keeps `generateStaticParams`, returning at least one real param.** An
+  empty array is a build error, and removing it under a layout that reads the path broke the
+  build.
+- **Variants of an internal view** (a reference page, a state gallery) go as a route
+  `[state]` with `generateStaticParams`, not `?state=`: reading `searchParams` outside
+  `<Suspense>` fails the prerender ("uncached or runtime data during prerendering").
+- **`opengraph-image.tsx`:** no `await fetch` of fonts at module level (it hung the build).
+  The TTF in the repo, read inside the function (`readFile`), or loaded lazily there.
+- **The build passes with errors that only show in dev with a session** (`Date.now()`,
+  uncached data). So: a test that lists every `page.tsx` and fails if its segment has no
+  `loading.tsx` (a hand-made list missed 6 subroutes), and, when the backend closes, a pass
+  over every route in dev with the test accounts that counts console errors.
+
 ### Dev server (Turbopack)
 
 - With several servers at once (pool workers), Turbopack may time out its subprocesses
@@ -189,6 +210,23 @@ supabase/                   migrations, seed, auth templates (in git)
 - With MUI, this section does not apply: tokens live in `createTheme()`.
 
 - Conditional classes with `cn()` (`clsx` + `tailwind-merge`).
+- **`cn` only resolves the conflicts it knows.** A utility of the project's own
+  (`@utility text-small-b`, `shadow-done`, `rounded-done`) next to Tailwind's (`text-xs`,
+  `shadow-1`, `rounded-md`) keeps both, and the one the CSS emits last wins — with `dark:`
+  the winner changed (KREA ×3). Each one is registered once, in the `cn` file, and checked
+  with a `cn(...)` in the unit's test:
+
+  ```ts
+  import { extendTailwindMerge } from 'tailwind-merge'
+  const twMerge = extendTailwindMerge({
+    extend: {
+      // a token in @theme (--text-small-b, --shadow-done) → its theme key
+      theme: { text: ['small-b'], shadow: ['done'], radius: ['done'] },
+      // a hand-written @utility → its class group
+      classGroups: { 'font-size': ['text-small-b'] },
+    },
+  })
+  ```
 - Mobile first: base classes are mobile, the `md:`/`lg:` prefixes widen.
 - **Zero arbitrary values** (`w-[347px]`, `text-[#3a7bd5]`). If one is needed, either a token
   is missing or it is a decision to record.

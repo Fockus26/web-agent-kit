@@ -666,15 +666,23 @@ if (firebaseJson?.emulators && !existsSync('supabase/config.toml')) {
   const up = (hostPort: string) => answers('127.0.0.1', Number(hostPort.split(':')[1]))
 
   // Waits up to `seconds`, printing progress every 15 s so a slow first start does not look hung.
-  async function waitFor(hostPort: string, seconds: number): Promise<void> {
+  // Returns false if the CLI exited first: on a cold HDD Firestore took 71 s, firebase-tools
+  // gave up at 60, and the old message blamed Java (KREA).
+  async function waitFor(hostPort: string, seconds: number, cli?: ChildProcess): Promise<boolean> {
     for (let i = 1; i <= seconds; i++) {
-      if (await up(hostPort)) return
+      if (await up(hostPort)) return true
+      if (cli && cli.exitCode !== null) return false
       if (i % 15 === 0) console.log(`  … waiting for the emulator on ${hostPort} (${i} s)`)
       await new Promise((r) => setTimeout(r, 1000))
     }
-    abort(`The emulator on ${hostPort} did not answer in ${seconds} s (is Java installed?).`)
+    abort(
+      `The emulator on ${hostPort} did not answer in ${seconds} s. Look at the firebase output above;` +
+        ' if it never started, check `java -version` and that the port is free.',
+    )
   }
 
+  // Without it, firebase-tools can sit silently on its update check (KREA).
+  process.env.NO_UPDATE_NOTIFIER = '1'
   const emulatorEnv = {
     ...process.env,
     FIREBASE_AUTH_EMULATOR_HOST: AUTH,
@@ -685,11 +693,21 @@ if (firebaseJson?.emulators && !existsSync('supabase/config.toml')) {
     console.log('= emulators already running')
   } else {
     console.log('… firebase emulators:start (the first time on a machine: minutes)')
-    if (pkgScripts.emulators?.includes('--project')) launch('bun', ['run', 'emulators'], process.env)
-    else if (pkgScripts.emulators) launch('bun', ['run', 'emulators', '--', '--project', FIREBASE_QA_PROJECT], process.env)
-    else launch('bun', ['x', 'firebase', 'emulators:start', '--project', FIREBASE_QA_PROJECT], process.env)
-    await waitFor(AUTH, 240)
-    await waitFor(FIRESTORE, 240)
+    const start = () =>
+      pkgScripts.emulators?.includes('--project')
+        ? launch('bun', ['run', 'emulators'], process.env)
+        : pkgScripts.emulators
+          ? launch('bun', ['run', 'emulators', '--', '--project', FIREBASE_QA_PROJECT], process.env)
+          : launch('bun', ['x', 'firebase', 'emulators:start', '--project', FIREBASE_QA_PROJECT], process.env)
+    let cli = start()
+    let ready = (await waitFor(AUTH, 240, cli)) && (await waitFor(FIRESTORE, 240, cli))
+    if (!ready) {
+      // The second start is warm (the emulator's JAR and the JVM are cached): once, not a loop.
+      console.log('… firebase exited before the emulators were ready (a cold start over its 60 s?): retrying once')
+      cli = start()
+      ready = (await waitFor(AUTH, 240, cli)) && (await waitFor(FIRESTORE, 240, cli))
+    }
+    if (!ready) abort('firebase emulators:start exited twice before the emulators were ready: see its output above.')
   }
 
   if (reset && existsSync('scripts/seed-emulator.ts')) {

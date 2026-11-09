@@ -20,6 +20,9 @@
 ## Blocked (actions for César or external)
 
 - {{e.g. "run supabase/x.sql before deploying PR #N"}}
+<!-- An install or setup item is checked (`java -version`, `docker info`) before telling César
+     again: "install Java" stayed here after it was done and was repeated to him (KREA). -->
+
 
 ## Next
 

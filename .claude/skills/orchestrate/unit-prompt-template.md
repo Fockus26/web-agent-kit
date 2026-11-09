@@ -18,6 +18,10 @@ Earlier decisions that constrain you: {{D0NN (what it says in 5 words), D0NN (�
 - `{{src/.../File.tsx:NN}}` — {{what is there today}}
 - `{{src/.../other.ts:NN-NN}}` — {{…}}
 
+{{If the unit builds or changes a screen: its headings as the canvas reads, e.g. "h1 Panel ·
+h2 Tareas (groups the cards) · h3 each card". A prompt asked for h3 cards without saying
+which h2 groups them, and the worker invented an `sr-only` h2 (KREA ×2).}}
+
 ### Approach decided
 {{What the orchestrator or César already decided, so the worker does not re-decide it. If
 some options are left to its judgment, say so explicitly.}}
