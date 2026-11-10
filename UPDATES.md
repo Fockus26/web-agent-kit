@@ -38,6 +38,34 @@ other, the agent shows them and asks before choosing.
 
 ---
 
+## 3.22.0 — 2026-11-09 · Hosting on the VPS: kit-deploy's brief and the project contract
+
+César wants to host the projects on his VPS, with previews and a dashboard of our own instead of
+Vercel. Nothing is installed on the VPS yet: this version leaves the plan. Decision by César,
+2026-11-09.
+
+**What changed**
+
+- **`prompts/VPS-PLATFORM-BRIEF.md`:** the idea and requirements of **kit-deploy**, a project of
+  its own (pasted into `/project-kickoff`): preview per PR, deploy on merge, variables per
+  environment, domains with automatic HTTPS, rollback, logs, metrics, alerts, cron, and the agent's
+  interface over SSH. Proposed architecture (builds in GitHub Actions → GHCR, Docker, Caddy with a
+  wildcard certificate, a privileged agent apart from the web app), memory budget, and the traps
+  known before starting: Docker opening ports past ufw, certbot standalone and Caddy fighting for
+  port 80 (it would let the database's certificate expire), `NEXT_PUBLIC_*` frozen at build.
+- **`tech/vps-hosting.md`:** what a project must meet to deploy on kit-deploy (standalone output,
+  `deploymentId`, `/api/health`, variables by build or runtime) and how to move one from Vercel.
+  It is a contract until kit-deploy is live; its last phase turns it into the guide.
+- **`tech/other-hosting.md`** › César's VPS, **`DEPLOY.md`** §2 and **`project-kickoff`**
+  question 14: they name kit-deploy, and say a project stays on Vercel until it answers.
+
+**Steps for a project on 3.21.0**
+
+None in the project; reinstall the skills (`project-kickoff` changed). No project deploys on the
+VPS until kit-deploy is live.
+
+---
+
 ## 3.21.0 — 2026-11-08 · KREA's first report: prompts checked, Cache Components, build in CI
 
 KREA's report on kit 3.14.0 (feedback PR #25), merged without triage at the time and

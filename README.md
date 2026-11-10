@@ -286,6 +286,7 @@ web-agent-kit/
 │   ├── CLAUDE-DESIGN-BRIEF.template.md      what gets pasted into Claude Design
 │   ├── DESIGN-HANDOFF.template.md           what must come back, and its check
 │   ├── CLAUDE-DESIGN-ADDENDUM.template.md   pieces missing from an existing design (states, icon, OG, emails…)
+│   ├── VPS-PLATFORM-BRIEF.md                kit-deploy: our own Vercel on the VPS (a project of its own, pasted into /project-kickoff)
 │   ├── ACTUALIZAR-KIT.md                    notice: since 3.6.0 the kit-update skill does it
 │   ├── MIGRATE-3.1-WORKTREES-CHANGESETS.md  step 3.0 → 3.1 (cited by UPDATES.md)
 │   └── MIGRATE-3.2-DECISIONS-CI.md          step 3.1 → 3.2 (cited by UPDATES.md)
@@ -306,7 +307,7 @@ web-agent-kit/
     ├── DEPLOY.md                  GitHub repo, the deployment questions and the post-deploy checks (Vercel: tech/vercel.md)
     ├── PATTERNS.md                solved patterns: validation modes, submit guard, fluid type, list states, auth criteria
     ├── PAYMENTS.md                payment methods: what the client provides, costs, sandbox, integration
-    ├── tech/                      one file per technology, read only by the projects that use it (README, astro, supabase, firebase, vps-postgres, wordpress, wordpress-adopt, vercel, other-hosting, migrate-supabase-vps, migrate-firebase-vps)
+    ├── tech/                      one file per technology, read only by the projects that use it (README, astro, supabase, firebase, vps-postgres, wordpress, wordpress-adopt, vercel, vps-hosting, other-hosting, migrate-supabase-vps, migrate-firebase-vps)
     │   └── wordpress/             WordPress templates: pull-site.sh, php-lint.sh, docker-compose.yml, deploy-ssh/ftps.yml, ci.yml, CLAUDE.md and PR variants, the site plugin skeleton
     ├── STACK-WORDPRESS.md         forwards to tech/wordpress.md
     ├── VPS-POSTGRES.md            César's central Postgres on the VPS: setup once, kit-db, backups, no passwords typed
@@ -373,7 +374,7 @@ Details in `reference/TOKEN-ECONOMY.md`. What weighs most:
 
 ## Versions and updating projects
 
-The kit is versioned (`VERSION`, now **3.21.0**) and each project keeps in `.kit-version`
+The kit is versioned (`VERSION`, now **3.22.0**) and each project keeps in `.kit-version`
 which one it is aligned with. To bring it up to date: `/kit-update` in a project session. It
 compares with the published version (`origin/main` of the kit's clone); if behind, it
 computes the path with `UPDATES.md` and applies each version in order, in a PR.
@@ -382,6 +383,13 @@ And the way back: each project logs in `context/KIT_FEEDBACK.md` what César had
 or repeat and what the kit did not cover. `/kit-feedback` uploads it to this repo as a PR
 (`feedback/`, `kit-feedback` label); in a session opened here, "revisa el feedback" triages
 all the PRs together (`CLAUDE.md` says how).
+
+### 3.22.0 (hosting on the VPS: the plan)
+
+| Before | Now |
+|---|---|
+| The VPS only served databases, and hosting sites there was "a piece to design" | `prompts/VPS-PLATFORM-BRIEF.md`: kit-deploy, our own Vercel (previews, variables, domains, dashboard), to build as a project of its own |
+| Nothing said what a project needs to leave Vercel for the VPS | `tech/vps-hosting.md`: the contract (standalone, `deploymentId`, `/api/health`, build vs runtime variables) and the move |
 
 ### 3.21.0 (KREA's first report)
 
