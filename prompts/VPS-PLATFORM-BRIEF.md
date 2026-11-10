@@ -215,11 +215,10 @@ dashboard at the end. The kickoff turns this into its phase plan.
 
 ## For César to decide at kickoff
 
-- The name, and the domains: the dashboard (`deploy.<domain>`?) and the previews'
-  (`*.preview.<domain>`).
-- **The DNS of that domain on Cloudflare** (free plan): the wildcard needs a DNS provider with an
-  API that Caddy supports. If it is elsewhere, either move it or choose a provider from
-  `caddy-dns`.
+- The name, and the subdomains: the dashboard (`deploy.fockus.dev`?) and the previews'
+  (`*.preview.fockus.dev`?). **Already decided:** the domain is `fockus.dev`, registered and with
+  its DNS on Cloudflare (2026-11-10), which is what the wildcard's DNS challenge needs;
+  `db.fockus.dev` already serves PgBouncer's certificate (certbot standalone, see Traps).
 - The alerts' channel: email (Brevo) or Telegram.
 - The dashboard open on the internet behind its login, or only through a tunnel (Tailscale or
   `ssh -L`): the second is safer and worse for reviewing a preview from the phone.

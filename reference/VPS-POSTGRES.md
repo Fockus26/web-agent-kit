@@ -89,10 +89,15 @@ them. Previews have their own database: with the same URL, a PR's preview writes
    encrypted, but a man in the middle could impersonate the server.
 5. **Bootstrap** (from the kit's folder):
    ```powershell
-   scp -r reference/vps kit-vps:/root/kit-vps
+   ssh kit-vps "mkdir -p /root/kit-vps"
+   scp reference/vps/bootstrap.sh reference/vps/kit-db kit-vps:/root/kit-vps/
    ssh kit-vps "bash /root/kit-vps/bootstrap.sh --domain db.<your-domain> --harden-ssh"
    ```
-   Re-running it is safe (it is how you apply a newer version of the script).
+   Re-running it is safe (it is how you apply a newer version of the script). Copy the two
+   files, not the folder: `scp -r reference/vps kit-vps:/root/kit-vps`, which this guide said
+   until 3.22.0, nests the copy in `/root/kit-vps/vps/` once the folder exists, and the re-run
+   uses the old script without saying so (César's VPS ran the 2026-10-30 version until
+   2026-11-10). `kit-db status` answering, not printing the usage, means the new one is in.
 6. **Off-VPS backups** (strongly recommended: the plan has no auto-backup, and a dump on the
    same disk dies with the disk). On the VPS, `rclone config` with a free remote (Cloudflare
    R2 10 GB, Backblaze B2 10 GB, or Google Drive), then put its name in

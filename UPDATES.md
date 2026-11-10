@@ -58,11 +58,23 @@ Vercel. Nothing is installed on the VPS yet: this version leaves the plan. Decis
   It is a contract until kit-deploy is live; its last phase turns it into the guide.
 - **`tech/other-hosting.md`** › César's VPS, **`DEPLOY.md`** §2 and **`project-kickoff`**
   question 14: they name kit-deploy, and say a project stays on Vercel until it answers.
+- **`VPS-POSTGRES.md` step 5:** the two scripts are copied as files. `scp -r reference/vps
+  kit-vps:/root/kit-vps` nested the copy in `/root/kit-vps/vps/` once the folder existed, so
+  every re-run since 2026-10-30 ran the first script (found connecting `db.fockus.dev`,
+  2026-11-10: `kit-db status` printed the usage).
 
 **Steps for a project on 3.21.0**
 
 None in the project; reinstall the skills (`project-kickoff` changed). No project deploys on the
 VPS until kit-deploy is live.
+
+**Steps for César's VPS (once)**
+
+Done on 2026-11-10: the current `bootstrap.sh` and `kit-db` copied as files, the re-run with
+`--domain db.fockus.dev --harden-ssh`, the certificate checked from outside and `certbot renew
+--dry-run` passing. Each project's `DATABASE_URL` in Vercel still has the IP and
+`sslmode=no-verify`, which keeps working; moving it to `verify-full` is the same two `kit-db url
+… | vercel env add` lines as `VPS-POSTGRES.md` › Credentials, run in each project.
 
 ---
 
@@ -370,8 +382,9 @@ invented almost every step. Decisions by César, 2026-11-07.
 
 **Steps for César's VPS (once, not per project)**
 
-From the kit's folder: `scp -r reference/vps kit-vps:/root/kit-vps`, then `ssh kit-vps "bash
-/root/kit-vps/bootstrap.sh --harden-ssh"`. It keeps the domain and every database. Check:
+From the kit's folder: `scp reference/vps/bootstrap.sh reference/vps/kit-db kit-vps:/root/kit-vps/`
+(this said `scp -r reference/vps …`, which nests the copy and re-runs the old script; corrected
+in 3.22.0), then `ssh kit-vps "bash /root/kit-vps/bootstrap.sh --harden-ssh"`. It keeps the domain and every database. Check:
 `ssh kit-vps "sshd -T | grep -i ^passwordauthentication"` says `no`, and `ssh kit-vps kit-db
 status`.
 
