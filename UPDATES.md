@@ -62,6 +62,9 @@ Vercel. Nothing is installed on the VPS yet: this version leaves the plan. Decis
   kit-vps:/root/kit-vps` nested the copy in `/root/kit-vps/vps/` once the folder existed, so
   every re-run since 2026-10-30 ran the first script (found connecting `db.fockus.dev`,
   2026-11-10: `kit-db status` printed the usage).
+- **`VPS-POSTGRES.md` › Credentials:** `vercel env add … --force --value "$(ssh -n kit-vps kit-db
+  url …)"`. The pipe the guide showed fails with Vercel CLI 64 in an agent's shell, which does not
+  read stdin; the migration guides and `tech/vps-postgres.md` cite it instead of repeating it.
 
 **Steps for a project on 3.21.0**
 
@@ -73,8 +76,9 @@ VPS until kit-deploy is live.
 Done on 2026-11-10: the current `bootstrap.sh` and `kit-db` copied as files, the re-run with
 `--domain db.fockus.dev --harden-ssh`, the certificate checked from outside and `certbot renew
 --dry-run` passing. Each project's `DATABASE_URL` in Vercel still has the IP and
-`sslmode=no-verify`, which keeps working; moving it to `verify-full` is the same two `kit-db url
-… | vercel env add` lines as `VPS-POSTGRES.md` › Credentials, run in each project.
+`sslmode=no-verify`, which keeps working; moving it to `verify-full` is the command in
+`VPS-POSTGRES.md` › Credentials plus a production redeploy. Done on 2026-11-10 for
+inversiones-js, krea, maranatha, workout and world-flags (Production, and Preview where it existed).
 
 ---
 
