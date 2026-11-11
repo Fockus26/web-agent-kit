@@ -38,6 +38,50 @@ other, the agent shows them and asks before choosing.
 
 ---
 
+## 3.22.0 — 2026-11-09 · Hosting on the VPS: kit-deploy's brief and the project contract
+
+César wants to host the projects on his VPS, with previews and a dashboard of our own instead of
+Vercel. Nothing is installed on the VPS yet: this version leaves the plan. Decision by César,
+2026-11-09.
+
+**What changed**
+
+- **`prompts/VPS-PLATFORM-BRIEF.md`:** the idea and requirements of **kit-deploy**, a project of
+  its own (pasted into `/project-kickoff`): preview per PR, deploy on merge, variables per
+  environment, domains with automatic HTTPS, rollback, logs, metrics, alerts, cron, and the agent's
+  interface over SSH. Proposed architecture (builds in GitHub Actions → GHCR, Docker, Caddy with a
+  wildcard certificate, a privileged agent apart from the web app), memory budget, and the traps
+  known before starting: Docker opening ports past ufw, certbot standalone and Caddy fighting for
+  port 80 (it would let the database's certificate expire), `NEXT_PUBLIC_*` frozen at build.
+- **`tech/vps-hosting.md`:** what a project must meet to deploy on kit-deploy (standalone output,
+  `deploymentId`, `/api/health`, variables by build or runtime) and how to move one from Vercel.
+  It is a contract until kit-deploy is live; its last phase turns it into the guide.
+- **`tech/other-hosting.md`** › César's VPS, **`DEPLOY.md`** §2 and **`project-kickoff`**
+  question 14: they name kit-deploy, and say a project stays on Vercel until it answers.
+- **`VPS-POSTGRES.md` step 5:** the two scripts are copied as files. `scp -r reference/vps
+  kit-vps:/root/kit-vps` nested the copy in `/root/kit-vps/vps/` once the folder existed, so
+  every re-run since 2026-10-30 ran the first script (found connecting `db.fockus.dev`,
+  2026-11-10: `kit-db status` printed the usage).
+- **`VPS-POSTGRES.md` › Credentials:** `vercel env add … --force --value "$(ssh -n kit-vps kit-db
+  url …)"`. The pipe the guide showed fails with Vercel CLI 64 in an agent's shell, which does not
+  read stdin; the migration guides and `tech/vps-postgres.md` cite it instead of repeating it.
+
+**Steps for a project on 3.21.0**
+
+None in the project; reinstall the skills (`project-kickoff` changed). No project deploys on the
+VPS until kit-deploy is live.
+
+**Steps for César's VPS (once)**
+
+Done on 2026-11-10: the current `bootstrap.sh` and `kit-db` copied as files, the re-run with
+`--domain db.fockus.dev --harden-ssh`, the certificate checked from outside and `certbot renew
+--dry-run` passing. Each project's `DATABASE_URL` in Vercel still has the IP and
+`sslmode=no-verify`, which keeps working; moving it to `verify-full` is the command in
+`VPS-POSTGRES.md` › Credentials plus a production redeploy. Done on 2026-11-10 for
+inversiones-js, krea, maranatha, workout and world-flags (Production, and Preview where it existed).
+
+---
+
 ## 3.21.0 — 2026-11-08 · KREA's first report: prompts checked, Cache Components, build in CI
 
 KREA's report on kit 3.14.0 (feedback PR #25), merged without triage at the time and
@@ -342,8 +386,9 @@ invented almost every step. Decisions by César, 2026-11-07.
 
 **Steps for César's VPS (once, not per project)**
 
-From the kit's folder: `scp -r reference/vps kit-vps:/root/kit-vps`, then `ssh kit-vps "bash
-/root/kit-vps/bootstrap.sh --harden-ssh"`. It keeps the domain and every database. Check:
+From the kit's folder: `scp reference/vps/bootstrap.sh reference/vps/kit-db kit-vps:/root/kit-vps/`
+(this said `scp -r reference/vps …`, which nests the copy and re-runs the old script; corrected
+in 3.22.0), then `ssh kit-vps "bash /root/kit-vps/bootstrap.sh --harden-ssh"`. It keeps the domain and every database. Check:
 `ssh kit-vps "sshd -T | grep -i ^passwordauthentication"` says `no`, and `ssh kit-vps kit-db
 status`.
 
