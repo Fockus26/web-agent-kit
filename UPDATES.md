@@ -104,7 +104,13 @@ repros that fail on Sundays are workout's own; `design-qa.ts`'s 150 % fallback a
 6. Nothing in `CLAUDE.md` or `context/`. Other projects: only step 1.
 
 **Steps for César's VPS:** `kit-db` gained `version`; it goes with the copy 3.24.0 already
-asks for, after the same container test.
+asks for (tested in the same container run: it prints `kit-db 3.25.0`).
+
+Also in this version, from testing 3.23.0's `qa-local.ts` with Docker running (a `supabase`
+that always fails, and a database container unhealthy or still starting): the error shows
+on every attempt, a starting database is waited for and not stopped, an unhealthy one ends
+with the recovery command — and the "Is Docker Desktop running?" hint now shows only when
+Docker does not answer (every Supabase error names Docker, so it showed always).
 
 ---
 
@@ -125,8 +131,8 @@ Tailwind, Supabase) still waits for its own version. Decisions by César, 2026-1
   with `certbot reconfigure`, or a forced renewal on Certbot < 2.3, and runs the dry run). A
   first issue with port 80 taken stops and says so; a run that finds standalone plus a busy
   port 80 ends with a warning. With Caddy on port 80 the renewal failed in silence
-  (kit-deploy). **Not run in the kit's Docker test** (no Docker on 2026-11-18; `bash -n`
-  only): see the VPS steps.
+  (kit-deploy). `--webroot` itself needs a real domain and a web server on port 80: it was
+  not run; the rest was (the VPS steps say what).
 - **`orchestrate`:** a phase with UI stops if `design/HANDOFF.md` is missing; the wave's shared
   primitives go to one unit; a worker whose decision ID was taken uses the next free one;
   `main` moved → `git merge origin/main`, never a rebase (kit-deploy).
@@ -175,12 +181,15 @@ Tailwind, Supabase) still waits for its own version. Decisions by César, 2026-1
 
 **Steps for César's VPS (once, not done)**
 
-`kit-db` and `bootstrap.sh` changed and could not be run in a container on the day they were
-written. Before copying them: with Docker running, `bash bootstrap.sh --test` inside an
-`ubuntu:24.04` container, then `kit-db create` over a role created by hand (it must refuse and
-leave its password alone) and over a role with its `.creating` mark (it must finish). Only
-then: copy both as files (`VPS-POSTGRES.md` step 5) and re-run `bootstrap.sh`. `--webroot` is
-for the day a web server takes port 80 (kit-deploy's first phase), not before.
+Copy `bootstrap.sh` and `kit-db` as files (`VPS-POSTGRES.md` step 5) and re-run
+`bootstrap.sh`; then `ssh kit-vps kit-db status` shows the certificate's days. `--webroot` is
+for the day a web server takes port 80 (kit-deploy's first phase), not before: it is the one
+part never run, so that day its dry run is watched.
+
+Tested in an `ubuntu:24.04` container (2026-11-18, with 3.25.0's copy): `bootstrap.sh --test`
+whole; `kit-db create` new, over a role created by hand (refused, its password hash
+unchanged, no database made) and over a role with its `.creating` mark (finished, mark
+removed); `status` with a certificate of 3649 days and one of 5 (it shouts).
 
 ---
 

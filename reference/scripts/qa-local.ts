@@ -360,7 +360,9 @@ function failure(r: Run): string {
 
 function supabaseFail(a: string[], r: Run, extra = ''): never {
   const detail = failure(r)
-  const docker = /docker|daemon|pipe/i.test(detail) ? '\n→ Is Docker Desktop running?' : ''
+  // Only when it really does not answer: every Supabase error names Docker, and the hint
+  // sent people to restart a Docker that was fine (kit test, 2026-11-18).
+  const docker = /docker|daemon|pipe/i.test(detail) && !dockerAnswers() ? '\n→ Is Docker Desktop running?' : ''
   abort(`supabase ${a.join(' ')} failed:\n${detail}${docker}${extra}`)
 }
 
