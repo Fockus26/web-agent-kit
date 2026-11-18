@@ -38,6 +38,68 @@ other, the agent shows them and asks before choosing.
 
 ---
 
+## 3.23.0 — 2026-11-18 · What repeated in workout, kit-deploy and InversionesJL22
+
+The repeated points of three reports (feedback PRs #32 workout on 3.21.0, #34 InversionesJL22
+on 3.19.0, #35 kit-deploy on 3.22.0) that were still open; the single-time points and the ones
+of one technology wait for their own version. Decisions by César, 2026-11-18.
+
+**What changed**
+
+- **Brief rules:** `/security-review` from a slot gets the slot's diff as a file (it read the
+  main folder's empty diff: kit-deploy ×8); a `wip:` commit and a push before the long checks,
+  `.qa/progress.md` from the end of the reading, and on resuming `git status` + `git log` are
+  the truth (workout ×5, kit-deploy ×2); no `cat >>` and no `python -` heredoc for text with
+  backslashes or several lines (workout ×4, kit-deploy); the PR body's Write and `gh pr
+  create` in separate turns (workout ×3).
+- **`orchestrate` §4: "Local build yes/no" per unit**, reserved like Docker, at most two per
+  wave; the rest read the build from CI and measure on dev. It replaces 3.21.0's "the build
+  only when the unit touches the build setup": with four slots compiling, `next build` took
+  6–25 min, hung and crashed in PostCSS (workout ×5, kit-deploy ×2). And how to write the
+  message that resumes a worker: from what its slot has, not from a `progress.md` nobody saw.
+- **`qa-local.ts` never waits without a limit:** `docker version` with 30 s before anything
+  (not `docker info`, which hung), a cap on every `supabase` command (20 min,
+  `QA_SUPABASE_TIMEOUT_MIN`), the error printed on each failed attempt, a database still
+  recovering waited for instead of stopped, and `supabase stop --no-backup` named when it ends
+  `unhealthy`. A run sat for hours with Docker Desktop stuck (workout ×7).
+- **`pr-screenshots.ts`:** `login` (steps run once, `${EMAIL_TEST}` read from
+  `.env.test.local`) or `storageState` for screens behind a session, `guest` per shot; falls
+  back to the machine's Edge or Chrome when this Playwright's Chromium is missing, and
+  `PW_CHANNEL` / `PW_CHROMIUM_PATH` choose (kit-deploy ×2, workout ×3, InversionesJL22).
+- **`run-on-main.sh`:** the worktree goes to the system's temp folder (under `.qa/` Vitest
+  collected its tests), copies the `.qa/` scripts and the `scripts/qa/` files main lacks, and
+  removes it with a limit instead of waiting 30 min on a locked folder (workout ×4).
+- **`new-project.ps1`:** Biome excludes `!.claude/worktrees`, relative to the root, and
+  replaces `!**/.claude/worktrees` (inside a worktree Biome 2.3 processed no files: workout,
+  kit-deploy ×2; tested on 2.2.0, 2.3.8 and 2.6.8); `formatter.lineEnding` `auto` → `lf`; a
+  rewritten `tsconfig.json` is formatted (a new project failed its first lint on it); warnings
+  for a `vitest.config.*` that does not exclude `.claude/**`, a missing `lint` script and a
+  lockfile that is not bun's (workout ×3).
+- **`frontend-build` §5:** a correction by César to a shared component is recorded as a
+  project decision and in `DESIGN_RULES.md` in the same PR; what is already approved is
+  looked at before proposing 3 options (InversionesJL22, workout).
+
+**Steps for a project on 3.22.0**
+
+1. Global pieces: `install-kit.ps1 -Pull` and a new session (skipped in a cloud session).
+   Then refresh the kit copy (`install-kit --project .`) and commit it.
+2. `new-project.ps1 -Path . -OnlyPieces` (a WordPress project: with `-Stack wordpress`; it
+   has no `biome.json`, so only its warnings apply). It rewrites the Biome exclusion and
+   `lineEnding`. Check: `bun run lint` passes in the main folder and, if there is a worktree
+   in `.claude/worktrees/`, inside it too.
+3. If it warned about `vitest.config.*`: add `exclude: [...configDefaults.exclude,
+   '.claude/**']` to its `test` block (`configDefaults` from `vitest/config`). A project
+   without Vitest: nothing.
+4. If it warned about the `lint` script or the lockfile: show both to César in the single
+   round; do not change the package manager on your own.
+5. Replace `scripts/qa-local.ts` and `scripts/pr-screenshots.ts` with the kit's (LF and the
+   project's Biome; `kit-update` › Piece check), and `scripts/run-on-main.sh` if the project
+   has it. `scripts/qa-roles.ts` is not replaced. A WordPress project: only
+   `pr-screenshots.ts`.
+6. Nothing in `CLAUDE.md` or `context/`.
+
+---
+
 ## 3.22.0 — 2026-11-09 · Hosting on the VPS: kit-deploy's brief and the project contract
 
 César wants to host the projects on his VPS, with previews and a dashboard of our own instead of

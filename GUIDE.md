@@ -491,7 +491,7 @@ agents in `.claude/` (the global `~/.claude/` does not exist there). What change
 | `bun run test:related` | Only the tests affected by what changed (by real imports) |
 | `bun run test` | The whole suite (before the PR; CI always runs it) |
 | `bun run lint` / `bun run format` | Biome |
-| `bun run shots` | Screenshots of the states defined in `.pr-shots.json` (uses node + Playwright) |
+| `bun run shots` | Screenshots of the states defined in `.pr-shots.json` (uses node + Playwright; screens behind a session with its `login` block, against `qa:local`; `PW_CHANNEL=msedge` to use Edge) |
 | `bun run shots:publish` | Uploads the screenshots to the `pr-shots` branch; markdown in `.pr-shots/README.md` |
 | `bun run qa:local -- --port <p>` | Server against the local database (Supabase, Postgres or Firebase emulators) with the test accounts (`--offline` without one, `--preview` for the build) |
 | `bun run context:backup` | Copies the local `context/` to the `context-state` branch |
@@ -555,6 +555,8 @@ something.
 | `typecheck` fails on routes that do not exist | Stale `.next/dev/types` / `.next/types` from another branch | Delete both (`wt take` does it when the branch changes) |
 | `bun run lint` fails locally and passes in CI | Files in CRLF in the working copy (`autocrlf=true` without `eol=lf`) | `* text=auto eol=lf` in `.gitattributes`, then on a clean tree `git rm -rq --cached . && git reset -q --hard` |
 | Biome or `tsc` complain about `.claude/kit-reference/*.ts` | The kit copy is not excluded (project before 3.20.0) | `new-project.ps1 -OnlyPieces` adds it to `biome.json` and `tsconfig.json` |
+| `bun run lint` inside a `.claude/worktrees` worktree: "No files were processed" | `biome.json` excludes `!**/.claude/worktrees`, which matches the worktree's own path (project before 3.23.0) | `new-project.ps1 -OnlyPieces` changes it to `!.claude/worktrees` |
+| `qa:local`: "Docker does not answer" | Docker Desktop is closed, or open and stuck | Open or restart it and run again; `QA_SUPABASE_TIMEOUT_MIN` raises the 20 min cap of each `supabase` step on a slow first download |
 | A worker could not write in the local `context/` | Sandboxed worktrees do not write in the main folder | It delivers it in its report and the orchestrator copies it |
 | `wt take`: "No free slots" | Every pool folder has an open unit | Wait for one to be merged (`wt free`) or grow it: `wt init -Count 6` |
 | `wt free` aborts | The slot has uncommitted changes | See what they are (`wt status`); they are never discarded on their own |

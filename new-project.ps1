@@ -253,7 +253,20 @@ try {
   elseif (-not $pkg.scripts.PSObject.Properties['typecheck']) {
     Write-Host "  = script typecheck: not Next.js, add the project's own by hand (Astro: astro check)" -ForegroundColor Yellow
   }
+  # The kit's CI and CLAUDE.md call `bun run lint` and `bun install --frozen-lockfile`. In an
+  # existing npm project they were copied as they were: CI failed on both, and on Windows
+  # `bun run lint` without that script ran a `lint.bat` of the system (workout ×3).
+  if (-not $wp) {
+    if (-not $pkg.scripts.PSObject.Properties['lint']) {
+      Write-Host '  ! package.json has no "lint" script: CI and CLAUDE.md call `bun run lint`. Add it (Biome: "biome check") or change both.' -ForegroundColor Yellow
+    }
+    $otherLock = 'package-lock.json', 'pnpm-lock.yaml', 'yarn.lock' | Where-Object { Test-Path $_ } | Select-Object -First 1
+    if ($otherLock -and -not ((Test-Path bun.lock) -or (Test-Path bun.lockb))) {
+      Write-Host "  ! $otherLock and no bun.lock: the kit's CI runs ``bun install --frozen-lockfile``. Move the project to bun (bun install, commit bun.lock) or adapt .github/workflows/ci.yml." -ForegroundColor Yellow
+    }
+  }
   $added = 0
+  $tsRewritten = $false
   foreach ($k in $scripts.Keys) {
     if (-not $pkg.scripts.PSObject.Properties[$k]) {
       $pkg.scripts | Add-Member -NotePropertyName $k -NotePropertyValue $scripts[$k]
@@ -332,9 +345,20 @@ try {
       if (-not $biome.files.PSObject.Properties['includes']) {
         $biome.files | Add-Member -NotePropertyName includes -NotePropertyValue @('**')
       }
-      foreach ($d in $outOfTools) {
-        if ($biome.files.includes -notcontains "!**/$d") { $biome.files.includes = @($biome.files.includes) + "!**/$d" }
+      # `.claude/worktrees` relative to the root, not `!**/…`: inside one of those worktrees
+      # its own path matches `**/.claude/worktrees`, and Biome 2.3 processed no files there
+      # (`bun run lint` exit 1: workout, kit-deploy ×2). Tested on 2.2.0, 2.3.8 and 2.6.8.
+      $biome.files.includes = @($biome.files.includes | Where-Object { $_ -ne '!**/.claude/worktrees' })
+      foreach ($p in '!.claude/worktrees', '!**/.claude/kit-reference') {
+        if ($biome.files.includes -notcontains $p) { $biome.files.includes = @($biome.files.includes) + $p }
       }
+    }
+    # "auto" means CRLF on Windows: with the `eol=lf` set below, the local lint failed on
+    # every file while CI passed (workout).
+    if ($biome.PSObject.Properties['formatter'] -and $biome.formatter.PSObject.Properties['lineEnding'] -and
+      $biome.formatter.lineEnding -eq 'auto') {
+      $biome.formatter.lineEnding = 'lf'
+      Write-Host '  ~ biome.json: formatter.lineEnding auto -> lf'
     }
     $after = $biome | ConvertTo-Json -Depth 20
     if ($after -ne $before) {
@@ -349,8 +373,16 @@ try {
     if ($new) {
       $ts | Add-Member -NotePropertyName exclude -NotePropertyValue (@($exclude) + $new) -Force
       ($ts | ConvertTo-Json -Depth 20) + "`n" | Set-Content tsconfig.json -NoNewline
+      $tsRewritten = $true
       Write-Host "  + tsconfig.json exclude: $($new -join ', ')"
     }
+  }
+  # Vitest walks every folder git ignores too: from the main folder it ran the tests of a
+  # worktree in `.claude/worktrees` (8 files instead of 4, and an old one failed: workout ×2).
+  # Its config is code, so it is not edited here.
+  $vitest = Get-ChildItem -File -Filter 'vitest.config.*' | Select-Object -First 1
+  if ($vitest -and (Get-Content $vitest.FullName -Raw) -notmatch '\.claude') {
+    Write-Host "  ! $($vitest.Name): add to test.exclude  [...configDefaults.exclude, '.claude/**']  (configDefaults from 'vitest/config')" -ForegroundColor Yellow
   }
 
   # Every text file with LF in the working copy too. With `* text=auto` alone and Windows'
@@ -398,6 +430,9 @@ try {
   if ($pkg.devDependencies -and $pkg.devDependencies.PSObject.Properties['@biomejs/biome']) {
     $paths = @('scripts')
     if ($added) { $paths += 'package.json' }
+    # ConvertTo-Json left it with CRLF and one array item per line: a new project failed
+    # its first `bun run lint` on it (kit-deploy, workout).
+    if ($tsRewritten) { $paths += 'tsconfig.json' }
     if (Test-Path biome.json) { $paths += 'biome.json' }
     if (Test-Path .changeset) { $paths += '.changeset' }
     if (Test-Path .claude/settings.json) { $paths += '.claude/settings.json' }

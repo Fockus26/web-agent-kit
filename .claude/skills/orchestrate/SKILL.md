@@ -181,6 +181,7 @@ So that parallel units do not collide, assign each one:
 | Range of custom error codes, if the project uses them (SQLSTATE of `raise … using errcode`): closed and disjoint per unit, never "F5+" (two units overlapped: melao) | MS010–MS014 |
 | Model · effort (`reference/TOKEN-ECONOMY.md` §12) | `sonnet` · medium |
 | Docker for this unit (local database, containers) | yes / no |
+| Local build for this unit (`next build`, `qa:local -- --preview`) | yes / no |
 | Test services on fixed ports for this unit (emulators, a test database the suite starts) | yes / no |
 
 **Two units sharing a shape** (the same table, column, type or event): fix its name and type
@@ -226,6 +227,14 @@ per wave runs them. Firebase's emulators with several slots did not start in 60 
 on the fixed ports and contaminated each other's runs (KREA ×8). The others verify through
 CI (`gh pr checks`) when it runs those tests; the technology's reference says how (e.g.
 `tech/firebase.md` § Emulators in parallel).
+
+**Local build yes/no is decided here too:** at most two units per wave get "yes" — the ones
+whose verification cannot be done without the build (Playwright guards of reflow or a11y
+measurements, a service worker, a change in `next.config` that CI cannot show). The rest run
+typecheck, lint and tests, measure on their dev server and read the build from CI. With four
+slots compiling at once, `next build` took 6–25 min, hung twice and crashed in PostCSS on
+Windows; Playwright over `next dev` hung on `load` (workout ×5, kit-deploy ×2). What a "no"
+unit could only measure on dev goes to the wave's QA list.
 
 The slot and its port are not reserved here: `wt take` assigns them at launch (wt2 → 4302, §6).
 
@@ -301,6 +310,13 @@ When each report arrives:
 
 When César asks for changes on a PR or `main` moved: continue the worker with `SendMessage`
 (it keeps its context) instead of launching a new one. The slot stays its own until merge.
+
+**Resuming a worker that was cut** (API error, watchdog): look at its slot before writing the
+message — `git -C <slot> status --short` and `git -C <slot> log --oneline origin/main..HEAD`
+— and say what is there, not what you suppose. Do not cite `.qa/progress.md` or
+`.qa/pr-body.md` unless you saw them and they are newer than the unit's start: two resume
+messages named a `progress.md` no worker had written and guessed the step from its last
+line, and another took a `pr-body.md` of a previous PR as recent (kit-deploy ×2, workout).
 
 **One extra round per PR, at most.** The worker fixes everything of its class or zone in the
 first pass (its prompt says so). What it reports "in passing" after that, if Medium or Low,
