@@ -322,6 +322,7 @@ web-agent-kit/
         ├── qa-local.ts            → scripts/: QA server against local Supabase (Docker) or Firebase emulators, with test accounts
         ├── qa-roles.ts            → scripts/ (copied once, never replaced): the project's role logic for qa-local
         ├── run-on-main.sh         → scripts/: runs a repro on a temporary worktree of origin/main (FAIL half of FAIL → PASS)
+        ├── brand-icons.ts         → scripts/ (when the brand unit needs it): favicon.ico, PNGs and manifest icons from the source SVG (with node)
         ├── context-backup.sh      → scripts/: local context/ ↔ the context-state branch
         ├── vps-env.ts             → scripts/ (projects on the VPS): DATABASE_URL/DIRECT_URL from the VPS into .env.development.local
         └── cloud-setup.sh         → scripts/: cloud session start (bun install + context:restore; local: nothing)
@@ -374,7 +375,7 @@ Details in `reference/TOKEN-ECONOMY.md`. What weighs most:
 
 ## Versions and updating projects
 
-The kit is versioned (`VERSION`, now **3.24.0**) and each project keeps in `.kit-version`
+The kit is versioned (`VERSION`, now **3.25.0**) and each project keeps in `.kit-version`
 which one it is aligned with. To bring it up to date: `/kit-update` in a project session. It
 compares with the published version (`origin/main` of the kit's clone); if behind, it
 computes the path with `UPDATES.md` and applies each version in order, in a PR.
@@ -383,6 +384,17 @@ And the way back: each project logs in `context/KIT_FEEDBACK.md` what César had
 or repeat and what the kit did not cover. `/kit-feedback` uploads it to this repo as a PR
 (`feedback/`, `kit-feedback` label); in a session opened here, "revisa el feedback" triages
 all the PRs together (`CLAUDE.md` says how).
+
+### 3.25.0 (by technology)
+
+| Before | Now |
+|---|---|
+| Adopting a WordPress on a managed host meant rediscovering its traps | `tech/wordpress-adopt.md`: where SSH is enabled, pull by pieces, the object-cache drop-in, staging vs production |
+| The WordPress `CLAUDE.md` named `build:css` and nothing compiled it | `new-project.ps1 -Stack wordpress -Client` adds the script and `sass` |
+| "Better Auth has rate limit: turn it on" | It does not cover `auth.api.*`; `disableCookieCache` on writes; validate what the API stores (`tech/vps-postgres.md`) |
+| Moving a Vite app to Next was improvised | `STACK-NEXTJS.md` › Migrating an app from Vite |
+| Tailwind v4 generated classes from `context/` and `.claude/` | `source(none)` and explicit `@source` |
+| "One source icon, the rest derived", with nothing to derive it | `reference/scripts/brand-icons.ts` |
 
 ### 3.24.0 (the single-time points of the same three reports)
 

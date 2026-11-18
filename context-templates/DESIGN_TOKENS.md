@@ -43,3 +43,7 @@ See `DESIGN_RULES.md` — they must match exactly; this file does not redefine t
 | duration.fast | {{150ms}} |
 | duration.normal | {{250ms}} |
 | easing.default | {{cubic-bezier(...)}} |
+
+A token built on a variable that changes per element (an animation whose duration a component
+overrides) is declared in `@theme inline` (Tailwind v4): in plain `@theme` the override does
+nothing — the kit's `reference/STACK-NEXTJS.md` › Tailwind.
