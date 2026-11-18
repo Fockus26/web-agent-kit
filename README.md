@@ -374,7 +374,7 @@ Details in `reference/TOKEN-ECONOMY.md`. What weighs most:
 
 ## Versions and updating projects
 
-The kit is versioned (`VERSION`, now **3.22.0**) and each project keeps in `.kit-version`
+The kit is versioned (`VERSION`, now **3.23.0**) and each project keeps in `.kit-version`
 which one it is aligned with. To bring it up to date: `/kit-update` in a project session. It
 compares with the published version (`origin/main` of the kit's clone); if behind, it
 computes the path with `UPDATES.md` and applies each version in order, in a PR.
@@ -383,6 +383,19 @@ And the way back: each project logs in `context/KIT_FEEDBACK.md` what César had
 or repeat and what the kit did not cover. `/kit-feedback` uploads it to this repo as a PR
 (`feedback/`, `kit-feedback` label); in a session opened here, "revisa el feedback" triages
 all the PRs together (`CLAUDE.md` says how).
+
+### 3.23.0 (what repeated in workout, kit-deploy and InversionesJL22)
+
+| Before | Now |
+|---|---|
+| Four slots compiled at once: builds of 6–25 min, hangs, a PostCSS crash | "Local build yes/no" per unit, at most two per wave; the rest read CI |
+| `qa:local` sat for hours with Docker Desktop stuck | Docker asked first, a cap on every step, the error on each attempt, the recovery command |
+| PRs of logged-in screens went out without images; "Executable doesn't exist" | `login` / `storageState` in `.pr-shots.json`; falls back to Edge or Chrome (`PW_CHANNEL`) |
+| `bun run lint` inside a `.claude/worktrees` worktree processed no files | Biome excludes `!.claude/worktrees`, relative to the root |
+| A cut session lost the unit; the resume message guessed | `wip:` + push before the long checks; resume from `git status` and `git log` |
+| `/security-review` in a slot reviewed an empty diff | The worker hands it its slot's diff |
+| `run-on-main.sh` left `.qa/main-*` in the slot and took 30 min to clean | Worktree in the temp folder, removed with a limit |
+| A visual correction by César came back on the next screen | It is a project decision, recorded in the same PR |
 
 ### 3.22.0 (hosting on the VPS: the plan)
 
