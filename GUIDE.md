@@ -499,7 +499,7 @@ agents in `.claude/` (the global `~/.claude/` does not exist there). What change
 | `vercel env pull .env.local --yes` | Brings the environment variables from Vercel (Development) to `.env.local` |
 | `bunx playwright install chromium` | Once per machine, before the first screenshot or audit |
 | `ssh kit-vps kit-db list` | The databases on your VPS (only once you set it up: `reference/VPS-POSTGRES.md`) |
-| `ssh kit-vps kit-db status` | Each database's last backup and the last failures |
+| `ssh kit-vps kit-db status` | Each database's last backup, the last failures and the days left on the door's certificate |
 
 Normally you do not run them: the skills do. They are there for when you want to check
 something.
@@ -557,6 +557,8 @@ something.
 | Biome or `tsc` complain about `.claude/kit-reference/*.ts` | The kit copy is not excluded (project before 3.20.0) | `new-project.ps1 -OnlyPieces` adds it to `biome.json` and `tsconfig.json` |
 | `bun run lint` inside a `.claude/worktrees` worktree: "No files were processed" | `biome.json` excludes `!**/.claude/worktrees`, which matches the worktree's own path (project before 3.23.0) | `new-project.ps1 -OnlyPieces` changes it to `!.claude/worktrees` |
 | `qa:local`: "Docker does not answer" | Docker Desktop is closed, or open and stuck | Open or restart it and run again; `QA_SUPABASE_TIMEOUT_MIN` raises the 20 min cap of each `supabase` step on a slow first download |
+| `bash scripts/…` in PowerShell: `execvpe(/bin/bash) failed` | PowerShell found WSL's `bash.exe` before Git's | `& "C:\Program Files\Git\bin\bash.exe" scripts/…`, or run it in Git Bash |
+| `wt take`: "No free slots" with slots nobody uses | A slot is detached but has changes (an untracked file that came with the base) | The message lists them: commit, ignore or delete those files in the slot |
 | A worker could not write in the local `context/` | Sandboxed worktrees do not write in the main folder | It delivers it in its report and the orchestrator copies it |
 | `wt take`: "No free slots" | Every pool folder has an open unit | Wait for one to be merged (`wt free`) or grow it: `wt init -Count 6` |
 | `wt free` aborts | The slot has uncommitted changes | See what they are (`wt status`); they are never discarded on their own |

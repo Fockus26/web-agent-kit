@@ -69,7 +69,8 @@ Nothing from another slot's `.qa/`: it belongs to a previous unit and may be sta
    permission there, deliver it whole in your final report.
 4. **Decisions:** one file per decision, `context/decisions/D0NN-<topic>.md`, with the IDs
    of your range and the one-line header (format in `context/decisions/README.md`). It goes
-   in git. There is no index to edit.
+   in git. There is no index to edit. If an ID of your range already exists on `main` when
+   you merge it in (another session took it), use the next free one and say so in the report.
 5. **Changeset:** the bump your prompt says (patch/minor/major, or none). If there is one, a
    `.changeset/<desc-kebab>.md` written by hand (format in `git-flow` §2.1) with user-facing
    text in Spanish. Do not touch `version` or `CHANGELOG.md`: the version PR writes them.
@@ -209,6 +210,8 @@ Nothing from another slot's `.qa/`: it belongs to a previous unit and may be sta
     (workout ×3). Leave the slot
     clean: everything committed and pushed (empty `git status`), or the orchestrator cannot
     free it. **Never** `gh pr merge`, push to `main`, force-push or amend what was pushed.
+    To bring your branch up to date: `git merge origin/main` and a normal push, never a
+    rebase (it needs the force-push).
     Database: only the authorized additive changes; nothing destructive.
 19. **Final report** (the orchestrator reads it, be brief): PR URL, slot, changeset,
     verified / not verified, open decisions, manual actions, bugs seen in passing, and your

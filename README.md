@@ -374,7 +374,7 @@ Details in `reference/TOKEN-ECONOMY.md`. What weighs most:
 
 ## Versions and updating projects
 
-The kit is versioned (`VERSION`, now **3.23.0**) and each project keeps in `.kit-version`
+The kit is versioned (`VERSION`, now **3.24.0**) and each project keeps in `.kit-version`
 which one it is aligned with. To bring it up to date: `/kit-update` in a project session. It
 compares with the published version (`origin/main` of the kit's clone); if behind, it
 computes the path with `UPDATES.md` and applies each version in order, in a PR.
@@ -383,6 +383,21 @@ And the way back: each project logs in `context/KIT_FEEDBACK.md` what César had
 or repeat and what the kit did not cover. `/kit-feedback` uploads it to this repo as a PR
 (`feedback/`, `kit-feedback` label); in a session opened here, "revisa el feedback" triages
 all the PRs together (`CLAUDE.md` says how).
+
+### 3.24.0 (the single-time points of the same three reports)
+
+| Before | Now |
+|---|---|
+| `kit-db create` could reset the password of a role it had not created | It only reuses a role it left behind itself; any other existing role is refused |
+| A web server on port 80 broke the database certificate's renewal in silence | `bootstrap.sh --webroot` moves the renewal; `kit-db status` shows the days left |
+| After each PR the agent stopped to ask | It goes on with the next unit that does not depend on that PR, and asks at the end |
+| Ten chained PRs merged into their own bases: only the first reached `main` | A chain only when you ask, with the merge order in the PR and a check on `main` |
+| `design-qa` waited for you to start the server, in the background | It starts `qa:local` itself, like the other QA agents |
+| The QA agents were told to write files and had no Write | They have Write and Edit, for `.qa/` and their report only |
+| A UI phase was launched without a handoff | `orchestrate` stops and offers the three ways to get the design |
+| The kickoff assumed a new project and a web-first one | It starts from the code when the app exists; an Infra track |
+| `test:related` ran `bun test` in a Vitest project | It runs the project's runner |
+| A focus ring, a selection or a toast action in primary, corrected screen by screen | `DESIGN_RULES`: each takes its component's color |
 
 ### 3.23.0 (what repeated in workout, kit-deploy and InversionesJL22)
 

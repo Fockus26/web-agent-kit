@@ -28,13 +28,90 @@ Projects before 3.3.0 do not have the file. It is deduced from signals, newest t
 | has `context/decisions/D0NN-*.md` (one file per decision) and no `context/DECISIONS_INDEX.md` | **3.2.0** |
 | its `CLAUDE.md` talks about the worktree pool (`..\<repo>-wt`, `wt take`) | **3.1.0** |
 | has `context/PHASE_LOG/` and `context/CURRENT_PHASE.md` | **3.0.0** |
-| has no `context/PHASE_LOG/` | **2.x or earlier**: no automatic path. `new-project.ps1 -Existing` adds what is missing without overwriting anything and you go on from 3.0.0 |
+| has no `context/PHASE_LOG/` but has other kit pieces (`phases/`, a kit `CLAUDE.md`) | **2.x or earlier**: no automatic path. `new-project.ps1 -Existing` adds what is missing without overwriting anything and you go on from 3.0.0 |
+| has none of the above (a `context/` folder of its own does not count) | **No kit**: it is an adoption, not an update. `new-project.ps1 -Existing` copies each missing template into the existing `context/` and writes `.kit-version` |
 
 The signals do not depend on Changesets on purpose: a project **without versioning**
 (created with `-NoVersion` / `-SinVersion`, or its `CLAUDE.md` says so) has no `.changeset/`
 or `release.yml` and is not older because of it. In that project, the Changesets steps of
 any version are skipped: they are not a pending migration. If the signals contradict each
 other, the agent shows them and asks before choosing.
+
+---
+
+## 3.24.0 — 2026-11-18 · The single-time points of workout, kit-deploy and InversionesJL22
+
+The points of the same three reports (feedback PRs #32, #34, #35) that came once and had a
+clear fix. What belongs to one technology (`tech/wordpress*`, `tech/vps-postgres.md`, Next,
+Tailwind, Supabase) still waits for its own version. Decisions by César, 2026-11-18.
+
+**What changed**
+
+- **`vps/kit-db create` no longer touches a role it did not create.** Its retry path reused
+  any existing role without a database and reset its password; now only one this command
+  left behind (a `.creating` mark written before the role). Found by kit-deploy's security
+  review. `kit-db status` shows the days left on the door's certificate and shouts under 14.
+- **`vps/bootstrap.sh --webroot`:** moves the certificate's renewal from certbot standalone
+  to a web server already on port 80 (it checks `/var/www/acme` is served, saves the renewal
+  with `certbot reconfigure`, or a forced renewal on Certbot < 2.3, and runs the dry run). A
+  first issue with port 80 taken stops and says so; a run that finds standalone plus a busy
+  port 80 ends with a warning. With Caddy on port 80 the renewal failed in silence
+  (kit-deploy). **Not run in the kit's Docker test** (no Docker on 2026-11-18; `bash -n`
+  only): see the VPS steps.
+- **`orchestrate`:** a phase with UI stops if `design/HANDOFF.md` is missing; the wave's shared
+  primitives go to one unit; a worker whose decision ID was taken uses the next free one;
+  `main` moved → `git merge origin/main`, never a rebase (kit-deploy).
+- **`qa-local.ts`:** `Object.assign(env, { NODE_ENV })` (Next 16's types made a new project's
+  typecheck fail); it says which script to add when `db:migrate` is missing and waits 5 min
+  for the first `initdb`; the confirmations warning reads only `[auth.email]`; it sets
+  `EMAIL_FROM` besides `SMTP_FROM`. **`EMAIL-TEMPLATES.md`** reads `SMTP_FROM`.
+- **`test-related.ts`** runs Vitest when the project has it (`vi.stubEnv` failed falsely under
+  `bun test`). **`wt take`** says which detached slots are dirty and with what, under "No free
+  slots". **`a11y` §1:** the axe example uses `newContext()`.
+- **QA agents:** `design-qa`, `functional-qa` and `wave-qa` get Write and Edit, for `.qa/` and
+  their report only; `design-qa` starts its own server with `qa:local` instead of asking
+  César, whom it cannot ask.
+- **`git-flow` §2A:** after opening a PR the agent goes on with the next unit that does not
+  depend on it and gathers its questions; a chain of PRs only when César asks, with the merge
+  order in the body and a check that it reached `main` (InversionesJL22); commands for César
+  written for PowerShell.
+- **`project-kickoff`:** a project that already exists starts from an inventory of the code;
+  an **Infra** track; the three visual directions can be shown; the repo's default branch is
+  read and a 403 on the protection is not retried.
+- **`new-project.ps1`:** a `context/` of the project's own is not taken for an old kit (each
+  missing template is copied and `.kit-version` written); an existing `.env.example` gets the
+  kit's missing keys. **`kit-update`:** `context:backup` before switching branches; a file
+  several versions replace is replaced once. 3.21.0's step 2 no longer asks for `git reset
+  --hard`; 3.14.0's step 4 says what to do without a types table.
+- **`DESIGN_RULES.md`** (template and the design brief): the focus ring takes its
+  component's ink color, `::selection` inside a colored component uses its inverted pair,
+  an action inside a notice uses the notice's color, placeholder ≥ 4.5:1.
+  **`QA-PREVENTION.md`:** nine rows (offline submit, a queue without an exit, a limit that
+  reads then adds, a whole array saved by upsert, the second tap, a notice from a modal, the
+  scrim per layer, 150 % font, placeholder contrast).
+
+**Steps for a project on 3.23.0**
+
+1. Global pieces: `install-kit.ps1 -Pull` and a new session (skipped in a cloud session).
+   Then refresh the kit copy (`install-kit --project .`) and commit it.
+2. Replace `scripts/qa-local.ts` and `scripts/test-related.ts` with the kit's (LF and the
+   project's Biome; `kit-update` › Piece check). A WordPress project: skipped, it has neither.
+3. `context/DESIGN_RULES.md`, accessibility list (Spanish `context/`: "Accesibilidad"): add
+   the four lines of the kit's template — focus ring by component, placeholder ≥ 4.5:1, the
+   action inside a notice, `::selection` inside a colored component — translated if the file
+   is in Spanish. A line the project already decides otherwise (a `context/decisions/` file
+   says so) is not added. Missing file: nothing to do.
+4. Nothing in `CLAUDE.md`. A project that reads `EMAIL_FROM` keeps working; new code reads
+   `SMTP_FROM`.
+
+**Steps for César's VPS (once, not done)**
+
+`kit-db` and `bootstrap.sh` changed and could not be run in a container on the day they were
+written. Before copying them: with Docker running, `bash bootstrap.sh --test` inside an
+`ubuntu:24.04` container, then `kit-db create` over a role created by hand (it must refuse and
+leave its password alone) and over a role with its `.creating` mark (it must finish). Only
+then: copy both as files (`VPS-POSTGRES.md` step 5) and re-run `bootstrap.sh`. `--webroot` is
+for the day a web server takes port 80 (kit-deploy's first phase), not before.
 
 ---
 
@@ -190,8 +267,11 @@ processed now; what 3.20.0 had already covered is left out. Decisions by César,
    Then refresh the kit copy (`install-kit --project .`) and commit it.
 2. `new-project.ps1 -Path . -OnlyPieces`: it sets `* text=auto eol=lf` in `.gitattributes`
    (left alone if a global rule already forces LF). Commit it, and then, **on a clean tree**,
-   rewrite the working copy: `git rm -rq --cached . && git reset -q --hard`. Check: `git
-   ls-files --eol | grep -c "w/crlf"` gives 0.
+   rewrite the working copy in place, file by file — not `git reset --hard`, which the
+   project's `CLAUDE.md` forbids and this step used to ask for (workout):
+   `git ls-files --eol | grep ' w/crlf ' | cut -f2 | xargs -d '\n' sed -i 's/\r$//'` and
+   then `git add -u` (Git Bash). Nothing is left to commit: the index already had them in
+   LF. Check: `git ls-files --eol | grep -c "w/crlf"` gives 0 and `git status` is clean.
 3. Replace `scripts/qa-local.ts` with the kit's (LF and the project's Biome; `kit-update` ›
    Piece check). A Firebase project adds `firebase-tools` as a pinned devDependency if it
    is not there.
@@ -611,7 +691,9 @@ status`.
    projects: same rows in Spanish. Then `wc -c CLAUDE.md`: if it is over 8 KB, shorten the
    comments of the commands block as the template did, never the rules.
 4. `context/KIT_FEEDBACK.md` (or `KIT_FEEDBACK.md` in Spanish): add the **Prevention** row
-   to the types table (Spanish: **Prevención**). Missing file: nothing to do.
+   to the types table (Spanish: **Prevención**). Missing file: nothing to do. A file with no types table (older than it): add the table from
+the kit's `context-templates/KIT_FEEDBACK.md` under its heading, and leave the log's rows as
+they are.
 5. `context/CURRENT_PHASE.md` "Blocked": `QA pendiente: design-qa — …` lines are removed
    (they go to the version QA); `QA pendiente: functional-qa — …` lines stay only if the
    flow is a risk one.

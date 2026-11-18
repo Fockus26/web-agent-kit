@@ -95,7 +95,8 @@ and has to be redone.
 - **No state is conveyed only by color.** Error, success, selected, active: always color +
   icon, text or shape.
 - **No horizontal scroll at 320px width.**
-- **Visible, designed focus states**, not the browser's default outline or its absence.
+- **Visible, designed focus states**, not the browser's default outline or its absence. The
+  ring takes each component's ink color (≥ 3:1), not one accent for every control.
 - **Implemented with {{COMPONENT_LIBRARY}}**. [The orchestrator pastes here the matching
   paragraph from `reference/UI-LIBRARIES.md` § "What the brief tells the design tool" — it
   changes what is reasonable to design, so do not omit it.]

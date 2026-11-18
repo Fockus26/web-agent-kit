@@ -452,8 +452,11 @@ function supabaseReset(): void {
 
 // Local sign-up without the confirmations the hosted project asks for: a repro passes here
 // and not there, and it hid the double confirmation of an email change (melao).
+// Only inside [auth.email]: `[auth.sms] enable_confirmations = false` (its default) raised
+// this warning in a project whose email confirmations were on (workout).
+const authEmail = configToml.match(/^\[auth\.email\][^\n]*\n([\s\S]*?)(?=^\[|$(?![\s\S]))/m)?.[1] ?? ''
 for (const key of ['enable_confirmations', 'double_confirm_changes']) {
-  if (new RegExp(`^\\s*${key}\\s*=\\s*false`, 'm').test(configToml)) {
+  if (new RegExp(`^\\s*${key}\\s*=\\s*false`, 'm').test(authEmail)) {
     console.warn(`! supabase/config.toml: ${key} = false. If the hosted project has it on, local QA skips that step.`)
   }
 }
@@ -501,7 +504,9 @@ async function startServer(base: NodeJS.ProcessEnv, beforeReady?: () => Promise<
   if (preview) {
     script = ['qa:serve', 'preview', 'start'].find((s) => pkgScripts[s]) ?? ''
     if (!script) abort('--preview: the project has no "qa:serve", "preview" or "start" script.')
-    env.NODE_ENV = 'production'
+    // Not `env.NODE_ENV = …`: Next 16's types declare it read-only and a new project's
+    // typecheck failed on this file (kit-deploy).
+    Object.assign(env, { NODE_ENV: 'production' })
     console.log('… bun run build (with the local backend\'s variables)')
     const build = launch('bun', ['run', 'build'], env)
     const code = await new Promise<number | null>((done) => build.on('exit', done))
@@ -627,11 +632,12 @@ if (args.includes('--postgres') || (hasDrizzle && !usesSupabase && !existsSync('
 
   // TCP, not the socket: during the image's init Postgres only listens on the socket.
   let ready = false
-  for (let i = 0; i < 120 && !ready; i++) {
+  // 5 minutes: the container's first initdb on a hard disk passed the 2 it had (kit-deploy).
+  for (let i = 0; i < 300 && !ready; i++) {
     ready = docker(['exec', PG, 'psql', '-h', '127.0.0.1', '-U', 'postgres', '-c', 'select 1']).status === 0
     if (!ready) await new Promise((r) => setTimeout(r, 1000))
   }
-  if (!ready) abort(`Postgres did not answer in 2 minutes.${dockerLogs(PG)}`)
+  if (!ready) abort(`Postgres did not answer in 5 minutes.${dockerLogs(PG)}`)
 
   const sqlIn = (db: string, statement: string): string => {
     const r = docker(['exec', '-i', PG, 'psql', '-U', 'postgres', '-d', db, '-v', 'ON_ERROR_STOP=1', '-qAt'], statement)
@@ -653,6 +659,12 @@ if (args.includes('--postgres') || (hasDrizzle && !usesSupabase && !existsSync('
 
   const databaseUrl = `postgresql://${ROLE}:${ROLE}@127.0.0.1:${pgPort}/${DB}`
 
+  if (!pkgScripts['db:migrate']) {
+    abort(
+      'package.json has no "db:migrate" script, which applies the migrations to the QA database.\n' +
+        'Add it — Drizzle: "db:migrate": "drizzle-kit migrate" (the kit\'s reference/tech/vps-postgres.md).',
+    )
+  }
   console.log('… bun run db:migrate')
   const migrate = spawnSync('bun', ['run', 'db:migrate'], {
     stdio: 'inherit',
@@ -691,6 +703,7 @@ if (args.includes('--postgres') || (hasDrizzle && !usesSupabase && !existsSync('
     SMTP_USER: '',
     SMTP_PASS: '',
     SMTP_FROM: 'QA <qa@example.test>',
+    EMAIL_FROM: 'QA <qa@example.test>', // projects that copied the guide before 3.24.0 read this name
   })
 
   await startServer(env, async () => {
