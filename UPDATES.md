@@ -39,6 +39,75 @@ other, the agent shows them and asks before choosing.
 
 ---
 
+## 3.25.0 — 2026-11-18 · By technology: WordPress, VPS Postgres, Next, Tailwind, Supabase
+
+The last part of the same three reports (feedback PRs #32, #34, #35): what belongs to one
+technology, each in its `reference/tech/<name>.md` or its section. Decisions by César,
+2026-11-18.
+
+**What changed**
+
+- **`tech/wordpress-adopt.md`:** where each common host enables SSH/SFTP; a managed host that
+  asks for key and password and cuts long sessions (pull by pieces); a repo with `plugins/`
+  and `themes/` at its root; what such a host leaves in the copy (the `object-cache.php`
+  drop-in, logs and caches that never verify, a vendored third-party plugin, the slow bind
+  mount on Windows); staging compared with production before the first deploy
+  (InversionesJL22). **`pull-site.sh`** leaves `wc-logs/` and `litespeed/` out;
+  **`docker-compose.yml`** has the commented line for a vendored plugin;
+  **`new-project.ps1 -Stack wordpress -Client`** adds `build:css` and `sass`.
+  **Not brought into the kit:** the pull by pieces with `SSH_ASKPASS`, turning the drop-in
+  off on import and the code in a named volume. They live in InversionesJL22's repo and
+  need a host and Docker to be tested; the guide points there.
+- **`tech/vps-postgres.md`:** Better Auth's rate limiter does not see `auth.api.*` (its docs);
+  `disableCookieCache: true` wherever a session authorizes a write; shape and caps of what
+  the API stores, now that PostgREST and RLS are gone; hand-written SQL lost when a migration
+  is renumbered (kit-deploy); look at `kit-db status` before asking for the backup bucket,
+  and a first `kit-db backup` for a database created after 03:30. **`kit-db version`** (new).
+- **`tech/migrate-supabase-vps.md`:** confirm the MCP's account sees the project; the pattern
+  for a client that wrote straight to PostgREST; `supabase/.temp/` before removing the
+  folder; a backup at the cutover (workout).
+- **`tech/supabase.md`:** `with check` does not validate whose the parent row is (workout).
+- **`STACK-NEXTJS.md`:** "Migrating an app from Vite" (`src/pages`, PostCSS, `public/` over
+  `app/`, what moves besides the screens, `vite` as Vitest's peer, the service worker's cache
+  key); Tailwind v4's `source(none)` with explicit `@source`, `--text-*` sizes in
+  `extendTailwindMerge`, `@theme inline`; the PostCSS crash on Windows (workout).
+- **`UI-LIBRARIES.md`:** the toggle group's role and Sonner `unstyled`. **`DESIGN_TOKENS.md`:**
+  `@theme inline`. **`design-qa`:** hit areas with `elementFromPoint`, the handoff's line cited.
+- **`reference/scripts/brand-icons.ts`** (new): `favicon.ico`, `icon.png`, `apple-icon.png`
+  and the manifest's icons from the one source SVG, with the project's Playwright
+  (`BRAND-ASSETS.md`).
+
+**Left out, and why:** `qa:local --offline` for an app with a local guest mode and the
+repros that fail on Sundays are workout's own; `design-qa.ts`'s 150 % fallback and its
+`.sr-only` filter wait for a session where the sweep can be run against a real site.
+
+**Steps for a project on 3.24.0**
+
+1. Global pieces: `install-kit.ps1 -Pull` and a new session (skipped in a cloud session).
+   Then refresh the kit copy (`install-kit --project .`) and commit it.
+2. **WordPress** (`wordpress` in `Tech refs`): `new-project.ps1 -Path . -Stack wordpress
+   -Client <slug> -OnlyPieces` adds `build:css` and `sass` if the project lacks them (it
+   leaves an existing `build:css` alone). `scripts/pull-site.sh`: if the project never
+   changed it, replace it with the kit's; if it did, add `wc-logs/ litespeed/` to its
+   `EXCLUDES`. Nothing else.
+3. **Postgres on the VPS with Better Auth** (`vps-postgres` in `Tech refs`): a diagnosis for
+   the single round, changing nothing — sign-in, sign-up or password reset called through
+   `auth.api.*` from a server action (no rate limit per IP); a route or action that writes
+   and reads the session without `disableCookieCache: true` while `cookieCache` is on; a
+   `jsonb` stored without validating its shape. Each one César accepts goes to
+   `context/plans/backlog.md` (`pendientes.md` in older projects) as its own unit.
+4. **Tailwind v4:** the same way, one finding — the global stylesheet without `source(none)`.
+   Its unit compares the built CSS before and after (only classes that came from `context/`
+   or `.claude/` may disappear).
+5. **Supabase** (`supabase` in `Tech refs`): the same way — child tables whose policy checks
+   only their own `user_id`.
+6. Nothing in `CLAUDE.md` or `context/`. Other projects: only step 1.
+
+**Steps for César's VPS:** `kit-db` gained `version`; it goes with the copy 3.24.0 already
+asks for, after the same container test.
+
+---
+
 ## 3.24.0 — 2026-11-18 · The single-time points of workout, kit-deploy and InversionesJL22
 
 The points of the same three reports (feedback PRs #32, #34, #35) that came once and had a

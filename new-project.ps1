@@ -267,6 +267,12 @@ try {
     $scripts['local:up']   = 'docker compose --env-file .env.local up -d'
     $scripts['local:down'] = 'docker compose --env-file .env.local down'
     $scripts['local:wp']   = 'docker compose --env-file .env.local --profile cli run --rm wpcli wp'
+    # The WordPress CLAUDE.md and CI name `bun run build:css` and the skeleton brings
+    # assets/scss/site.scss, but no script compiled it (InversionesJL22).
+    if ($Client) {
+      $assets = "wp-content/plugins/$Client-site/assets"
+      $scripts['build:css'] = "sass $assets/scss/site.scss $assets/site.css --no-source-map --style=compressed"
+    }
   } elseif ($isNext) { $scripts['typecheck'] = 'next typegen && tsc --noEmit' }
   elseif (-not $pkg.scripts.PSObject.Properties['typecheck']) {
     Write-Host "  = script typecheck: not Next.js, add the project's own by hand (Astro: astro check)" -ForegroundColor Yellow
@@ -430,7 +436,7 @@ try {
   # here: `bunx playwright install chromium` when screenshots or audits are needed.
   # @axe-core/playwright: the a11y gate uses it on every unit, and a pool worker does not add
   # dependencies (it ended up injecting axe from a CDN).
-  $deps = if ($wp) { @('@playwright/test', '@axe-core/playwright') } else { @('@types/bun', '@playwright/test', '@axe-core/playwright') }
+  $deps = if ($wp) { @('@playwright/test', '@axe-core/playwright') + $(if ($Client) { 'sass' }) } else { @('@types/bun', '@playwright/test', '@axe-core/playwright') }
   if (-not $NoVersion) { $deps += '@changesets/cli' }
   $missing = $deps | Where-Object {
     -not ($pkg.devDependencies -and $pkg.devDependencies.PSObject.Properties[$_])

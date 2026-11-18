@@ -7,6 +7,7 @@
 #                                   (for migrations, through `ssh -N -L 5433:127.0.0.1:5432 kit-vps`)
 #   kit-db list                     databases with size
 #   kit-db status                   per database: last dump; and the last backup failures
+#   kit-db version                  the kit version this copy came with
 #   kit-db rotate <name>            new password (the old one stops working at once)
 #   kit-db backup <name>|--all      pg_dump -Fc to /var/backups/kit-pg (+ rclone if configured)
 #   kit-db restore <name> <file>    pg_restore a dump INTO the existing database (clean first)
@@ -113,6 +114,11 @@ SQL
   list)
     psql_su "-d postgres -F ' ' -c \"SELECT datname, pg_size_pretty(pg_database_size(datname)) FROM pg_database WHERE datname NOT IN ('postgres','template0','template1') ORDER BY 1\""
     ;;
+  version)
+    # So a project can tell an older copy on the VPS from the kit's: the guides named
+    # `kit-db status` when the installed one did not have it yet (workout).
+    echo "kit-db 3.25.0"
+    ;;
   status)
     # A failed backup only reaches a log nobody reads: this is the one place to look.
     for db in $(psql_su "-d postgres -c \"SELECT datname FROM pg_database WHERE datname NOT IN ('postgres','template0','template1') ORDER BY 1\""); do
@@ -176,7 +182,7 @@ SQL
     echo "Dropped $1."
     ;;
   *)
-    sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'
     exit 1
     ;;
 esac

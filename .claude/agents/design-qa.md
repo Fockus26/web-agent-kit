@@ -48,6 +48,12 @@ background, like `functional-qa` and `wave-qa`: `bun run qa:local -- --port <por
 verified". You run in the background and cannot ask: the old "ask César to start `bun dev`
 and wait" left the audit waiting for an answer nobody could give (workout).
 
+**Two measurements that gave false findings** (workout): a touch target enlarged with
+`::before` is invisible to `getBoundingClientRect()` — measure the hit area with
+`document.elementFromPoint` at the edges of the 44 px box; and a claim that the build
+differs from the handoff cites the handoff's line, read at that moment (a favicon was
+reported as wrong against a handoff that said the opposite).
+
 Use the kit's `reference/scripts/design-qa.ts` as a base, copied into `.qa/` of the project
 (ignored by git; inside the project it resolves Playwright), and adjust the project's routes.
 If Playwright cannot be installed or the server does not come up, say so **at the top of the
