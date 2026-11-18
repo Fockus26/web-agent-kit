@@ -228,6 +228,11 @@ the merge, as a manual action in the PR.
 Per `context/GIT_STATE.md`: `pr` mode → `chore/kit-<published>` from an updated
 `origin/main`; `local` mode → from the base.
 
+Before switching branches, `bun run context:backup` if the project has it. A version that
+moves a `context/` file from git to local (3.8.0) leaves it at the mercy of the next
+checkout: one to a commit where it was tracked overwrote `plans/pendientes.md` and the pull
+after it deleted the file (workout, recovered from `context-state`).
+
 ## 8. Apply each version, in order
 
 Follow its "Steps" in `<kit>/UPDATES.md` (and the prompts they cite, only the steps
@@ -240,6 +245,10 @@ version is done:
 
 If a version fails halfway, stop there: what was done stays in commits and `.kit-version`
 says how far it got.
+
+**A file several versions of the path replace whole** (`scripts/qa-local.ts` in 3.11.0 to
+3.15.0 and later): the kit only publishes its current copy, so replace it once, in the last
+version of the path that names it, and say so in the earlier ones' commits.
 
 With every version applied, **refresh the project's copy of the skills and agents** (cloud
 sessions load only that one): `powershell -ExecutionPolicy Bypass -File "<kit>\install-kit.ps1" -Project .`

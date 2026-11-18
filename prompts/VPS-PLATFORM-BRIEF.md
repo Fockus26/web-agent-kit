@@ -146,9 +146,9 @@ Each one with why it is here.
 - **certbot standalone and Caddy both want port 80.** Once Caddy is listening, the renewal of
   `db.<domain>` fails without anyone noticing, and when that certificate expires every project
   with `sslmode=verify-full` loses its database at once. Before installing Caddy, the certificate
-  moves to `webroot`: Caddy serves `http://db.<domain>` from `/var/www/acme`, then `certbot
-  certonly --webroot -w /var/www/acme -d db.<domain> --cert-name db.<domain> -n` (which rewrites
-  its renewal config) and `certbot renew --dry-run` must pass. The PgBouncer deploy hook stays.
+  moves to `webroot`: Caddy serves `http://db.<domain>` from `/var/www/acme`, then `bash
+  bootstrap.sh --webroot` (kit 3.24.0: it checks the folder is served, saves the renewal as
+  webroot and runs `certbot renew --dry-run`). The PgBouncer deploy hook stays.
 - **`NEXT_PUBLIC_*` are frozen at build** (Next.js docs). A change of one needs a new image;
   only server variables can change with a restart.
 - **The Server Actions key and the version skew.** For a few seconds the old and the new

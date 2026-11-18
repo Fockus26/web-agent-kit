@@ -105,6 +105,18 @@ try {
     $copied.Add($to)
     Write-Host "  + $to"
   }
+  # An .env.example the project already has gets the kit's keys it lacks, appended: skipping
+  # the file left every kit variable out and they were merged by hand (InversionesJL22).
+  function MergeEnvExample($from, $to) {
+    if (-not (Test-Path $to)) { CopyIfMissing $from $to; return }
+    $have = Get-Content $to | ForEach-Object { if ($_ -match '^\s*#?\s*([A-Za-z_][A-Za-z0-9_]*)=') { $Matches[1] } }
+    $new = Get-Content $from | Where-Object { $_ -match '^\s*#?\s*([A-Za-z_][A-Za-z0-9_]*)=' -and $have -notcontains $Matches[1] }
+    if (-not $new) { Write-Host "  = $to already has every kit key" -ForegroundColor Yellow; return }
+    $text = [IO.File]::ReadAllText((Resolve-Path $to))
+    $sep = if ($text -and -not $text.EndsWith("`n")) { "`n" } else { '' }
+    [IO.File]::AppendAllText((Resolve-Path $to), "$sep`n# web-agent-kit (see $(Split-Path $from -Leaf) in the kit for what each one is)`n$($new -join "`n")`n")
+    Write-Host "  + ${to}: $(@($new).Count) kit key(s) added"
+  }
   function ToLf($path) {
     if (-not (Test-Path $path)) { return }
     $files = if (Test-Path $path -PathType Container) { Get-ChildItem $path -Recurse -File -Force } else { Get-Item $path }
@@ -118,9 +130,15 @@ try {
   Write-Host "Copying the kit into $Path"
   # If context/ was already there, the project followed an earlier kit version: it does not
   # get the current version (it is not migrated); the kit-update skill deduces it and updates it.
-  $olderKit = Test-Path context
+  # A context/ of the project's own (plans, notes) is not a kit: it used to be taken for an
+  # earlier version, and every template and .kit-version were skipped (workout).
+  $olderKit = (Test-Path context\CURRENT_PHASE.md) -or (Test-Path context\PHASE_LOG)
   if (-not $OnlyPieces) {
-    CopyIfMissing "$kit\context-templates" 'context'
+    if ((Test-Path context) -and -not $olderKit) {
+      Get-ChildItem "$kit\context-templates" -Force | ForEach-Object { CopyIfMissing $_.FullName "context\$($_.Name)" }
+    } else {
+      CopyIfMissing "$kit\context-templates" 'context'
+    }
     CopyIfMissing "$kit\phases-templates" 'phases'
     New-Item -ItemType Directory -Force design, .github\workflows | Out-Null
   }
@@ -132,7 +150,7 @@ try {
     }
     foreach ($f in 'pull-site.sh', 'php-lint.sh') { CopyIfMissing "$wpKit\$f" "scripts\$f" }
     CopyIfMissing "$wpKit\docker-compose.yml" 'docker-compose.yml'
-    CopyIfMissing "$wpKit\env.example" '.env.example'
+    MergeEnvExample "$wpKit\env.example" '.env.example'
     New-Item -ItemType Directory -Force local | Out-Null
     CopyIfMissing "$wpKit\local\mu-plugins" 'local\mu-plugins'
     CopyIfMissing "$wpKit\local\mysql-client.cnf" 'local\mysql-client.cnf'
@@ -156,7 +174,7 @@ try {
         Write-Host "  + $plugin (skeleton: assets by filemtime, acf-json, migrations)"
       }
       foreach ($f in 'docker-compose.yml', '.env.example') {
-        if ($copied.Contains($f)) { (Get-Content $f -Raw).Replace('acme-site', "$Client-site") | Set-Content $f -NoNewline }
+        if ((Test-Path $f) -and (Get-Content $f -Raw).Contains('acme-site')) { (Get-Content $f -Raw).Replace('acme-site', "$Client-site") | Set-Content $f -NoNewline }
       }
     } else {
       Write-Host "  = no -Client: the plugin skeleton is not copied ($wpKit\plugin)" -ForegroundColor Yellow
