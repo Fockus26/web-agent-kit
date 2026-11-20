@@ -145,6 +145,14 @@ Me faltan estas para armar el plan:
     > alto, ilustración por encima de foto, copy en primera persona. *Transmite:*
     > accesibilidad. *Riesgo:* puede leerse como poco serio en B2B.
 
+    **Each direction grows from an anchor in the business** (its material, place, trade, an
+    object of its work) and says which: "stamps and ledgers" for a notary, not "modern".
+    None of the three may be a generic AI look (cream + serif + one accent, purple
+    gradient, Inter with rounded cards): the list is in the kit's
+    `reference/AI-DEFAULTS.md`. Why: the designs came out like every other generated site
+    (César, 2026-11-20), and a style label with no anchor is exactly what produces that.
+    The chosen anchor goes into the brief's § 2.
+
     Ask him to pick one, or to mix. If he has no opinion, **pick the one that fits the
     business best yourself and say why.** If he would rather see them than read them, show
     them: the same screen (the hero or the main view) in the three directions, side by side
@@ -399,6 +407,12 @@ When César comes back with Claude Design's result:
    component's states, mobile behavior, a token without a value), **say so before starting
    to code** and give César the exact question to send back to Claude Design. It is far
    cheaper than finding out in phase 5.
+2b. If the design came with an HTML export, save it in `design/export/` and run the
+   detector on it (`reference/AI-DEFAULTS.md` § 2). Each `slop` finding that the handoff
+   does not justify in "Decisions and traps" goes to César as a question to take back to
+   Claude Design, together with the missing pieces: changing it now costs one prompt, and
+   after phase 04 it costs sections. Without an export, say so in one line and leave it to
+   `design-qa`.
 3. Reconcile the handoff with `context/`: if Claude Design changed a color or a scale,
    update `COLORS.md`/`TYPOGRAPHY.md`/`DESIGN_TOKENS.md` and record the decision. The
    handoff overrides the original proposal, but the change stays documented.

@@ -90,6 +90,8 @@ For each section, in the page's vertical order:
 ### 8. Decisions and traps
 - [ ] Decisions with their reason
 - [ ] What is easy to implement wrong
+- [ ] Each deliberate choice that looks like one of the brief's "AI defaults", with its
+      reason (without it, `design-qa` reports it as a default)
 
 ### 9. Open questions
 - [ ] Listed, with Claude Design's recommendation for each

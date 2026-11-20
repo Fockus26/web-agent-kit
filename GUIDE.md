@@ -274,7 +274,8 @@ What happens:
 ### Step 2 — Design (you, in Claude Design)
 
 You paste the brief into Claude Design. You come back with the design and a
-**`HANDOFF.md`**, which you save in `design/HANDOFF.md`.
+**`HANDOFF.md`**, which you save in `design/HANDOFF.md`. If Claude Design lets you export
+the pages as HTML, bring that too: the review checks it for the generic AI look.
 
 ### Step 3 — Handoff review
 
@@ -282,8 +283,9 @@ You paste the brief into Claude Design. You come back with the design and a
 Revisa design/HANDOFF.md
 ```
 
-If something is missing (an error state, the mobile behavior, a measurement), it gives you
-**the exact question** to send back to Claude Design. Do not skip it: an invented value here
+If something is missing (an error state, the mobile behavior, a measurement), or the
+export falls into an AI default the handoff does not justify, it gives you **the exact
+question** to send back to Claude Design. Do not skip it: an invented value here
 is paid for by redoing sections later.
 
 ### Step 4 — Building, unit by unit

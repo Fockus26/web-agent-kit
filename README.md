@@ -301,6 +301,7 @@ web-agent-kit/
     ├── UI-LIBRARIES.md            shadcn/ui · Hero UI · MUI — criteria and what changes
     ├── TOKEN-ECONOMY.md           reading by levels, context/ caps, tests, screenshots
     ├── QA-PREVENTION.md           defects QA keeps finding, and the rule that prevents each
+    ├── AI-DEFAULTS.md             what makes a design look generated, and the detector that measures it
     ├── STATUS-SCREENS.md          404 · 500 · offline · maintenance: catalog and implementation
     ├── BRAND-ASSETS.md            logo, icon, favicon, touch icon, OG: what is asked and what is generated
     ├── EMAIL-TEMPLATES.md         the app's emails: catalog, design constraints, React Email, Supabase, Firebase, provider
@@ -375,7 +376,7 @@ Details in `reference/TOKEN-ECONOMY.md`. What weighs most:
 
 ## Versions and updating projects
 
-The kit is versioned (`VERSION`, now **3.25.0**) and each project keeps in `.kit-version`
+The kit is versioned (`VERSION`, now **3.26.0**) and each project keeps in `.kit-version`
 which one it is aligned with. To bring it up to date: `/kit-update` in a project session. It
 compares with the published version (`origin/main` of the kit's clone); if behind, it
 computes the path with `UPDATES.md` and applies each version in order, in a PR.
@@ -384,6 +385,13 @@ And the way back: each project logs in `context/KIT_FEEDBACK.md` what César had
 or repeat and what the kit did not cover. `/kit-feedback` uploads it to this repo as a PR
 (`feedback/`, `kit-feedback` label); in a session opened here, "revisa el feedback" triages
 all the PRs together (`CLAUDE.md` says how).
+
+### 3.26.0 (designs that do not look AI-generated)
+
+| Before | Now |
+|---|---|
+| Claude Design's designs looked like every generated site, and only "Must NOT look like" fought it | The brief carries an anchor in the business and the "AI defaults" block; the 3 directions grow from that anchor |
+| Nothing measured the generic look | `impeccable detect` on the HTML export at the handover and on every route in `design-qa` (`reference/AI-DEFAULTS.md`) |
 
 ### 3.25.0 (by technology)
 
