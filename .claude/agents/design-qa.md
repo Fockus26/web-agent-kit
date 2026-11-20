@@ -240,6 +240,21 @@ grep -rnE '\[[0-9]+px\]|\[#[0-9a-fA-F]{3,8}\]' components/ app/
 - [ ] Hover and focus states are consistent across equivalent elements.
 - [ ] Shadows come from the elevation scale.
 
+## 7b. AI defaults
+
+Run the detector on every route, at 1280 and at 390, following the kit's
+`reference/AI-DEFAULTS.md` § 2 (pinned version, telemetry off, JSON into `.qa/`). Why: the
+generic look (Inter, purple gradient, icon tile above each heading) passed every other check
+of this agent because nothing measured it (César, 2026-11-20).
+
+- **`slop`** findings: **Medium**, type "decisión de diseño", with the rule id, the selector
+  and the snippet as evidence. One that `design/HANDOFF.md` justifies in "Decisions and
+  traps" (cite the line, read now) is not a finding: list it under "Coherencia del sistema"
+  as accepted.
+- **`quality`** findings: only those axe and sections 1–8 did not already catch, as normal
+  findings with their own severity. Do not report the same problem twice.
+- Exit `1` on a route: that route goes to "Sin verificar" for this check.
+
 ## 8. Contrast measured on the render
 
 axe catches contrast on flat backgrounds. Check by hand what it cannot measure:

@@ -44,6 +44,40 @@ consulting you again. All the site's copy is in {{LANGUAGE}}.
 [Be concrete about the "why" of each reference. "I like Stripe" says nothing; "I like
 Stripe's information density without a feeling of clutter" does.]
 
+**Anchor in the business:** {{one concrete thing from this business the design grows from —
+its material, its place, its trade, an object of its work. E.g. "the stamps and ledgers of a
+notary office", not "modern and clean"}}
+
+### AI defaults this design must avoid
+
+[Copy this block as is. Delete only a line that sections 3–4 close on purpose — if the
+client's font is Inter, the Inter line goes. Why: see the kit's `reference/AI-DEFAULTS.md`.]
+
+Generated designs converge on the same handful of choices, and a site built from them looks
+like every other one. Before designing, write down in one line what you would do by default
+for this project, and do something else. Unless sections 3–4 say otherwise, do not use:
+
+- **Fonts:** Inter, Roboto, Open Sans, Lato, Arial, system defaults, and the "distinctive"
+  ones every generator now picks: Space Grotesk, Plus Jakarta Sans, Geist, Fraunces.
+- **Color:** purple/violet or purple-to-blue gradients; cyan or neon on near-black; the
+  cream background + serif + one accent color look; gradient-filled text; a timid palette
+  where every color weighs the same.
+- **Composition:** a small rounded icon tile above every card heading; cards nested inside
+  cards; a thick colored border on one side of a card; an eyebrow chip or kicker label
+  above every heading; numbered section labels when there is no real sequence; one word of
+  the headline in a different color; all-caps labels everywhere; the same spacing between
+  every block.
+- **Effects:** glows and radial halos behind content; grid or stripe backgrounds as
+  decoration; thin border + wide soft shadow on every card; marquees; pulsing dots; bounce
+  easing; a fade-up on every section (one orchestrated moment beats ten small ones).
+- **Copy:** buzzwords ("seamless", "unlock", "elevate", "revolutionize"), aphorisms
+  ("Less noise. More signal."), em-dashes in every sentence.
+
+What to do instead: derive the type, the palette and one signature element from the
+**anchor** above, give the headings a real size contrast with the body, and let one or two
+dominant colors carry the page with a sharp accent. In the handoff's "Decisions and traps",
+name each choice that looks like one of the defaults above but is deliberate, and why.
+
 ## 3. Brand constraints
 
 **Logo:** {{available / in progress / none / the client has it but has not delivered it (design a provisional one, section 7)}} — {{description or usage note}}
@@ -169,6 +203,8 @@ Deliver **two things**. The second is as important as the first.
 ### 9.1 The design
 
 Every page of section 6 at {{desktop 1440 · mobile 390}}, with the states of section 7.
+If you can export the pages as HTML, include that export: it is checked against section 2's
+"AI defaults" before development starts.
 
 ### 9.2 `HANDOFF.md` — the handoff document for development
 
@@ -247,4 +283,6 @@ spacing". "#1E293B on #F8FAFC, ratio 14.8:1", not "dark gray on light gray".
 - [ ] Zero references to files Claude Design cannot see.
 - [ ] The sections of each page are in real vertical order.
 - [ ] Section 9 is complete and not summarized.
+- [ ] Section 2 has a concrete anchor and the "AI defaults" block, minus only the lines
+      sections 3–4 close.
 - [ ] It is inside a code block, ready to copy.

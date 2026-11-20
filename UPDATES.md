@@ -39,6 +39,38 @@ other, the agent shows them and asks before choosing.
 
 ---
 
+## 3.26.0 — 2026-11-20 · Designs that do not look AI-generated
+
+The designs from Claude Design looked like every other generated site (César, 2026-11-20).
+Claude Design does not load skills, so the rules go inside the brief and the result gets
+measured. Decision by César: options A + B of the research into design skills
+(`frontend-design`, Impeccable, Taste Skill).
+
+**What changed**
+
+- **`reference/AI-DEFAULTS.md`** (new): why, where the list comes from, and how to run and
+  read `impeccable detect` (62 deterministic rules, `slop` and `quality`; pinned to 4.8.0,
+  telemetry off).
+- **Brief (`CLAUDE-DESIGN-BRIEF.template.md`) § 2:** an **anchor in the business** and the
+  block "AI defaults this design must avoid" (fonts, color, composition, effects, copy),
+  with a "what to do instead". § 9.1 asks for the HTML export.
+- **`project-kickoff`:** each of the 3 directions grows from an anchor and none is a generic
+  AI look (step 12); at the handover, the detector on the HTML export and its `slop`
+  findings back to Claude Design as questions (step 6, 2b).
+- **`DESIGN-HANDOFF.template.md` § 8:** a deliberate choice that looks like a default
+  carries its reason.
+- **`design-qa` § 7b:** the detector on every route at 1280 and 390; `slop` = Medium
+  "decisión de diseño", what the handoff justifies is listed as accepted.
+
+**Steps for a project on 3.25.0**
+
+1. Global pieces: `install-kit.ps1 -Pull` and a new session (skipped in a cloud session).
+   Then refresh the kit copy (`install-kit --project .`) and commit it.
+2. Nothing else. A project whose brief has not gone to Claude Design yet may regenerate it
+   with the new § 2; one already designed gets the check at its next `design-qa`.
+
+---
+
 ## 3.25.0 — 2026-11-18 · By technology: WordPress, VPS Postgres, Next, Tailwind, Supabase
 
 The last part of the same three reports (feedback PRs #32, #34, #35): what belongs to one
