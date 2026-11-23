@@ -74,7 +74,7 @@ git -C "<clone>" status --porcelain --branch       # current branch and uncommit
 |---|---|
 | **Published** | the clone's `origin/main:VERSION` |
 | **Installed skills** | `version` in `~/.claude/web-agent-kit.json` |
-| **Project** | the project's `.kit-version`. If it does not exist, deduce it with the table "How to tell a project's version without `.kit-version`" in `UPDATES.md` and show the signals; if they contradict each other, ask |
+| **Project** | the project's `.kit-version` **on its remote base**: `git fetch` and `git show origin/<base>:.kit-version` (`main` in `pr` mode), not the working tree — a local copy left on an old branch read 3.9.0 and planned 13 versions when `origin/main` was on 3.21.0 (iglesia-maranatha ×2). Without a remote, the working tree. If it does not exist, deduce it with the table "How to tell a project's version without `.kit-version`" in `UPDATES.md` and show the signals; if they contradict each other, ask |
 
 Show them in one line: `proyecto 3.4.0 · skills 3.5.0 · publicada 3.8.0`.
 
@@ -193,6 +193,7 @@ happened: a project on 3.5.0 without `test:related` or `shots`, because it start
 | Kit copy for cloud sessions: `.claude/skills/<each kit skill>` and `.claude/agents/<each kit agent>`, equal to `<kit>`'s, not gitignored | `diff -rq "<kit>/.claude/skills/<name>" .claude/skills/<name>` per kit skill (and agents); `git check-ignore -q .claude/skills` |
 | `.claude/settings.json` with the `SessionStart` hook to `scripts/cloud-setup.sh`, and the script | `grep cloud-setup .claude/settings.json`; `ls scripts/cloud-setup.sh` |
 | Backup of the local `context/` on the remote | `git ls-remote --heads origin context-state` |
+| CI exists: `.github/workflows/ci.yml` (if missing, from `<kit>/github-templates/workflows/ci.yml`, in the pieces commit). Without it nothing flagged that a project had no CI (inversiones-js) | `ls .github/workflows/ci.yml` |
 | **Nested subprojects** (a `package.json` below the root: `bot/`, `functions/`) are installed and checked in CI | `git ls-files '*/package.json' \| grep -v node_modules`; for each: does `<dir>/node_modules` exist, does its typecheck pass, and does `.github/workflows/ci.yml` run its install + typecheck + tests (the commented job in `<kit>/github-templates/workflows/ci.yml`) |
 | Firebase project: `firebase.json` with `emulators`, an `emulators` script with `--project demo-*`, Java available | `grep -q emulators firebase.json`; `java -version` |
 
@@ -231,7 +232,10 @@ Per `context/GIT_STATE.md`: `pr` mode → `chore/kit-<published>` from an update
 Before switching branches, `bun run context:backup` if the project has it. A version that
 moves a `context/` file from git to local (3.8.0) leaves it at the mercy of the next
 checkout: one to a commit where it was tracked overwrote `plans/pendientes.md` and the pull
-after it deleted the file (workout, recovered from `context-state`).
+after it deleted the file (workout, recovered from `context-state`). If the script refuses
+(a public repo: `context-state` would publish the local `context/`), go on without it only if
+no version of the path takes files out of git, and say so in the PR; if one does, copy
+`context/` to the scratchpad first (krea).
 
 ## 8. Apply each version, in order
 
@@ -246,14 +250,20 @@ version is done:
 If a version fails halfway, stop there: what was done stays in commits and `.kit-version`
 says how far it got.
 
-**A file several versions of the path replace whole** (`scripts/qa-local.ts` in 3.11.0 to
-3.15.0 and later): the kit only publishes its current copy, so replace it once, in the last
-version of the path that names it, and say so in the earlier ones' commits.
+**What several versions of the path repeat is done once.** The kit only publishes its current
+copy: a script replaced whole (`scripts/qa-local.ts` in 3.11.0 to 3.15.0 and later), a
+`new-project.ps1 -OnlyPieces` run and an `install-kit --project .` are done once, in the last
+version of the path that names them, and the earlier ones' commits say "ya al día: se aplica
+en <versión>". Repeating them in each version of a long jump only redid the same thing
+(iglesia-maranatha).
 
 With every version applied, **refresh the project's copy of the skills and agents** (cloud
 sessions load only that one): `powershell -ExecutionPolicy Bypass -File "<kit>\install-kit.ps1" -Project .`
 (macOS/Linux: `bash "<kit>/install-kit.sh" --project .`). It replaces only the kit's skills
-and agents; the project's own stay. Its own commit:
+and agents; the project's own stay, and it writes them with LF (since 3.27.0). If
+`-OnlyPieces` already ran in this path it refreshed the copy too: do not run it again, only
+check `git ls-files --eol .claude | grep -c w/crlf` gives 0 (inversiones-js, kit-deploy).
+Either way the copy goes in its own commit, at the end:
 `chore(kit): copia de skills y agentes <versión>`. If `.claude/settings.json` existed
 without the cloud hook, merge the kit's `reference/claude/settings.json` `SessionStart`
 into it (keep what it had).

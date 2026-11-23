@@ -79,6 +79,23 @@ export async function existingAccount({ email, role }: { email: string; role: st
   return false
 }
 
+// Postgres: an app whose accounts the sign-up route cannot create (`disableSignUp`, login by
+// ID number) or whose seed makes them without the `.env.test.local` password (krea). Export
+// it and qa-local calls it for every account instead of the sign-up — also with `--db-only`,
+// where `site` is null. Return the user's id and `assignRolePostgres` gives it its role.
+// Do not export it if the sign-up works: exported, it replaces it.
+//
+// export async function createAccountPostgres(
+//   { email, password, role }: { email: string; password: string; role: string },
+//   { databaseUrl }: { sql: (s: string) => string; databaseUrl: string; site: string | null },
+// ): Promise<string | undefined> {
+//   // e.g. the app's own factory, without Next imports:
+//   //   const { createAuth } = await import('../lib/auth/factory.ts')
+//   //   const auth = createAuth(databaseUrl)
+//   //   const { user } = await auth.api.createUser({ body: { email, password, name: role } })
+//   //   return user.id
+// }
+
 /** The Postgres backend: `sql` runs a statement in the QA database and returns its output. */
 export async function assignRolePostgres(
   id: string,

@@ -17,8 +17,9 @@
 # worktree remove --force` took more than 30 min with node_modules and .next locked by a
 # process still alive (workout ×4).
 #
-# A repro that needs a server: start it inside the command, on a port that is not your slot's
-# (e.g. -- bash -c 'bun run qa:local -- --port 4399 > .qa/dev.log 2>&1 & … node .qa/repro/x.mjs').
+# A repro that needs a server: not here. Starting it inside the command hung more than 10 min
+# (iglesia-maranatha). A free pool slot already is origin/main: start its `qa:local` on that
+# slot's port and point the repro there (orchestrate §8).
 # --keep leaves the worktree (its path is printed) to look at it; remove it with
 # `git worktree remove --force <path>`.
 set -euo pipefail

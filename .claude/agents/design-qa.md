@@ -65,8 +65,11 @@ Write and Edit are yours only for `.qa/` and your report's folder — never the 
 code (until kit 3.24.0 these agents had no Write, and a heredoc over 5–6 KB failed with
 `unexpected EOF`: workout). Files with Write/Edit or a `.mjs`; never Python in text mode (CRLF) and never `node -e` or a
 heredoc with backticks (Git Bash runs them). Each finding leaves its reproduction script in
-`.qa/repro/<n>-<slug>.mjs` (base URL as its argument, prints `PASS` or `FAIL <measure>`), as
-`wave-qa` §4 says: the fix is closed by running it, not by another audit.
+`.qa/repro/design/<n>-<slug>.mjs` (base URL as its argument, prints `PASS` or `FAIL <measure>`), as
+`wave-qa` §4 says: the fix is closed by running it, not by another audit. Your own folder, and
+each script run by its name, never by a glob: next to `functional-qa`, a glob over
+`.qa/repro/` ran its auth repros, emptied the login attempts table and changed a test
+password (inversiones-js).
 
 **Measuring without false results** (world-flags, each one cost a wrong finding or a missed
 one):
@@ -131,10 +134,17 @@ button out of view.
   Windows it failed with `spawn UNKNOWN` (KREA). If neither starts, the sweep reports
   `font150-not-run` / `font200-not-run`: that check goes to "Not verified", it is not a pass.
 
+Zoom is measured as the viewport it really produces — 1280×800 at 200 % is 640×400, at 400 %
+320×200 — never with `document.body.style.zoom`, which fires no media query and gave false
+horizontal scroll (iglesia-maranatha):
+
 ```ts
-await page.setViewportSize({ width: 1280, height: 800 })
-await page.evaluate(() => { document.body.style.zoom = '200%' })
+const ctx = await browser.newContext({ viewport: { width: 640, height: 400 }, deviceScaleFactor: 2 })
 ```
+
+Before measuring anything `position: fixed` (a sheet, a drawer), let its animations finish
+(`settle()` in `design-qa.ts`): one measured at 300 ms gave a false overflow (kit-deploy). The
+sweep also reports `word-break@…`: words split across lines at ≤ 390 px or 200 % text.
 
 ## 3. Color blindness and vision
 

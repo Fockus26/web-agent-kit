@@ -279,6 +279,10 @@ while:
   plain `@theme` it resolves where it is defined (`:root`), so overriding the inner variable
   on an element does nothing: an `--animate-*` built on `var(--duration)` ignored the
   override (workout; Tailwind docs, "Referencing other variables").
+- **Global element rules go inside `@layer base`** (`::selection`, `::-webkit-scrollbar`,
+  `html`, `body`). Outside a layer they beat every utility, whatever its specificity: a
+  global `::selection` overrode each `selection:` class and the inverted pair `DESIGN_RULES`
+  asks for inside colored components could not be applied (inversiones-js).
 - Mobile first: base classes are mobile, the `md:`/`lg:` prefixes widen.
 - **Zero arbitrary values** (`w-[347px]`, `text-[#3a7bd5]`). If one is needed, either a token
   is missing or it is a decision to record.

@@ -477,7 +477,10 @@ With the report:
   finding: **no second QA of the fixes**. The wave closes when those PRs are merged. The FAIL
   half runs with `bash scripts/run-on-main.sh -- node .qa/repro/<n>.mjs <url>` (a temporary
   worktree of `origin/main`): proving it by patching the logic back in the slot risked the
-  patch reaching the PR (melao). Why: in
+  patch reaching the PR (melao). **A repro that needs a server** runs its FAIL half against a
+  free pool slot, which is already `origin/main` detached: its `qa:local` on that slot's port,
+  the repro from the worker's slot pointing there, then the server stopped. Starting the server
+  inside `run-on-main.sh` hung more than 10 min (iglesia-maranatha). Why: in
   world-flags each QA opened a wave and each fix got a QA that found more, a loop with no
   end; the owner fixed this rule on 2026-10-22.
 - **A finding that is a class** (several instances of the same defect) → the fix unit
@@ -505,11 +508,15 @@ tests what is public and flags it), and in the closing ask César to add them
 2. `CURRENT_PHASE.md`: "Now" with the phase and the next wave; "Blocked" with the QA items.
    If the reports listed "Missing tokens" (§4), one PR adds them and replaces the nearest
    ones the workers used, before the next wave.
-3. **Back up the local state:** `bun run context:backup` (copies the local `context/` to the
+3. **Containers of the wave down** (`docker stop qa-<package>-pg qa-<package>-mailpit`, or
+   `supabase stop`) once no unit or QA of the wave runs: the workers only stop their servers,
+   since the containers are shared by every slot (iglesia-maranatha). Stopped, not removed:
+   the next wave reuses them.
+4. **Back up the local state:** `bun run context:backup` (copies the local `context/` to the
    `context-state` branch; see `git-flow` §2.1.2). Without it, losing the main folder means
    the next session does not know where the project stood. If the project does not have
    the script yet, say so in the closing (`/kit-update` adds it).
-4. To César (in Spanish), and nothing else:
+5. To César (in Spanish), and nothing else:
 
 ```
 **Fase 04 — Secciones · ola 2 de 3 cerrada**
@@ -523,7 +530,7 @@ Para lanzarla: "inicia la ola en otra sesión"
 
 If it was the last wave, "Sigue" is the next phase of the track (its wave 1 starts with §0).
 
-5. When César says "start the wave/batch in another session" ("inicia la ola en otra
+6. When César says "start the wave/batch in another session" ("inicia la ola en otra
    sesión", or equivalent):
    - First check that everything the next wave needs is on disk (plan, `CURRENT_PHASE.md`,
      `backlog.md`): the new session does not see this conversation.

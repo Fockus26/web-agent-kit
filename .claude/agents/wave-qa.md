@@ -183,7 +183,11 @@ Playwright traps that gave false findings (melao):
   mark the media "not verified locally".
 
 **Every finding leaves its reproduction script**, `.qa/repro/<n>-<slug>.mjs` in your slot:
-it takes the base URL as its argument and ends printing `PASS` or `FAIL <what it measured>`.
+it takes the base URL as its argument (and the database, if it needs one, from `QA_DB_URL`:
+never a fixed port) and ends printing `PASS` or `FAIL <what it measured>`. It locates what
+it measures by its text or label, not by a role the fix may change: a repro looking for a
+`button` broke when the right fix made it a link (iglesia-maranatha). A helper it imports
+goes in `.qa/repro/` next to it: the scripts are copied out with that folder (krea ×3).
 The fix worker runs it on `main` (FAIL) and on its branch (PASS) and attaches both: that
 closes the finding, with no further QA. **If the finding is a class** (the same defect in
 several places: text clipped at 200 %, a row without `flex-wrap`), say so, with the `grep`
