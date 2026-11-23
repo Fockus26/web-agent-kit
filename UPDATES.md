@@ -39,6 +39,55 @@ other, the agent shows them and asks before choosing.
 
 ---
 
+## 3.29.0 — 2026-11-22 · What QA found, prevented; and by technology
+
+Block C of the same triage (feedback PRs #40–#43): the `Prevención` rows of the four version
+QAs and the points that belong to one technology. Decision by César, 2026-11-22.
+
+**What changed**
+
+- **`QA-PREVENTION.md`:** §1 the client validates each field with the server's schema, 0-byte
+  files, hidden inputs; §2 the atomic counter seen twice more (and its test), the login limit
+  for every content type, the reset that lifts the lock, a background process as the other
+  writer (third time), per-item toggles, merging states, idempotent retries, `CHECK` with
+  `NULL`; §3 `useActionState` without `try/catch`, auth errors by `code`, sign-out that
+  swallows the error, sticky polling errors, an expired credential; §4 buttons and scrollers
+  at 200 %, tables, `scrollbar-gutter` with a scroll lock; §5 toasts and focus around dialogs,
+  the combobox's Tab, loading bars, filled buttons in forced colors; **§7 color on the real
+  backgrounds** and **§8 data other users see** (new).
+- **`STATUS-SCREENS.md`:** a 404 inside the app shell brings no header or `main` of its own,
+  and the existence check goes before any `<Suspense>` (krea, second time).
+- **`UI-LIBRARIES.md` › shadcn:** what else to restore after `init`, the CLI as a dev
+  dependency, `add --dry-run` before it asks to overwrite, the `cn` package import, brand
+  icons, `motion-reduce:animate-none!`, measuring over Radix modals, cmdk locators.
+- **`STACK-NEXTJS.md`:** Tailwind container names and `--container-*` resets, `--font-*` from
+  `next/font`; `typegen` with dev running, the dev overlay as a dialog, `next/font/google`
+  offline; `next build` typechecks `tests/`; an action that deletes the current page with
+  `staleTimes.dynamic`.
+- **`tech/vps-postgres.md`:** the auth factory without Next imports for the CLI; `isAPIError`,
+  not `instanceof APIError`, in the per-account limit, and only a response with `token` counts
+  as a success; `BETTER_AUTH_URL` is the Vercel domain, read by the agent; migrations only
+  through `db:migrate` and how to realign `__drizzle_migrations`; hand SQL by SSH with
+  `SET ROLE`.
+- **`tech/vps-hosting.md`:** `[SENSITIVE]` values copied from Vercel.
+- **`a11y`:** a "manual only" mode for a worker with no server and no build.
+- **`qa-local.ts`:** a reset deletes `.qa/session*.json` (kit-deploy); the Firebase seed gets
+  the demo project in every `FIREBASE_PROJECT_ID` (inversiones-js).
+
+**Steps for a project on 3.28.0**
+
+1. Global pieces: `install-kit.ps1 -Pull` and a new session (skipped in a cloud session).
+   Then refresh the kit copy (`install-kit --project .`) and commit it.
+2. Replace `scripts/qa-local.ts` with the kit's.
+3. **Better Auth projects:** `git grep -n "instanceof APIError"`. In an auth hook that counts
+   failed sign-ins it is a bug — a request that fails validation counts as a success and resets
+   the lock — so it goes in this PR: `isAPIError(returned)` from `better-auth/api`, and only a
+   response with `token` resets the counter. Elsewhere, the same change is safe.
+4. Nothing else in this PR. The new prevention rows apply from the next unit; a project with
+   shadcn applies `motion-reduce:animate-none!` (or the global rule) in its next UI unit.
+
+---
+
 ## 3.28.0 — 2026-11-22 · Updating, QA scripts and the pool, tidied
 
 Block B of the same triage (feedback PRs #40–#43): the points of one or two projects about

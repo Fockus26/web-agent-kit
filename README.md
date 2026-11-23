@@ -376,7 +376,7 @@ Details in `reference/TOKEN-ECONOMY.md`. What weighs most:
 
 ## Versions and updating projects
 
-The kit is versioned (`VERSION`, now **3.28.0**) and each project keeps in `.kit-version`
+The kit is versioned (`VERSION`, now **3.29.0**) and each project keeps in `.kit-version`
 which one it is aligned with. To bring it up to date: `/kit-update` in a project session. It
 compares with the published version (`origin/main` of the kit's clone); if behind, it
 computes the path with `UPDATES.md` and applies each version in order, in a PR.
@@ -385,6 +385,15 @@ And the way back: each project logs in `context/KIT_FEEDBACK.md` what César had
 or repeat and what the kit did not cover. `/kit-feedback` uploads it to this repo as a PR
 (`feedback/`, `kit-feedback` label); in a session opened here, "revisa el feedback" triages
 all the PRs together (`CLAUDE.md` says how).
+
+### 3.29.0 (what QA found, prevented; and by technology)
+
+| Before | Now |
+|---|---|
+| Four version QAs found ~38 defects the builders had no rule for | `QA-PREVENTION.md` grows by those rows, and §7 (color on real backgrounds) and §8 (data others see) |
+| A login limit with `instanceof APIError` counted a failed request as a success | `isAPIError()`, and only a response with `token` resets the counter (`tech/vps-postgres.md`) |
+| shadcn's reduced motion lost to its own `animate-in`; `add` waited on a prompt | `motion-reduce:animate-none!`, `add --dry-run` first (`UI-LIBRARIES.md`) |
+| `next build` failed on a type error in a test that `bun test` passed | The typecheck before the PR is the whole project's (`STACK-NEXTJS.md`) |
 
 ### 3.28.0 (updating, QA scripts and the pool, tidied)
 
