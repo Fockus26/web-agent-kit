@@ -63,7 +63,14 @@ Nothing from another slot's `.qa/`: it belongs to a previous unit and may be sta
    `context/`; the rest, with `grep`.
 2. **Slot and branch:** you work ONLY in your pool slot's path (`..\<repo>-wt\wtN`), which
    already has your branch created, `node_modules` installed and the `.env*` files copied.
-   Do not create or delete worktrees, do not run `wt` and do not switch branches.
+   Do not create or delete worktrees, do not run `wt` and do not switch branches. Every
+   versioned file — `context/decisions/` included, which is in git in your slot — is edited
+   only there, never in the main folder (a worker marked a decision as replaced in the main
+   folder and had to redo it: kit-deploy).
+   **Your files:** the ones your prompt lists, the zone it gives you in a shared file (with
+   every import your JSX needs), and **new files next to them** — a new component, test or
+   helper is yours without asking (five workers hesitated: krea ×5). Another unit's file, or
+   a zone outside yours: not touched; say in the report what you needed.
 3. **Shared local files:** do not edit `CURRENT_PHASE.md` or `CONTENT_CHECKLIST.md`. Write
    `context/PHASE_LOG/<your-branch-with-dashes>.md` in the main folder; if you have no write
    permission there, deliver it whole in your final report.
@@ -75,8 +82,9 @@ Nothing from another slot's `.qa/`: it belongs to a previous unit and may be sta
    `.changeset/<desc-kebab>.md` written by hand (format in `git-flow` §2.1) with user-facing
    text in Spanish. Do not touch `version` or `CHANGELOG.md`: the version PR writes them.
 6. **Server:** {{authorized: `bun run dev -- --port <your slot's port>` in the background,
-   in your slot (already installed, with `.env*`). | not authorized: verify through code,
-   and flag it.}} If the port is taken, do not start on another one: the framework jumps to
+   in your slot (already installed, with `.env*`), **only if your prompt says "Dev server:
+   yes"** — the machine holds a few at once (`orchestrate` §4); with "no", verify through code
+   and tests and say so. | not authorized: verify through code, and flag it.}} If the port is taken, do not start on another one: the framework jumps to
    the next free port without warning and lands on another worker's; say so in the report.
    Shut it down when done by killing **your** process and its children (Windows:
    `taskkill /PID <pid> /T /F`; a plain `kill` only kills the shell and leaves the server
@@ -111,10 +119,14 @@ Nothing from another slot's `.qa/`: it belongs to a previous unit and may be sta
    Logged-in testing with data is done by `wave-qa` once the wave is merged: in your PR,
    "How to test" says which flow and which role, so it can do it.
 9. **Tests:** `bun run test:related` while you work (if the project does not have it:
-   `bun test <file>` for what you touched). Before the PR, the full suite **alone**: not at
-   the same time as the build and not with its output through a pipe (with several workers,
-   Bun hangs on Windows or PGlite runs out of memory): `mkdir -p .qa && bun run test >
-   .qa/test.log 2>&1` in the background, then read the summary at the end. A test that
+   `bun test <file>` for what you touched; with the machine loaded, `bun test <your new and
+   touched test files>` beats `test:related`, which took 330 s with two workers: krea).
+   **Full suite and typecheck: {{`ci` — CI runs them: you do not run them locally; your
+   verdict is `gh pr checks` (rule 13) | `local` — before the PR, and only in your turn:
+   {{order of the slots}}}}.** Why: with 4–7 workers the local suite passed 10 min with false
+   timeouts while CI took 2 (krea ×14, kit-deploy ×3). Run locally, it goes **alone**: not at
+   the same time as the build and never through a pipe (Bun hangs on Windows or PGlite runs
+   out of memory), with rule 11's recipe. A test that
    times out only in the full suite with other slots busy, and passes alone, is load, not
    your bug: run it alone, say so in the report, and do not raise its timeout in your PR
    (melao: `tokens.test.ts` 8.8 s in the suite, 0.4 s alone). A test or sample that needs
@@ -141,14 +153,31 @@ Nothing from another slot's `.qa/`: it belongs to a previous unit and may be sta
     you touched a file through the shell (`sed`, `biome --write`), read it before editing it
     — so format (`bunx biome check --write <files>`) once when a stage closes, not after
     every edit: each run invalidates the reads of every file it formats (KREA).
-11. **Waiting and searching:** `sleep` is blocked; anything that takes more than 2 min
-    (suite, build, typecheck) runs in the background and you wait for its notice. Search
+11. **Waiting and searching:** `sleep` is blocked; anything that may take more than 2 min
+    (suite, build, typecheck, `drizzle-kit generate`, a `git commit` with hooks) runs in the
+    background (`run_in_background`) with this one recipe, also for a single test file:
+
+    ```bash
+    mkdir -p .qa && { <command>; echo "exit $?"; } > .qa/<name>.log 2>&1
+    ```
+
+    Then wait with `until grep -q '^exit ' .qa/<name>.log; do sleep 5; done` in the
+    background, and read the exit code and the summary from the file. Never `| tail`, `| head`
+    or `timeout` on a check: a typecheck through `timeout … | head` and a `bun test | tail`
+    ended with no output and exit 0, a false green (krea ×2, kit-deploy); a foreground command
+    is moved to the background at ~120–180 s whatever its `timeout` (kit-deploy); `--dots`
+    hides the summary (krea ×3). No `jq` (not on Windows: a CI monitor with it died silently
+    for 30 min: krea). Search
     with `git grep -n <pattern> -- <paths>`: it only walks tracked files and answers in
     seconds, while `grep -r` over several folders took > 2 min in a slot and `rg` timed out
     (KREA). A plain `grep` always with scoped paths (`app/`, `lib/`): at the root it walks
-    `node_modules` and `.next`.
-12. **Commit when each stage closes** (backend, UI, docs), not only at the end: an API cut
-    (403/429) mid-unit does not take the work with it. Inside a long stage, a `wip: <what>`
+    `node_modules` and `.next`. The Grep tool, if you have it, answers at once where `grep
+    -rn` hung more than 120 s in Git Bash (krea). An environment variable whose value starts
+    with `/` also needs `MSYS_NO_PATHCONV=1` (krea).
+12. **Commit and push when each stage closes** (backend, UI, docs), not only at the end: an
+    API or network cut (403/429, `ENOTFOUND`) mid-unit does not take the work with it — a cut
+    left a worker with commits only in the slot (krea), and cuts stopped every worker of a wave
+    2–4 times each (iglesia-maranatha ×5). Inside a long stage, a `wip: <what>`
     commit every ~20 min of work (the PR merge squashes them) and two lines appended to
     `.qa/progress.md` (done / next): two workers died mid-unit (watchdog at 600 s, a 403)
     with no report and their work uncommitted in the slot (melao). Its first lines go in
@@ -160,18 +189,33 @@ Nothing from another slot's `.qa/`: it belongs to a previous unit and may be sta
     `.qa/progress.md` only orients; carry on, do not reread what you already wrote.
     (`wt take` removes another unit's `progress.md` and `pr-body.md`: the ones there are
     yours.)
-13. **Minimum verification before the PR:** typecheck, lint (no new errors in your code),
-    tests; before each commit, `git diff --cached --stat`; if you touched UI, the `a11y`
+13. **Minimum verification before the PR:** typecheck (locally or in CI, per rule 9), lint
+    (`bunx biome check <every new or touched file>`, `scripts/` included: CI failed on a new
+    `scripts/qa/` file nobody linted: kit-deploy), tests; if you changed a public API (a hook's
+    shape, a prop), `git grep -n <symbol> -- tests/` before the push (a test of the old shape
+    broke CI: krea); before each commit, `git diff --cached --stat`; if you touched UI, the `a11y`
     skill (axe light and dark, 320 px, keyboard). **The build runs locally only if your
     prompt says "Local build: yes"**; otherwise CI runs it (`git-flow` §2.1 gate 3) and you
-    read it with `gh pr checks`, also when you touched `next.config` or dependencies. With
+    read it with `gh pr checks`, also when you touched `next.config` or dependencies —
+    `gh pr checks <n> --watch` with rule 11's recipe, in the background (it outlives 120 s).
+    If a long check is still pending when the rest is done, open the PR with it marked
+    "pendiente" and update the body (`gh pr edit --body-file`) when it ends (kit-deploy). With
     four slots compiling at once `next build` took 6–25 min, hung twice and crashed in
     PostCSS on Windows (`0xc0000142`) (workout ×5, kit-deploy ×2). With "no", what needs the
     build (Playwright guards, rule 7) is measured on your dev server and named in the report
     as "measured on dev, not on the build".
-    **`/security-review` from a slot** reads `git status` / `git diff` of the main folder,
-    which is empty, and reviews nothing (kit-deploy ×8): write your diff first (`git diff
-    origin/main...HEAD > .qa/review.diff`) and hand it that file.
+    **Security review: never `/security-review` from a slot.** It reads `git status` /
+    `git diff` of the main folder, which is empty or another branch's, and ignores a diff
+    passed as its argument (kit-deploy ×10). Instead: `git diff origin/main...HEAD >
+    .qa/review.diff` and a subagent (`general-purpose`, in the foreground) whose prompt is
+    only "Security review of the diff in `<slot>/.qa/review.diff` of a {{stack}} app: auth and
+    session checks, authorization per row and per role, input validation on the server,
+    injection (SQL, HTML, headers), secrets or personal data in code, logs or responses, CSRF
+    and open redirects, rate limits. Read the files around each hunk inside `<slot>` when you
+    need context. Report only real findings with file:line, severity and the fix; say 'no
+    findings' if none." Its findings go in the PR's "Seguridad" with what you fixed.
+    **CI cancelled before it starts** (in seconds, "billing" or "account" in the run's
+    annotations): it is an action for César, said in the report; do not re-run it (krea).
     Lint with `bun run lint` or `bunx biome`, never `npx biome`: it does not use the
     project's config and reformatted files the other way (KREA).
     A tool a skill asks for that the project does not have (Lighthouse, a CLI): skip it and

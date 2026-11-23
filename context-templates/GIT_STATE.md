@@ -29,3 +29,20 @@ In `pr` mode the branches' status is `gh pr list`: the table below is not needed
 | {{design/hero}} | {{design/integration}} | {{Hero section}} | {{open / in review / merged}} |
 
 <!-- Merged branches are not deleted: deleting is destructive and César decides it. -->
+
+## Parallel work on this machine
+
+What `orchestrate` launches at once here (§4). This file is local: each machine keeps its own.
+Without this section, the defaults below.
+
+| Limit | Value | Default |
+|---|---|---|
+| Workers running at once | `{{3}}` | 3 |
+| Dev servers at once (`bun run dev`, `qa:local`) | `{{2}}` | 2 |
+| Local builds at once (`next build`, `--preview`) | `{{1}}` | 1 |
+| Full suite and full typecheck | `{{ci | local}}` | `ci` when CI runs them, else `local` (one slot at a time) |
+
+<!-- Why: on a Windows laptop with 4–7 workers, suites passed 10 min, typecheck 6 min without
+     finishing (CI: 1m50s), `next dev` stopped answering and 3 of 4 PRs left without
+     screenshots (krea ×19, iglesia-maranatha ×12, kit-deploy ×7). A desktop with more RAM
+     raises the numbers. -->

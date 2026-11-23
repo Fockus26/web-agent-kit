@@ -143,7 +143,12 @@ Before even mentioning a commit:
    (KREA; César, 2026-11-05). A project without CI keeps the local build.
 4. `bunx tsc --noEmit` and the linter pass, if the project has them configured.
 5. **Tests:** during the work `bun run test:related` was enough; here goes the full suite
-   (`bun run test`, with `--dots`). CI runs it again on the PR.
+   (`bun run test`), in the background with its output to a file and its exit code at the
+   end (`{ bun run test; echo "exit $?"; } > .qa/test.log 2>&1`): read the code from the
+   file, never through `| tail` or under `timeout`, which gave exit 0 with no output, a false
+   green (krea ×2, kit-deploy). CI runs it again on the PR; waiting for it, `gh pr checks
+   <n> --watch` the same way, in the background (it outlives the 120 s of a foreground
+   command).
 5b. **Closing QA — only for risk**, outside a wave of `orchestrate` (which has its own
    `wave-qa`): if the unit **completes a risk flow** (sign-up/login/session, a form that
    saves data, a CRUD, payments, checkout) → launch `functional-qa` on that flow, with

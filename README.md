@@ -376,7 +376,7 @@ Details in `reference/TOKEN-ECONOMY.md`. What weighs most:
 
 ## Versions and updating projects
 
-The kit is versioned (`VERSION`, now **3.26.0**) and each project keeps in `.kit-version`
+The kit is versioned (`VERSION`, now **3.27.0**) and each project keeps in `.kit-version`
 which one it is aligned with. To bring it up to date: `/kit-update` in a project session. It
 compares with the published version (`origin/main` of the kit's clone); if behind, it
 computes the path with `UPDATES.md` and applies each version in order, in a PR.
@@ -385,6 +385,17 @@ And the way back: each project logs in `context/KIT_FEEDBACK.md` what César had
 or repeat and what the kit did not cover. `/kit-feedback` uploads it to this repo as a PR
 (`feedback/`, `kit-feedback` label); in a session opened here, "revisa el feedback" triages
 all the PRs together (`CLAUDE.md` says how).
+
+### 3.27.0 (waves that fit the machine)
+
+| Before | Now |
+|---|---|
+| 4–7 workers on the laptop: suites over 10 min with false timeouts, typecheck that never finished, PRs without screenshots | `GIT_STATE.md` › "Parallel work on this machine": workers, dev servers and builds at once; the full suite and typecheck in CI |
+| `\| tail` or `timeout` on a check gave exit 0 with no output | One recipe: output and `exit $?` to `.qa/<name>.log`, in the background |
+| `/security-review` in a slot ignored even the diff passed to it | A subagent reviews `.qa/review.diff` |
+| The previous unit's screenshots and sessions went into the next PR | `wt take` and `shots` clear them; clicks wait for hydration |
+| QA with Postgres kept the real `ADMIN_EMAILS` and the real third-party keys | `ROLE_BY_ENV` in the Postgres branch; third-party keys disabled (`KEEP_ENV` keeps one) |
+| Prompts cited tests that did not exist and missed the project's guards | §1 finds them with `git grep` and checks them with `ls` |
 
 ### 3.26.0 (designs that do not look AI-generated)
 
@@ -428,7 +439,7 @@ all the PRs together (`CLAUDE.md` says how).
 | PRs of logged-in screens went out without images; "Executable doesn't exist" | `login` / `storageState` in `.pr-shots.json`; falls back to Edge or Chrome (`PW_CHANNEL`) |
 | `bun run lint` inside a `.claude/worktrees` worktree processed no files | Biome excludes `!.claude/worktrees`, relative to the root |
 | A cut session lost the unit; the resume message guessed | `wip:` + push before the long checks; resume from `git status` and `git log` |
-| `/security-review` in a slot reviewed an empty diff | The worker hands it its slot's diff |
+| `/security-review` in a slot reviewed an empty diff | The worker hands it its slot's diff (3.27.0: a subagent over that diff) |
 | `run-on-main.sh` left `.qa/main-*` in the slot and took 30 min to clean | Worktree in the temp folder, removed with a limit |
 | A visual correction by César came back on the next screen | It is a project decision, recorded in the same PR |
 

@@ -46,6 +46,14 @@ export const EXTRA_ENV_MAP: Record<string, string> = {
   // SUPABASE_ADMIN_KEY: 'SERVICE_ROLE_KEY',
 }
 
+// qa-local gives a dead value to every `*_KEY`, `*_SECRET`, `*_TOKEN`, `*_PASSWORD`, `*_DSN`
+// of the `.env*` files it does not set itself (storage, email, AI, payments): a QA run must not
+// reach the real accounts. A key the QA needs as it is — a payment provider's TEST key, a
+// sandbox — goes here.
+export const KEEP_ENV: string[] = [
+  // 'STRIPE_SECRET_KEY', // only if it is an sk_test_ key
+]
+
 export async function assignRole(id: string, role: string, { api, headers }: SupabaseCtx): Promise<void> {
   // If your project keeps the role in a table, upsert it here with the local REST API, e.g.:
   //   await fetch(`${api}/rest/v1/profiles`, { method: 'POST', headers: { ...headers,
