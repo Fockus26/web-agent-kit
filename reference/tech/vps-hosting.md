@@ -68,6 +68,12 @@ Once kit-deploy is live, and only when César asks:
 
 ## Traps
 
+- **Vercel answers `[SENSITIVE]` for sensitive variables** (`vercel env pull`, the API): a copy
+  that reads them stores that literal text. Nine secrets went over that way and nothing failed
+  until an email did not arrive (kit-deploy). After copying, `kit-deploy env ls` and check no
+  value is `[SENSITIVE]` or empty; those César copies by hand from where the secret lives (the
+  provider's dashboard), since Vercel no longer shows them.
+
 - **`.env.local` is overwritten by `env pull`**, as with Vercel: this machine's overrides stay in
   `.env.development.local`.
 - **A variable only in the Preview set** is not in Development: `env pull` does not bring it, and

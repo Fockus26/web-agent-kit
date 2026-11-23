@@ -62,6 +62,11 @@ changed between versions.
   a client or an integration reads the status.
 - If there are route groups with different layouts, one `not-found.tsx` per group only if
   the design asks for it; otherwise, one at the root.
+- **A 404 of a route inside the app shell renders inside its layout.** The screen then must
+  not bring its own header or `<main>`: KREA's showed two headers and two `main`, twice
+  (the second time in its version QA). And the existence check of the entity goes before any
+  `<Suspense>` of the page (awaited in the page itself, not in a streamed child): inside a
+  boundary, `notFound()` arrives after the shell and the 200 is sent.
 
 ### Error — `app/error.tsx` and `app/global-error.tsx`
 

@@ -58,7 +58,13 @@ Project names on the VPS: lowercase, digits and `_` (`world_flags`, not `world-f
    })
    ```
 4. Better Auth with `drizzleAdapter(db, { provider: 'pg' })`, its tables with `bunx auth@latest
-   generate`, and a migration. `qa-local.ts` expects its `user` table with an `email_verified`
+   generate`, and a migration. **The CLI loads the auth config itself**, and one that imports
+   `next/server` (`after()` for the emails) made it finish with no error and no file
+   (inversiones-js). Keep a factory without Next imports — `lib/auth/factory.ts` exporting
+   `createAuth(db)`, which `lib/auth.ts` wraps with what needs Next; it also lets tests build
+   the auth over PGlite — and point the CLI at it (`--config lib/auth/factory.ts`). Without
+   plugins, `--adapter drizzle --dialect postgresql` generates the base tables with no config
+   at all. Check the file exists after it runs. `qa-local.ts` expects its `user` table with an `email_verified`
    column and the sign-up route at `/api/auth/sign-up/email`. Emails:
    `EMAIL-TEMPLATES.md` § Better Auth. Also the kit's auth rules (`backend-build` §2), and the
    two below.
@@ -84,9 +90,14 @@ Project names on the VPS: lowercase, digits and `_` (`world_flags`, not `world-f
      minutes was locked out (KREA). A loose limit per IP (`rateLimit.customRules:
      { '/sign-in/email': { window: 300, max: 200 } }`) plus one per account that only counts
      failures: in `hooks.after`, when `ctx.path === '/sign-in/email'` and `ctx.context.returned`
-     is an `APIError`, add one to a counter for `ctx.body.email` in a table of yours (a success
-     resets it); in `hooks.before`, with ≥ 5 failures in 15 min, `throw new APIError(
-     'TOO_MANY_REQUESTS')` (both from `better-auth/api`, each hook one `createAuthMiddleware`).
+     is an error — checked with `isAPIError(returned)`, never `instanceof APIError`: the 400 of
+     a request without a password is another copy's class, failed `instanceof`, counted as a
+     success and reset the counter (inversiones-js; Better Auth docs) — add one to a counter
+     for `ctx.body.email` in a table of yours. Only a response that carries a `token` is a
+     success and resets it. In `hooks.before`, with ≥ 5 failures in 15 min, `throw new
+     APIError('TOO_MANY_REQUESTS')` (`APIError`, `isAPIError` and `createAuthMiddleware` from
+     `better-auth/api`). The counter is reserved atomically (`QA-PREVENTION.md` §2) and a
+     password reset clears it (`emailAndPassword.onPasswordReset`), as the 429's text promises.
    - **Better Auth's rate limiter does not see `auth.api.*`.** Its docs: server-side calls
      "aren't affected by rate limiting", only requests that reach the handler. A sign-in or a
      password reset called from a server action has no limit per IP at all (workout found it
@@ -107,8 +118,11 @@ Project names on the VPS: lowercase, digits and `_` (`world_flags`, not `world-f
    in QA.
 
 **Actions for César** (not the agent): Brevo sender and SMTP key, Google OAuth client if there is
-social login, and the variables' values in Vercel (`SMTP_*`, `GOOGLE_*`, `BETTER_AUTH_SECRET`,
-`BETTER_AUTH_URL`).
+social login, and the variables' values in Vercel (`SMTP_*`, `GOOGLE_*`, `BETTER_AUTH_SECRET`).
+**`BETTER_AUTH_URL` is not one of them:** it is the app's production domain, and the app stays
+on Vercel (the VPS only holds the database). The agent reads it from Vercel (the MCP's
+`list_project_domains`) and sets it at the cutover. Asked for "the domain", César understood
+the VPS resolved it (inversiones-js).
 
 ## Migrations
 
@@ -133,6 +147,26 @@ DIRECT_URL="$(ssh kit-vps kit-db url <database> --direct)" bun run db:migrate
 `db:generate` writes only what Drizzle derives from the schema, and the SQL added by hand —
 a backfill `UPDATE`, a data fix — is gone without a warning (kit-deploy). Copy the hand-written
 statements aside first and put them back in the regenerated file, then read its diff.
+
+**Always through `db:migrate`, never SQL by hand.** A migration applied by hand is not in
+`drizzle.__drizzle_migrations`, so `db:migrate` tries it again and fails — silently: its
+spinner hides the error (krea). Check the count of rows in `drizzle.__drizzle_migrations`
+against the entries of `drizzle/meta/_journal.json` before and after; if one was applied by
+hand, insert its row (its `hash` and `created_at` from the journal) in a transaction instead
+of re-running it. And without `DIRECT_URL` set, `drizzle.config.ts` takes
+`.env.development.local`: the database you meant is the one you name.
+
+**SQL that has to go by hand** (a data fix César runs): by SSH, as the database's owner, with
+no URL or password in the command — Windows has no `psql`:
+
+```powershell
+Get-Content -Raw fix.sql | ssh kit-vps "su postgres -s /bin/sh -c 'psql -X -v ON_ERROR_STOP=1 -d <database>'"
+```
+
+The file starts with `SET ROLE <database>;` (the app's role): run as `postgres`, the tables it
+created belonged to `postgres` and the app got `permission denied` (42501) in production
+(krea). Afterwards, `select tablename, tableowner from pg_tables where schemaname = 'public'`
+shows only the app's role.
 
 The URL does not reach the screen that way; do not print it. In a cloud session there is no SSH to
 the VPS: migrations and `vps:env` wait for César's machine, and QA uses `--offline`.

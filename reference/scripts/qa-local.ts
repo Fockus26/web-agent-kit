@@ -147,7 +147,7 @@
  */
 
 import { type ChildProcess, spawn, spawnSync } from 'node:child_process'
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import { connect } from 'node:net'
 import { pathToFileURL } from 'node:url'
 
@@ -224,6 +224,11 @@ if (!args.includes('--port') || !/^\d+$/.test(port ?? '')) {
   process.exit(2)
 }
 const reset = !args.includes('--no-reset')
+// A fresh database makes every saved session stale: a `.qa/session-a.json` of the previous
+// database was taken as valid and a repro hung 10 min on /login (kit-deploy).
+if (reset && existsSync('.qa')) {
+  for (const f of readdirSync('.qa').filter((n) => /^session.*\.json$/.test(n))) rmSync(`.qa/${f}`, { force: true })
+}
 const offline = args.includes('--offline')
 const preview = args.includes('--preview')
 const dbOnly = args.includes('--db-only')
@@ -857,6 +862,9 @@ if (firebaseJson?.emulators && !existsSync('supabase/config.toml')) {
     FIREBASE_AUTH_EMULATOR_HOST: AUTH,
     FIRESTORE_EMULATOR_HOST: FIRESTORE,
     GCLOUD_PROJECT: FIREBASE_QA_PROJECT,
+    // A seed that reads the project id from the app's variable got the real one from
+    // `.env.local` (Bun loads it) and aborted (inversiones-js): every prefix gets the demo one.
+    ...Object.fromEntries(['', 'NEXT_PUBLIC_', 'PUBLIC_', 'VITE_'].map((p) => [`${p}FIREBASE_PROJECT_ID`, FIREBASE_QA_PROJECT])),
   }
   if ((await up(AUTH)) && (await up(FIRESTORE))) {
     console.log('= emulators already running')

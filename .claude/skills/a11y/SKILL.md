@@ -83,6 +83,14 @@ axe over the build's prerendered HTML, served by Playwright itself (KREA improvi
 the cloud). Only routes Next prerendered (`.next/server/app/<route>.html`); no live data, so
 say "axe over the static HTML" in the output.
 
+**Manual only** — a worker whose prompt says "Dev server: no" and "Local build: no" (the
+machine's limits, `orchestrate` §4): neither axe nor Plan B can run, and that is expected, not
+a gap to fill by starting a server. Do the manual review below against the code, compute the
+contrast of every pair you touched from the tokens (both themes, every accent, **over the
+composed background**: a decorative layer under the text lowered it in krea), and write "a11y:
+solo revisión manual (sin servidor ni build)" in the report, so the version QA measures it.
+krea's workers had no way to say this and each improvised.
+
 ```ts
 // in .qa/a11y-check.ts, instead of BASE_URL: serve .next from page.route
 import { join } from 'node:path'

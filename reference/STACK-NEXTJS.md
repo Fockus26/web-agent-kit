@@ -194,6 +194,27 @@ What KREA hit (Next 16), each one a broken build or a 500 found late:
 - `next build` dying on Windows with exit code `0xc0000142` while PostCSS runs (Turbopack,
   several slots building): retry once; if it dies the same way, the PR's CI build is the one
   that counts, and say so in the report (workout ×2).
+- **`typecheck` (`next typegen`) with the dev server running** left a route of the panel on 404
+  until a restart, and with Docker and dev up it took ~50 min (iglesia-maranatha): typecheck
+  and the suite with the server stopped.
+- **Dev's error overlay is a `[role="dialog"]` too:** `page.locator('[role="dialog"]')` hit it.
+  Locate dialogs by name (`getByRole('dialog', { name })`) (iglesia-maranatha).
+- **`next/font/google` without network** stalls the first compile (~30 min) and the
+  screenshots come out in the fallback font (iglesia-maranatha): on a machine or CI without
+  Google, self-host the files (`next/font/local`).
+
+### `next build` typechecks the tests
+
+`next build` checks every file the `tsconfig` includes, `tests/` too: a type error in a test
+broke the Vercel deploy while `bun test` passed (it strips types) (krea). The typecheck before
+the PR is the whole project's — `bunx next typegen && bunx tsc --noEmit` — not only `app/`.
+
+### An action that deletes the page you are on (`staleTimes.dynamic`)
+
+With `experimental.staleTimes.dynamic`, a Server Action that deletes the current entity cannot
+call `refresh()` (the page 404s before the client navigates), and a `router.push` without
+refresh shows the old list from the router cache (krea). The pattern: no `refresh()` in that
+action; the client does `router.push(<list>)` and then `router.refresh()`.
 
 ### Migrating an app from Vite
 
@@ -279,6 +300,17 @@ while:
   plain `@theme` it resolves where it is defined (`:root`), so overriding the inner variable
   on an element does nothing: an `--animate-*` built on `var(--duration)` ignored the
   override (workout; Tailwind docs, "Referencing other variables").
+- **Container names Tailwind already uses do not work as tokens.** A `--container-prose`
+  lost to the static `max-w-prose` (65ch); `prose`, `screen`, `none`, `full`, `min`, `max`
+  and `fit` are taken. Name it otherwise (`--container-reading` → `max-w-reading`) and check
+  the width in a test (iglesia-maranatha).
+- **Reset `--container-*` and the `max-w-*` names fall back to spacing.** With
+  `--container-*: initial`, `max-w-md` resolved to `--spacing-md`: redefine every container
+  size you use (iglesia-maranatha).
+- **A `--font-*` variable from `next/font` with a theme key's name** (`--font-heading`) collides
+  with the theme's own: reference it with `@theme inline reference` — Biome 2.4 does not parse
+  that, so it goes in a file Biome skips, or the `next/font` variable gets another name
+  (`--font-heading-src`) and the theme points to it (iglesia-maranatha).
 - **Global element rules go inside `@layer base`** (`::selection`, `::-webkit-scrollbar`,
   `html`, `body`). Outside a layer they beat every utility, whatever its specificity: a
   global `::selection` overrode each `selection:` class and the inverted pair `DESIGN_RULES`
