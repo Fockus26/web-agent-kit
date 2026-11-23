@@ -39,6 +39,66 @@ other, the agent shows them and asks before choosing.
 
 ---
 
+## 3.27.0 — 2026-11-22 · Waves that fit the machine
+
+The most repeated points of the four reports of 2026-11-22 (feedback PRs #40 iglesia-maranatha,
+#41 krea, #42 inversiones-js, #43 kit-deploy): a laptop with 4–7 workers made the local
+checks slow or misleading (×38), false greens, leftovers of the previous unit in the slot,
+`/security-review` reviewing nothing from a slot. Decisions by César, 2026-11-22: block A of
+the triage; for the load, option C (limits per machine + CI as the full verdict); for the
+security review, option B (a subagent over the slot's diff).
+
+**What changed**
+
+- **`context/GIT_STATE.md`** (template): "Parallel work on this machine" — workers, dev
+  servers and local builds at once, and whether the full suite and typecheck run in CI or
+  locally. Defaults without the section: 3 · 2 · 1 · `ci`.
+- **`orchestrate`:** §4 reads those limits (workers launched up to the limit, "Dev server
+  yes/no" and "Migration" per unit, the `bun.lock` unit first, one migration per wave, an
+  install test counts as a build); §1 finds the guard tests with `git grep` and checks every
+  cited test with `ls`, checks what the slot's `.env` can show, measures the colors it asks
+  for and covers derived data; §3 zones of a shared file and a removed prop between units;
+  §6 `docker version` before a Docker unit; §7 resume message cites the last commit and log;
+  §8 repros copied with their helpers.
+- **Brief:** rule 2 — new files next to yours are yours, versioned files only in the slot;
+  rule 6 — server only with "Dev server: yes"; rule 9 — full suite and typecheck per the
+  machine; rule 11 — one recipe for long commands (`{ cmd; echo "exit $?"; } > .qa/x.log`,
+  never `| tail`/`timeout`, no `jq`); rule 12 — push with every stage commit; rule 13 — the
+  security review is a subagent over `.qa/review.diff`, `biome check` on every new file,
+  `git grep` of a changed public API in `tests/`, a CI cancelled by billing is César's.
+  **Unit prompt:** "Dev server" and "Migration" lines; traps list the guard tests.
+- **`git-flow` §2.1 gate 5:** the suite and `gh pr checks --watch` in the background with the
+  exit code in the file.
+- **`wt.ps1` take:** also removes the previous unit's `.qa/review.diff`, `.qa/session*.json`,
+  `.qa/shots/` and `.pr-shots/`.
+- **`pr-screenshots.ts`:** empties `.pr-shots/` first; `click`/`fill` wait for React to
+  hydrate the element; every selector takes the first visible match (Suspense's hidden copy).
+- **`qa-local.ts`:** the Postgres branch fills `ROLE_BY_ENV` (iglesia-maranatha); third-party
+  keys of the `.env*` files (`*_KEY`, `*_SECRET`, `*_TOKEN`, `*_PASSWORD`, `*_DSN`) get a dead
+  value, `KEEP_ENV` in `qa-roles.ts` keeps one (krea); Postgres waits up to 20 min while its log
+  says it is starting or recovering, retries `docker start` and recreates a container whose
+  first init failed.
+- **`install-kit.ps1 -Project`:** writes the copy with LF.
+
+**Steps for a project on 3.26.0**
+
+1. Global pieces: `install-kit.ps1 -Pull` and a new session (skipped in a cloud session).
+   Then refresh the kit copy (`install-kit --project .`: now with LF, so `git ls-files --eol |
+   grep -c w/crlf` gives 0 for it) and commit it.
+2. Replace `scripts/qa-local.ts` and `scripts/pr-screenshots.ts` with the kit's (whole: the
+   project's part lives in `scripts/qa-roles.ts`). If the project patched the Postgres
+   branch to fill `ROLE_BY_ENV` (iglesia-maranatha did, after 3.24.0), the patch goes away
+   with the replacement.
+3. `scripts/qa-roles.ts` is not replaced: if the QA needs a real key of a test account (a
+   payment provider's `sk_test_`, a sandbox), add `export const KEEP_ENV = ['<NAME>']`.
+   Without it nothing is needed: the first `qa:local` lists which keys it disabled.
+4. `context/GIT_STATE.md` (local): add the section "Parallel work on this machine" from the
+   template, with this machine's values (a project created before 3.8.0 writes it in Spanish:
+   "Trabajo en paralelo en esta máquina"). Without it the defaults apply; if the project
+   has no `GIT_STATE.md`, create it with only that section.
+
+---
+
 ## 3.26.0 — 2026-11-20 · Designs that do not look AI-generated
 
 The designs from Claude Design looked like every other generated site (César, 2026-11-20).

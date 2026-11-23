@@ -125,7 +125,23 @@ are about to ask:
   re-check it (extra reads for something the brief had settled: KREA).
 - **Which tests watch these files?** A project test that guards them (`tokens.test.ts` that
   forbids hex in `app/`, even in comments) goes in the prompt's traps: the worker found it
-  when it failed (KREA).
+  when it failed (KREA). Find them, do not remember them: the tests that read source code
+  (`git grep -l -e readFileSync -e readdirSync -e "import.meta.glob" -- tests/`) and the
+  ones that name the touched files or symbols (`git grep -l -e <file name> -e <symbol> --
+  tests/`), and every test you cite, checked with `ls` on `origin/main`. A prompt cited
+  `tests/unit/tokens.test.ts` in a repo without it (iglesia-maranatha ×4), and two guards
+  nobody listed (`refresh()` in every Server Action, `method="post"` on every form) cost a
+  red CI each (krea ×4).
+- **What the slot can show.** Before asking to "see X in the browser", check that the slot's
+  `.env*` configures it: without the payment variables or a database it shows "not enabled"
+  (iglesia-maranatha). If not, verification by test or on the PR's preview.
+- **Colors you ask for, measured.** A focus ring, border or text color the prompt fixes gets
+  its contrast computed against the real backgrounds (both themes, every accent) and, for a
+  data scale, over its whole range — not the finding's notes: `secondary[500]` did not reach
+  3:1 on white and the worker had to change it (iglesia-maranatha); a range from the notes
+  failed on the full scale (krea).
+- **Data a rule forbids, and what derives from it.** "Never the ID number" also covers a
+  field built from it: the avatar's seed contained it (krea).
 - **States: all the combinations.** With two selectors on one view (role × tab), the prompt
   lists the product, not each one apart: two states without a destination were missing
   (KREA).
@@ -174,6 +190,16 @@ the PR with its alternative.
 - **Waves:** units that step on each other (same files) go in different waves; cross-cutting
   work (global styles, shared modal headers) goes last, on an updated `main`.
 - A unit with no repo code (external template) runs without a pool slot and without a PR.
+- **Zones of a shared file** (a `page.tsx` two units fill): each unit's zone includes every
+  import its JSX needs and the component that paints what it is asked to change — open it
+  while mapping (a menu item the prompt asked for lived outside the zone; "one import" did
+  not cover the two the JSX needed: krea). State two units share on that page (two siblings)
+  is fixed in "Shared shapes" with its mechanism, not left to improvise (krea). The helpers
+  of a shared file have one exporter, named in the brief: two units duplicated `withAlpha`
+  (iglesia-maranatha).
+- **A unit that removes a prop or changes a public API** another unit of the wave uses: the
+  merge order is fixed here, or the unit leaves a temporary adapter. Removing `sx` from `Logo`
+  broke the typecheck of the unit that passed it until that one merged (iglesia-maranatha).
 - **Shared primitives of the wave:** list the base components the wave's units will need
   and do not have yet (`components/ui/*`: a select, a dialog, a table) and give each to one
   unit only — or to the components wave, before. Two page units each added
@@ -192,7 +218,9 @@ So that parallel units do not collide, assign each one:
 | Range of custom error codes, if the project uses them (SQLSTATE of `raise … using errcode`): closed and disjoint per unit, never "F5+" (two units overlapped: melao) | MS010–MS014 |
 | Model · effort (`reference/TOKEN-ECONOMY.md` §12) | `sonnet` · medium |
 | Docker for this unit (local database, containers) | yes / no |
+| Dev server for this unit (`bun run dev`, `qa:local`) | yes / no |
 | Local build for this unit (`next build`, `qa:local -- --preview`) | yes / no |
+| Migration for this unit (a new file in the migrations folder, its number) | `0012` / no |
 | Test services on fixed ports for this unit (emulators, a test database the suite starts) | yes / no |
 
 **Two units sharing a shape** (the same table, column, type or event): fix its name and type
@@ -242,13 +270,37 @@ on the fixed ports and contaminated each other's runs (KREA ×8). The others ver
 CI (`gh pr checks`) when it runs those tests; the technology's reference says how (e.g.
 `tech/firebase.md` § Emulators in parallel).
 
-**Local build yes/no is decided here too:** at most two units per wave get "yes" — the ones
-whose verification cannot be done without the build (Playwright guards of reflow or a11y
-measurements, a service worker, a change in `next.config` that CI cannot show). The rest run
-typecheck, lint and tests, measure on their dev server and read the build from CI. With four
-slots compiling at once, `next build` took 6–25 min, hung twice and crashed in PostCSS on
-Windows; Playwright over `next dev` hung on `load` (workout ×5, kit-deploy ×2). What a "no"
-unit could only measure on dev goes to the wave's QA list.
+**The machine's limits decide the rest:** the "Parallel work on this machine" table of
+`context/GIT_STATE.md` (without it, its defaults: 3 workers, 2 dev servers, 1 local build,
+full suite and typecheck in CI). Why: with 4–7 workers on César's laptop, suites passed
+10 min with false timeouts, typecheck ran 6 min without finishing while CI did it in 1m50s,
+`next dev` stopped answering for 15 min and 3 of 4 PRs left without screenshots or axe (krea
+×19, iglesia-maranatha ×12, kit-deploy ×7).
+
+- **Workers at once:** a wave with more units than that launches the rest as the first ones
+  finish (§6), not all together.
+- **Dev server yes/no** per unit, up to the limit: the units with UI to measure. The rest
+  verify by code and tests and say so in the report.
+- **Local build yes/no**, up to its limit: the units whose verification cannot be done
+  without the build (Playwright guards of reflow or a11y measurements, a service worker, a
+  change in `next.config` that CI cannot show). The rest read the build from CI. With four
+  slots compiling at once, `next build` took 6–25 min, hung twice and crashed in PostCSS on
+  Windows; Playwright over `next dev` hung on `load` (workout ×5, kit-deploy ×2). A Docker
+  install test that runs `next build` counts as a local build (kit-deploy). What a "no" unit
+  could only measure on dev goes to the wave's QA list.
+- **Full suite and typecheck `ci`:** the worker runs `test:related` (or `bun test` on its new
+  and touched test files) and the typecheck of its slot only if it is the one unit with a
+  local build; the full verdict is `gh pr checks`. With `local`, one slot at a time: the brief
+  names the order.
+- **The unit that changes `bun.lock`** (a dependency added or removed) launches first and
+  alone if it can: `bun install` with 7 workers took more than 15 min (krea). Removing a
+  package is `bun remove`, never deleting its folder of `node_modules` by hand (`rm -rf
+  node_modules/@mui` took more than 1 h on Windows: iglesia-maranatha).
+- **Migrations:** at most one unit per wave creates a migration, or the second one's number is
+  fixed here and it regenerates after merging the first. Two units with a new table made the
+  same `000N_*` and collided in `_journal.json` (krea). A new value in a column with a `CHECK`
+  or an enum (an audit action) is a migration too: "Migration: none" for one cost a red CI
+  (kit-deploy).
 
 The slot and its port are not reserved here: `wt take` assigns them at launch (wt2 → 4302, §6).
 
@@ -304,8 +356,13 @@ Agent(
 )
 ```
 
-A unit with no repo code takes no slot. All units of a wave in the **same message** (they
-run in parallel). Do not poll: you are notified when they finish.
+A unit with no repo code takes no slot. The wave's units in the **same message** (they run in
+parallel), up to the machine's "Workers at once" (§4); the next one is taken and launched when
+a report arrives. Do not poll: you are notified when they finish.
+
+**A unit with "Docker: yes":** `docker version` first. Docker Desktop was off, nobody said so,
+and starting it and recovering Postgres cost the worker ~25 min (iglesia-maranatha). If it
+does not answer, tell César before launching that unit.
 
 ## 7. Consolidate
 
@@ -336,6 +393,9 @@ message — `git -C <slot> status --short` and `git -C <slot> log --oneline orig
 `.qa/pr-body.md` unless you saw them and they are newer than the unit's start: two resume
 messages named a `progress.md` no worker had written and guessed the step from its last
 line, and another took a `pr-body.md` of a previous PR as recent (kit-deploy ×2, workout).
+The message cites the last commit (`git log -1 --format=%s`) and the end of the last test or
+typecheck log in `.qa/`, not the worker's last sentence: a resume quoted it and the work was
+already done and committed (krea).
 
 **One extra round per PR, at most.** The worker fixes everything of its class or zone in the
 first pass (its prompt says so). What it reports "in passing" after that, if Medium or Low,
@@ -408,7 +468,9 @@ that wave's logged-in QA goes to "Blocked" until there is a local database.
 
 With the report:
 - Save it to `context/plans/qa-wave-0N-N.md`, copy the slot's `.qa/repro/` to
-  `context/plans/qa-wave-0N-N/`, and `wt free` the QA slot.
+  `context/plans/qa-wave-0N-N/` **with the helpers its scripts import** (`grep -h "from '\.\./"`
+  over them: three repros came without theirs: krea), and `wt free` the QA slot. The repros
+  take the base URL and the database from their arguments or `QA_DB_URL`, never a fixed port.
 - **Critical or High** → a fix unit **in this same wave** (same slots, no new wave or
   session), with the finding's reproduction script in its prompt: the worker runs it on
   `main` (FAIL) and on its branch (PASS) and attaches both to the PR. That closes the

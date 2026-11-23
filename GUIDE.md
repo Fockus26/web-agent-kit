@@ -360,6 +360,9 @@ What happens:
    (`..\<repo>-wt\wt1..wtN`, with its port 4301, 4302…). Slots are not deleted:
    `node_modules` is already there and each unit only installs if `bun.lock` changed. The
    first time in a project, the orchestrator runs `wt init`.
+   How many run at once, how many dev servers and builds, and whether the full suite runs
+   in CI is in `context/GIT_STATE.md` › "Parallel work on this machine" (default 3 workers,
+   2 servers, 1 build, suite in CI): raise it on a machine with more RAM.
 4. You get **one PR per unit**, each with its changeset (without touching `version` or
    `CHANGELOG.md`: they do not collide). Merge them in any order; after each merge the
    orchestrator frees the slot (`wt free`).

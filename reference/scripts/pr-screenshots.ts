@@ -63,6 +63,11 @@
  *     others and reports at the end (a failing shot does not block the PR).
  *   - It warns if `.pr-shots.json` is older than the branch's last commit: it was the slot's
  *     previous unit's, and the shots came out of the wrong states (melao).
+ *   - It empties `.pr-shots/` first: `shots:publish` uploads every PNG there, and the
+ *     previous unit's went into the PR (iglesia-maranatha, kit-deploy).
+ *   - `click`/`fill` wait for React to hydrate the element, and every selector takes the first
+ *     *visible* match (Suspense parks a hidden copy): clicks before hydration opened nothing
+ *     (iglesia-maranatha ×3) and a `waitFor` expired on the hidden copy (kit-deploy).
  *
  * **Why node and not bun:** on Windows, Playwright launched from a Bun script hangs starting
  * Chromium (checked: 170 s without output with bun; 3 shots in seconds with node, same
@@ -77,7 +82,7 @@
 import { type Browser, type BrowserContextOptions, chromium, type Page } from '@playwright/test'
 import { spawnSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
-import { mkdir, readFile, stat } from 'node:fs/promises'
+import { mkdir, readdir, readFile, rm, stat } from 'node:fs/promises'
 
 type Step =
   | { click: string }
@@ -115,6 +120,11 @@ const ATTEMPTS = 3
 
 const config = JSON.parse(await readFile(configPath, 'utf8')) as Config
 await mkdir(OUT, { recursive: true })
+// The folder holds only this run's images: the slot's previous unit left its PNGs here and
+// `shots:publish` put them in the PR next to the new ones (iglesia-maranatha ×3, kit-deploy).
+for (const old of await readdir(OUT)) {
+  if (old.endsWith('.png') || old === 'README.md') await rm(`${OUT}/${old}`, { force: true })
+}
 
 const lastCommit = Number(spawnSync('git', ['log', '-1', '--format=%ct'], { encoding: 'utf8' }).stdout.trim()) * 1000
 if (lastCommit && (await stat(configPath)).mtimeMs < lastCommit) {
@@ -167,12 +177,40 @@ async function launchBrowser(): Promise<Browser> {
   }
 }
 
+// The first VISIBLE match: with Suspense streaming, React parks the content in a hidden
+// `<div hidden>` before swapping it in, and `.first()` waited on that copy until the timeout
+// although the element was on screen (kit-deploy).
+const visible = (page: Page, selector: string) => page.locator(`${selector} >> visible=true`).first()
+
+// A click or a fill before React hydrates does nothing: the SSR button is there but has no
+// handler, Radix did not open and the retries took over an hour (iglesia-maranatha ×3). In a
+// React page, wait until the element carries React's props (set on hydration); elsewhere,
+// nothing to wait for. Up to 60 s: a cold `next dev` hydrates late.
+async function hydrated(page: Page, selector: string) {
+  const target = visible(page, selector)
+  await target.waitFor({ timeout: STEP_TIMEOUT })
+  await target
+    .evaluate(
+      (el) =>
+        new Promise<void>((done) => {
+          const w = window as unknown as Record<string, unknown>
+          const react = Boolean(w.__next_f || w.__NEXT_DATA__ || document.querySelector('[data-reactroot]'))
+          const ready = () => !react || Object.keys(el).some((k) => k.startsWith('__reactProps'))
+          const until = Date.now() + 60_000
+          const tick = () => (ready() || Date.now() > until ? done() : setTimeout(tick, 100))
+          tick()
+        }),
+    )
+    .catch(() => {})
+  return target
+}
+
 async function runSteps(page: Page, steps: Step[]) {
   for (const step of steps) {
-    if ('click' in step) await page.locator(step.click).first().click({ timeout: STEP_TIMEOUT })
-    else if ('fill' in step) await page.locator(step.fill).first().fill(fromEnv(step.value), { timeout: STEP_TIMEOUT })
+    if ('click' in step) await (await hydrated(page, step.click)).click({ timeout: STEP_TIMEOUT })
+    else if ('fill' in step) await (await hydrated(page, step.fill)).fill(fromEnv(step.value), { timeout: STEP_TIMEOUT })
     else if ('press' in step) await page.keyboard.press(step.press)
-    else if ('waitFor' in step) await page.locator(step.waitFor).first().waitFor({ timeout: STEP_TIMEOUT })
+    else if ('waitFor' in step) await visible(page, step.waitFor).waitFor({ timeout: STEP_TIMEOUT })
     else if ('wait' in step) await page.waitForTimeout(step.wait)
     else if ('eval' in step) await page.evaluate(step.eval)
   }
@@ -236,7 +274,7 @@ for (const shot of config.shots) {
         await page.goto(config.base + (shot.path ?? '/'), { waitUntil: 'load', timeout: 30_000 })
         await runSteps(page, shot.steps ?? [])
         if (shot.element) {
-          await page.locator(shot.element).first().screenshot({ path: file, timeout: STEP_TIMEOUT })
+          await visible(page, shot.element).screenshot({ path: file, timeout: STEP_TIMEOUT })
         } else {
           await page.screenshot({ path: file, fullPage: shot.fullPage ?? false, timeout: STEP_TIMEOUT })
         }

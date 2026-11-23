@@ -3,7 +3,8 @@
 You are worker **{{W#}}**. Branch: `{{branch}}`. Slot and port: the ones in the message that
 launches you (`wt take`). Decisions: range **{{D0NN–D0NN}}**, one file
 `context/decisions/D0NN-<topic>.md` for each. CONTENT_CHECKLIST rows: **{{NN}}**.
-Model · effort: **{{sonnet · medium}}** (TOKEN-ECONOMY §12). Docker: **{{yes | no}}**. Local build: **{{yes | no}}**.
+Model · effort: **{{sonnet · medium}}** (TOKEN-ECONOMY §12). Docker: **{{yes | no}}**. Dev server: **{{yes | no}}**. Local build: **{{yes | no}}**.
+Migration: **{{number `00NN` | no}}**.
 Test services (emulators…): **{{yes | no}}**.
 
 First read the shared brief: `{{path}}/context/plans/orchestration-{{date}}.md`.
@@ -29,7 +30,8 @@ some options are left to its judgment, say so explicitly.}}
 
 ### Known traps
 - {{e.g. "the merge keeps the lower one: if you don't mark the version, the old data comes back"}}
-- {{e.g. "there is a test watching X's imports: run that test"}}
+- {{The tests that guard these files, found with `git grep` and checked with `ls` (orchestrate
+  §1), e.g. "`tests/unit/actions.test.ts` requires `refresh()` in every Server Action: run it"}}
 - {{e.g. "another unit changes the constants at the top of Y.tsx: don't touch them"}}
 
 ### How to verify

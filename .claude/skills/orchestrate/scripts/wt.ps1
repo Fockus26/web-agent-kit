@@ -24,8 +24,9 @@
 
   `.qa/` (each slot's measuring scripts and logs) is ignored by git in every slot: `init`
   and `take` add it to `.git/info/exclude`. When `take` puts a different branch in the slot,
-  it removes the previous unit's `.qa/pr-body.md`, `progress.md`, `*.log` and `.next/dev`,
-  `.next/types`; the scripts in `.qa/` stay.
+  it removes the previous unit's `.qa/pr-body.md`, `progress.md`, `review.diff`, `*.log`,
+  `session*.json`, `.qa/shots/`, `.pr-shots/` and `.next/dev`, `.next/types`; the scripts in
+  `.qa/` stay.
 
   The `.env*` files (except `.env.example`) are copied from the main folder only if git
   ignores them in the slot: they are never committed.
@@ -181,8 +182,16 @@ function ClearLeftovers([string] $path, [string] $branch) {
   $mark = Join-Path $qa '.branch'
   if ((Test-Path $mark) -and ((Get-Content -LiteralPath $mark -Raw).Trim() -eq $branch)) { return }
   if (Test-Path $qa) {
-    $old = @(Get-ChildItem -LiteralPath $qa -File | Where-Object { $_.Name -in 'pr-body.md', 'progress.md' -or $_.Extension -eq '.log' })
-    if ($old) { $old | Remove-Item -Force; Write-Host "  - .qa/: $($old.Count) file(s) of the previous unit removed (pr-body, progress, logs)" }
+    $old = @(Get-ChildItem -LiteralPath $qa -File | Where-Object {
+        $_.Name -in 'pr-body.md', 'progress.md', 'review.diff' -or $_.Extension -eq '.log' -or $_.Name -like 'session*.json'
+      })
+    if ($old) { $old | Remove-Item -Force; Write-Host "  - .qa/: $($old.Count) file(s) of the previous unit removed (pr-body, progress, logs, sessions)" }
+  }
+  # Images: `shots:publish` uploads every PNG of the folder, and the previous unit's went into
+  # the next PR (iglesia-maranatha ×3, kit-deploy). A saved session (`.qa/session-a.json`) of
+  # another database was taken as valid and a repro hung 10 min on /login (kit-deploy).
+  foreach ($d in (Join-Path $qa 'shots'), (Join-Path $path '.pr-shots')) {
+    if (Test-Path $d) { Remove-Item $d -Recurse -Force; Write-Host "  - $([IO.Path]::GetRelativePath($path, $d).Replace('\', '/'))/ of the previous unit removed" }
   }
   foreach ($d in 'dev', 'types') {
     $p = Join-Path (Join-Path $path '.next') $d

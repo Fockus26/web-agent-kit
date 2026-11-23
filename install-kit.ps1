@@ -75,6 +75,18 @@ Copy-Item (Join-Path $kit 'reference') $ref -Recurse
 Write-Host "  + kit-reference (the kit's reference/)"
 
 if ($Project) {
+  # The kit's working copy on Windows is CRLF; the project's `eol=lf` then showed 63–67 files
+  # of the copy as `w/crlf` (modified with no diff) after every update (iglesia-maranatha ×2,
+  # krea, inversiones-js ×2). Same pass as new-project.ps1's.
+  $n = 0
+  foreach ($dir in 'skills', 'agents', 'kit-reference') {
+    foreach ($f in Get-ChildItem (Join-Path $target $dir) -Recurse -File -Force) {
+      if ($f.Extension -notmatch '^\.(md|ts|tsx|js|mjs|json|sh|ps1|yml|yaml|toml|txt|css|scss|php|cnf|example|template)$') { continue }
+      $text = [IO.File]::ReadAllText($f.FullName)
+      if ($text.Contains("`r`n")) { [IO.File]::WriteAllText($f.FullName, $text.Replace("`r`n", "`n")); $n++ }
+    }
+  }
+  if ($n) { Write-Host "  ~ $n file(s) of the copy rewritten with LF" }
   Write-Host ''
   Write-Host "Done. Commit $target\skills, $target\agents and $target\kit-reference with the project." -ForegroundColor Green
   return
