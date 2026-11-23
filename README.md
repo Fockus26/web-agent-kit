@@ -376,7 +376,7 @@ Details in `reference/TOKEN-ECONOMY.md`. What weighs most:
 
 ## Versions and updating projects
 
-The kit is versioned (`VERSION`, now **3.27.0**) and each project keeps in `.kit-version`
+The kit is versioned (`VERSION`, now **3.28.0**) and each project keeps in `.kit-version`
 which one it is aligned with. To bring it up to date: `/kit-update` in a project session. It
 compares with the published version (`origin/main` of the kit's clone); if behind, it
 computes the path with `UPDATES.md` and applies each version in order, in a PR.
@@ -385,6 +385,16 @@ And the way back: each project logs in `context/KIT_FEEDBACK.md` what César had
 or repeat and what the kit did not cover. `/kit-feedback` uploads it to this repo as a PR
 (`feedback/`, `kit-feedback` label); in a session opened here, "revisa el feedback" triages
 all the PRs together (`CLAUDE.md` says how).
+
+### 3.28.0 (updating, QA scripts and the pool, tidied)
+
+| Before | Now |
+|---|---|
+| `kit-update` read `.kit-version` from an old local branch and planned 13 versions too many | It reads `origin/<base>:.kit-version` |
+| `qa-local` could not create accounts without sign-up, nor with `--db-only` | `createAccountPostgres` in `qa-roles.ts` |
+| `wt take` could stop another project's server on the slot's port | It stops only the pool's and says whose it is |
+| `design-qa` and `functional-qa` ran each other's repros through a glob | Their own `.qa/repro/design/` and `.qa/repro/functional/` |
+| `design-qa.ts` zoomed with `body.style.zoom` (false scroll) and measured mid-animation | Real 640/320 viewports, animations settled, a word-break check |
 
 ### 3.27.0 (waves that fit the machine)
 

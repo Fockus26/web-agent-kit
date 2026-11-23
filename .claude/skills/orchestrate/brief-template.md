@@ -92,7 +92,10 @@ Nothing from another slot's `.qa/`: it belongs to a previous unit and may be sta
    and may be another slot's. **Astro ≥ 7** detaches `astro dev` into the background: start
    it with `ASTRO_DEV_BACKGROUND=0` so the kill reaches it; if it detached anyway, `bunx astro
    dev stop` run **inside your slot** is safe (its lock, `.astro/dev.json`, is per folder).
-   **Docker:** only if your prompt says "Docker: yes" (another unit may be using it).
+   **Docker:** only if your prompt says "Docker: yes" (another unit may be using it). When
+   done you stop **your server**, never the containers (`qa-<package>-pg`, `-mailpit`, the
+   Supabase stack): every slot shares them, and the orchestrator brings them down when the
+   wave closes (iglesia-maranatha).
    If it says "Node.js subprocess crashed … deadline has elapsed" (Turbopack with several
    servers at once): shut it down, delete `.next/dev` and restart it; the 500 stays cached
    and a restart is not enough.
@@ -230,7 +233,11 @@ Nothing from another slot's `.qa/`: it belongs to a previous unit and may be sta
     session: the `login` block of `.pr-shots.json`, with the `.env.test.local` accounts as
     `${EMAIL_TEST}`, and only against `qa:local` (rule 8 stands for the real backend).
     "Executable doesn't exist": `PW_CHANNEL=msedge bun run shots`. The markdown is left in
-    `.pr-shots/README.md`: paste it into the PR. Do not open the images.
+    `.pr-shots/README.md`: paste it into the PR. Do not open the images. The "after" shots
+    are taken **before** any walk that changes data (confirming a payment, deleting a row), or
+    after re-seeding: otherwise they no longer compare with the "before" (iglesia-maranatha).
+    A temporary page you made to measure something is deleted before the final typecheck,
+    with `.next/types`: deleted while typecheck ran, it left a false TS6053 (iglesia-maranatha).
 15. **Unable to ask:** when data is missing, the conservative option + "Decision taken /
     alternative" in the PR. Do not block.
 16. **Fix the class, in the first pass.** If what you fix (or a bug you meet) has the same
@@ -245,7 +252,9 @@ Nothing from another slot's `.qa/`: it belongs to a previous unit and may be sta
     `z.string().trim().min(1)`, submit `disabled` while in flight + idempotent server,
     `flex-wrap` on button rows}}. Why: the same classes (spaces as content, double submit,
     reflow at 200 %) came back in every project because only QA knew them.
-17. **New copy = provisional:** flagged in the code + your reserved checklist row.
+17. **New copy = provisional:** flagged in the code + your reserved checklist row, written in
+    your report (`CONTENT_CHECKLIST.md` is local, in the main folder: the orchestrator adds the
+    rows; a worker looked for it in its slot: krea).
 18. **Closing:** Conventional commits (only your files) with the description in Spanish,
     push of your branch, `gh pr create --body-file .qa/pr-body.md` with the template (PR in
     Spanish; the body written with Write, never inline: quotes and backticks break it).

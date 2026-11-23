@@ -145,7 +145,10 @@ function CopyEnv([string] $path) {
 # The port belongs to the slot: whatever listens there when taking or freeing it is a server
 # the previous unit left (a kill that only killed the shell, a cut-off session). If it stays,
 # the next server jumps to another port without warning and lands on another slot's.
-function StopServers([string] $s) {
+# Only if it is this pool's: the port of a slot was taken by another project's server (krea),
+# and stopping it would kill someone else's work. A server of the slot runs from its folder
+# (`…\<repo>-wt\wtN\node_modules\next\…`); one from another project's is reported, not stopped.
+function StopServers([string] $s, [switch] $Strict) {
   $port = $BasePort + (SlotNumber $s)
   $pids = if ($IsWindows) {
     Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue |
@@ -154,6 +157,19 @@ function StopServers([string] $s) {
     lsof -ti "tcp:$port" -sTCP:LISTEN
   }
   foreach ($p in $pids | Where-Object { $_ -gt 0 }) {
+    $cmd = if ($IsWindows) { (Get-CimInstance Win32_Process -Filter "ProcessId=$p" -ErrorAction SilentlyContinue).CommandLine }
+           else { (ps -o args= -p $p 2>$null) -join ' ' }
+    # Foreign = it runs from another folder's `node_modules`. A command line without one
+    # (`node server.mjs`) cannot be told apart and is treated as the slot's.
+    $norm = "$cmd".Replace('/', '\')
+    $foreign = $norm -match '(?i)[a-z]:\\[^"]*?\\node_modules\\' -and
+      $norm.IndexOf($pool.Replace('/', '\') + '\', [StringComparison]::OrdinalIgnoreCase) -lt 0
+    if ($foreign) {
+      $msg = "Port $port (slot $s) is used by a program outside this pool (PID $p): $($cmd.Substring(0, [Math]::Min(120, $cmd.Length)))"
+      if ($Strict) { throw "$msg`nNot stopping it: close it, or take another slot (-Slot wtN)." }
+      Write-Warning "$msg — left running"
+      continue
+    }
     Write-Host "  - orphaned server on port $port (PID $p): stopping it"
     if ($IsWindows) { taskkill /PID $p /T /F | Out-Null } else { kill $p }
   }
@@ -259,7 +275,7 @@ switch ($Command) {
 
     Refresh
     ExcludeQa
-    StopServers $Slot
+    StopServers $Slot -Strict
     $remote = if ($Base -match '^([^/]+)/') { "$($Matches[1])/$Name" }
     git show-ref --verify --quiet "refs/heads/$Name"
     $existsLocal = $LASTEXITCODE -eq 0
@@ -274,6 +290,15 @@ switch ($Command) {
       GitOk -C $path switch --quiet -c $Name --track $remote
     } else {
       GitOk -C $path switch --quiet -c $Name --no-track $Base
+    }
+    # One upstream at most: a resumed branch ended with two `branch.<name>.merge` values and a
+    # plain `git push` failed (krea). The remote branch of the same name, if it exists.
+    $merges = @(git -C $path config --get-all "branch.$Name.merge")
+    if ($merges.Count -gt 1) {
+      git -C $path config --unset-all "branch.$Name.merge"
+      if ($existsRemote) { GitOk -C $path branch --quiet --set-upstream-to $remote $Name }
+      else { git -C $path config --unset-all "branch.$Name.remote" }
+      Write-Host "  ~ $Name had $($merges.Count) upstreams: left with $(if ($existsRemote) { $remote } else { 'none (the first push sets it)' })"
     }
     ClearLeftovers $path $Name
     Install $path -IfChanged

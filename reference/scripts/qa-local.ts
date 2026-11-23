@@ -27,9 +27,10 @@
  *   4. Before printing `QA ready`, the `.env.test.local` accounts through Better Auth's sign-up
  *      endpoint, then `email_verified = true` by SQL; the role in `assignRolePostgres`. An app
  *      with `disableSignUp` creates them in `scripts/seed-db.ts` and says so in
- *      `existingAccount` (`scripts/qa-roles.ts`); that hook works for every backend.
+ *      `existingAccount` (`scripts/qa-roles.ts`); that hook works for every backend. Or it
+ *      exports `createAccountPostgres` there and qa-local calls it instead of the sign-up.
  *   `--db-only` stops after step 2 and prints the URLs: for tests against the database, without
- *   a server.
+ *   a server. The accounts then come only from `createAccountPostgres`.
  *
  * Supabase:
  *   1. `supabase start` (Docker Desktop running): the project's local stack, with Auth's
@@ -166,6 +167,10 @@ interface QaRoles {
   ): Promise<void>
   assignRolePostgres(id: string, role: string, ctx: { sql: (statement: string) => string }): Promise<void>
   existingAccount(account: { email: string; role: string }): boolean | Promise<boolean>
+  createAccountPostgres(
+    account: { email: string; password: string; role: string },
+    ctx: { sql: (statement: string) => string; databaseUrl: string; site: string | null },
+  ): Promise<string | undefined>
   KEEP_ENV: string[]
 }
 const roles: Partial<QaRoles> = existsSync('scripts/qa-roles.ts')
@@ -490,7 +495,11 @@ async function warmUp(beforeReady?: () => Promise<void>): Promise<void> {
         redirect: 'manual',
         signal: AbortSignal.timeout(5 * 60_000),
       })
-      console.log(`  ~ warmed ${route} (${r.status}, ${Math.round((Date.now() - started) / 1000)} s)`)
+      const seconds = Math.round((Date.now() - started) / 1000)
+      console.log(`  ~ warmed ${route} (${r.status}, ${seconds} s)`)
+      // With other `next dev` on the machine, Turbopack took ~2 min per route and 13 min in
+      // all (krea); the build compiles once (inversiones-js: dev hung on /login, --preview did not).
+      if (!preview && seconds > 120) console.warn('! A route took over 2 min to compile: with other dev servers running, --preview is faster.')
     } catch (e) {
       console.warn(`! warming ${route} failed: ${(e as Error).message}`)
     }
@@ -746,7 +755,29 @@ if (args.includes('--postgres') || (hasDrizzle && !usesSupabase && !existsSync('
   }
 
   console.log(`Local database: ${databaseUrl} · emails at http://127.0.0.1:${mailUi}`)
-  if (dbOnly) process.exit(0)
+
+  // The project's own way to create an account (no sign-up, an ID number instead of an email,
+  // a password set on an account the seed made): `createAccountPostgres` in qa-roles.ts. The
+  // sign-up route could not do it and `existingAccount` left the seed's account without the
+  // `.env.test.local` password (krea ×3). It returns the user's id for `assignRolePostgres`.
+  async function createWithHook(site: string | null): Promise<void> {
+    for (const a of accounts) {
+      if (!a.email || !a.password || (await seeded(a))) continue
+      const id = await roles.createAccountPostgres?.(
+        { email: a.email, password: a.password, role: a.role },
+        { sql: (statement) => sqlIn(DB, statement), databaseUrl, site },
+      )
+      if (id) await roles.assignRolePostgres?.(id, a.role, { sql: (statement) => sqlIn(DB, statement) })
+      console.log(`  + test account: role ${a.role} (createAccountPostgres)`)
+    }
+  }
+  if (dbOnly) {
+    if (roles.createAccountPostgres) await createWithHook(null)
+    else if (accounts.length) {
+      console.warn('! --db-only: the .env.test.local accounts are not created (they need the server\'s sign-up); createAccountPostgres in scripts/qa-roles.ts does it without one.')
+    }
+    process.exit(0)
+  }
 
   const env: NodeJS.ProcessEnv = { ...process.env, QA_LOCAL: '1' }
   for (const k of [...Object.keys(ENV_MAP), ...remote.map((r) => r.key)]) env[k] = dead(k)
@@ -769,6 +800,7 @@ if (args.includes('--postgres') || (hasDrizzle && !usesSupabase && !existsSync('
   }
 
   await startServer(env, async () => {
+    if (roles.createAccountPostgres) return createWithHook(SITE)
     for (const a of accounts) {
       if (!a.email || !a.password) {
         console.warn(`! role ${a.role}: email or password missing in .env.test.local; skipped`)

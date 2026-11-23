@@ -373,8 +373,13 @@ try {
       # its own path matches `**/.claude/worktrees`, and Biome 2.3 processed no files there
       # (`bun run lint` exit 1: workout, kit-deploy ×2). Tested on 2.2.0, 2.3.8 and 2.6.8.
       $biome.files.includes = @($biome.files.includes | Where-Object { $_ -ne '!**/.claude/worktrees' })
+      # Either form of each exclusion counts as present: `!.claude/kit-reference` got a second
+      # `!**/.claude/kit-reference` appended (krea).
       foreach ($p in '!.claude/worktrees', '!**/.claude/kit-reference') {
-        if ($biome.files.includes -notcontains $p) { $biome.files.includes = @($biome.files.includes) + $p }
+        $bare = $p -replace '^!(\*\*/)?', ''
+        if (-not ($biome.files.includes | Where-Object { ($_ -replace '^!(\*\*/)?', '') -eq $bare -and $_ -like '!*' })) {
+          $biome.files.includes = @($biome.files.includes) + $p
+        }
       }
     }
     # "auto" means CRLF on Windows: with the `eol=lf` set below, the local lint failed on

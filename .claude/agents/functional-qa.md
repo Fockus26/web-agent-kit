@@ -52,8 +52,10 @@ force: true })` to prove the disabled button does nothing), and `textContent` in
 hidden text such as a button's `loadingText` (compare with `innerText()`). Accounts a script
 needs are created already confirmed through the local admin API, not by a public sign-up
 that expects a session at once (that only works with `enable_confirmations` off). Each finding leaves
-its reproduction script in `.qa/repro/<n>-<slug>.mjs` (base URL as its argument, prints
-`PASS` or `FAIL <measure>`): the fix is closed by running it, not by another QA.
+its reproduction script in `.qa/repro/functional/<n>-<slug>.mjs` (base URL as its argument, prints
+`PASS` or `FAIL <measure>`): the fix is closed by running it, not by another QA. Your own folder,
+and each script run by its name, never by a glob: `design-qa` runs next to you, and its glob
+once ran your auth repros (inversiones-js).
 
 **Server against the local database:** you start it yourself, in the background, with
 `bun run qa:local -- --port <port>` (if you are launched in a pool slot, the slot's port;

@@ -39,6 +39,55 @@ other, the agent shows them and asks before choosing.
 
 ---
 
+## 3.28.0 — 2026-11-22 · Updating, QA scripts and the pool, tidied
+
+Block B of the same triage (feedback PRs #40–#43): the points of one or two projects about
+`kit-update`, `qa-local`, `wt`, the QA agents and the templates. Decision by César,
+2026-11-22.
+
+**What changed**
+
+- **`kit-update`:** the project's version is read from `origin/<base>:.kit-version`, not the
+  working tree (iglesia-maranatha planned 13 versions too many); in a long path a whole-file
+  replacement, `-OnlyPieces` and the kit copy are done once; `-OnlyPieces` already refreshes
+  the copy; piece check "`ci.yml` exists"; `context:backup` refused in a public repo.
+- **`qa-local.ts`:** `createAccountPostgres` in `qa-roles.ts` creates the accounts when the
+  sign-up cannot (no sign-up, login by ID number, the seed's account without the test
+  password) and also runs with `--db-only` (krea ×3); a route that takes over 2 min to compile
+  suggests `--preview`.
+- **`wt.ps1` take:** does not stop a server of another project on the slot's port (it says so
+  and stops); a branch with two upstreams is left with one (krea).
+- **QA agents:** `design-qa` and `functional-qa` write their repros in `.qa/repro/design/` and
+  `.qa/repro/functional/`, run by name, never by glob (inversiones-js); `wave-qa`'s repros
+  take the database from `QA_DB_URL`, locate by text, keep their helpers next to them.
+  `orchestrate` §8: the FAIL half of a repro that needs a server runs against a free pool slot
+  (`run-on-main.sh` no longer suggests starting it inside).
+- **`design-qa.ts`:** zoom measured as the real viewport (640 and 320), animations settled
+  before measuring, and a `word-break` check (Range per word) at ≤ 390 px and 200 % text.
+- **Brief:** the containers are shared (the worker stops only its server, `orchestrate` §9
+  brings them down); "after" shots before walks that change data; a temporary page deleted
+  before the typecheck; checklist rows go in the report.
+- **Templates:** `CLAUDE.md.template` points to `tech/migrate-<from>-vps.md` (inversiones-js);
+  `new-project.ps1 -OnlyPieces` recognises either form of a Biome exclusion (krea);
+  `STACK-NEXTJS` › Tailwind: global element rules (`::selection`) inside `@layer base`
+  (inversiones-js); `tech/vercel.md`: build logs through the MCP (krea).
+
+**Steps for a project on 3.27.0**
+
+1. Global pieces: `install-kit.ps1 -Pull` and a new session (skipped in a cloud session).
+   Then refresh the kit copy (`install-kit --project .`) and commit it.
+2. Replace `scripts/qa-local.ts` and `scripts/run-on-main.sh` with the kit's. A Postgres
+   project whose accounts the sign-up cannot create (or that set their password by hand
+   after 3.20.0 step 3) may move that to `createAccountPostgres` in `scripts/qa-roles.ts`
+   (the commented example there); nothing to do otherwise.
+3. `CLAUDE.md`: in the "Tech refs" line, add `To VPS: tech/migrate-<from>-vps.md.` if the
+   project may move its database to the VPS (skip it if it is already there or never will).
+   If that puts the file over 8 KB, skip it: `kit-update` finds the guide anyway.
+4. With Tailwind: if the global stylesheet has `::selection` (or other element rules) outside
+   `@layer base`, move them inside it in the next UI unit — not in this PR.
+
+---
+
 ## 3.27.0 — 2026-11-22 · Waves that fit the machine
 
 The most repeated points of the four reports of 2026-11-22 (feedback PRs #40 iglesia-maranatha,

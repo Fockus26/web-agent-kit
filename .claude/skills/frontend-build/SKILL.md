@@ -154,6 +154,7 @@ Follow the order the handoff brings. If it brings none, this one:
 ```
 1. Tokens          → the chosen library's theme system, light/dark
 2. Base layout     → typography, container, grid, reset, ::selection, scrollbar, favicon
+                     (Tailwind: in @layer base, STACK-NEXTJS › Tailwind)
 3. Primitives      → the ui/ components everything else uses
 4. Components      → the handoff's composite ones
 5. Sections        → in each page's vertical order

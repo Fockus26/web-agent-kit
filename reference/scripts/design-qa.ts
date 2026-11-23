@@ -130,6 +130,48 @@ async function checkFocusOrder(page: Page, route: string) {
   }
 }
 
+/**
+ * Words cut letter by letter (`overflow-wrap: anywhere`, `break-all` on a short token): a
+ * status word or a SHA split across lines on mobile, which no overflow check sees (kit-deploy).
+ * A word whose Range spans more than one line box is broken.
+ */
+async function checkWordBreak(page: Page, route: string, label: string) {
+  const broken = await page.evaluate(() => {
+    const out: string[] = []
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
+    const range = document.createRange()
+    for (let node = walker.nextNode(); node && out.length < 8; node = walker.nextNode()) {
+      const text = node.textContent ?? ''
+      for (const m of text.matchAll(/\S{2,}/g)) {
+        range.setStart(node, m.index)
+        range.setEnd(node, m.index + m[0].length)
+        const tops = new Set([...range.getClientRects()].filter((r) => r.width > 0).map((r) => Math.round(r.top)))
+        if (tops.size > 1) {
+          out.push(`"${m[0].slice(0, 30)}" in ${node.parentElement?.tagName.toLowerCase() ?? '?'}`)
+          break
+        }
+      }
+    }
+    return out
+  })
+  if (broken.length) findings.push({ route, kind: `word-break@${label}`, detail: broken.join(' · ') })
+}
+
+/**
+ * Lets running animations finish before measuring: a sheet measured at 300 ms, halfway
+ * through its entrance, gave a false overflow (kit-deploy). Up to 3 s.
+ */
+async function settle(page: Page) {
+  await page
+    .evaluate(() =>
+      Promise.race([
+        Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))),
+        new Promise((done) => setTimeout(done, 3000)),
+      ]),
+    )
+    .catch(() => {})
+}
+
 /** Colors outside the palette are not detected here — that is grep on the code. */
 
 /**
@@ -173,10 +215,12 @@ async function run() {
       const ctx = await browser.newContext({ viewport: { width, height: 900 } })
       const page = await ctx.newPage()
       await page.goto(BASE + route, { waitUntil: 'load' })
+      await settle(page)
       await page.screenshot({ path: `${OUT}/${rs}-w${width}.png`, fullPage: true })
       await checkOverflow(page, route, width)
       await checkTapTargets(page, route, width)
       await checkLineLength(page, route, width)
+      if (width <= 390) await checkWordBreak(page, route, `w${width}`)
       await ctx.close()
     }
 
@@ -189,8 +233,10 @@ async function run() {
         const big = await fontContext(browser, px, width)
         const bigPage = big.pages()[0] ?? (await big.newPage())
         await bigPage.goto(BASE + route, { waitUntil: 'load' })
+        await settle(bigPage)
         await bigPage.screenshot({ path: `${OUT}/${rs}-${label}.png`, fullPage: true })
         await checkOverflow(bigPage, route, width)
+        if (width <= 390) await checkWordBreak(bigPage, route, label)
         await big.close()
       } catch (e) {
         findings.push({ route, kind: `${label}-not-run`, detail: (e as Error).message.split('\n')[0] })
@@ -230,15 +276,17 @@ async function run() {
       await ctx.close()
     }
 
-    // 4. Zoom 400% (reflow, WCAG 1.4.10)
-    {
-      const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } })
+    // 4. Zoom 200 % and 400 % (reflow, WCAG 1.4.10): a 1280×800 window zoomed is a 640×400
+    // and a 320×200 CSS viewport, which is what the browser really lays out (media queries
+    // included). `document.body.style.zoom` fires no media query and gave false horizontal
+    // scroll (iglesia-maranatha).
+    for (const [zoom, width, height] of [[200, 640, 400], [400, 320, 200]] as const) {
+      const ctx = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: zoom / 100 })
       const page = await ctx.newPage()
       await page.goto(BASE + route, { waitUntil: 'load' })
-      await page.evaluate(() => { document.body.style.zoom = '400%' })
-      await page.waitForTimeout(300)
-      await checkOverflow(page, route, 1280)
-      await page.screenshot({ path: `${OUT}/${rs}-zoom400.png`, fullPage: true })
+      await settle(page)
+      await checkOverflow(page, route, width)
+      await page.screenshot({ path: `${OUT}/${rs}-zoom${zoom}.png`, fullPage: true })
       await ctx.close()
     }
 

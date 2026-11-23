@@ -24,17 +24,17 @@ descriptions. Site copy in {{Spanish}}. Code and comments: like the code around 
 | If the task… | Also read |
 |---|---|
 | touches UI (component, section, page, styles) | `context/DESIGN_RULES.md`, and `COLORS.md` / `DESIGN_TOKENS.md` / `TYPOGRAPHY.md` only if it touches color, spacing or type |
-| implements something from the design | that piece's part of `design/HANDOFF.md` (not the whole handoff) |
+| implements something from the design | that piece's part of `design/HANDOFF.md`, not all |
 | touches data, auth, payments or API | `context/PROJECT_CONTEXT.md` › Stack and services |
 | opens or closes a unit | `git-flow` skill + `context/GIT_STATE.md` |
-| arrives with an orchestrator prompt | **only** what the prompt cites: it already brings paths, lines and decisions |
+| arrives with an orchestrator prompt | **only** what the prompt cites: it brings paths, lines and decisions |
 
 **Search, don't read:** `decisions/`, `CONTENT_CHECKLIST.md`, inventories, `PHASE_LOG/` —
 `grep` the word or ID (`grep -rhi "^# D.*modal" context/decisions/`: decided? don't
 re-litigate it) and open only what comes up.
 
 **The kit's `reference/…`** = `~/.claude/kit-reference/…` (or `.claude/kit-reference/…`).
-**Tech refs:** {{astro, vps-postgres}} → its `tech/<name>.md` when the task touches it; only these.
+**Tech refs:** {{astro, vps-postgres}} → its `tech/<name>.md` when the task touches it; only these. To VPS: `tech/migrate-<from>-vps.md`.
 
 ---
 
